@@ -1,0 +1,85 @@
+# PHDS profiles — the document/interchange layer over the entities.
+id: https://example.org/phds/profiles
+name: phds_profiles
+title: PHDS Profiles
+license: MIT
+version: 0.1.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  phds: https://example.org/phds/
+default_prefix: phds
+default_range: string
+
+imports:
+  - linkml:types
+  - core
+  - entities
+
+classes:
+  PropertyProfile:
+    tree_root: true
+    description: >-
+      The flagship interchange document: everything known about one property,
+      as one bundle. Every section is exactly the corresponding entity shape.
+      parties[] is the deduplicated bundle carrying every Party referenced by
+      any event (required for lossless round-trip). Conformance requires
+      passing the entities → profile → entities round-trip test.
+    attributes:
+      parties: {range: Party, multivalued: true, inlined: true, inlined_as_list: true}
+      addresses: {range: Address, multivalued: true, inlined: true, inlined_as_list: true, description: Address bundle referenced by property/parties/ownership}
+      property: {range: Property, inlined: true, required: true}
+      identifiers: {range: PropertyIdentifier, multivalued: true, inlined: true, inlined_as_list: true}
+      jurisdictions: {range: Jurisdiction, multivalued: true, inlined: true, inlined_as_list: true}
+      parcels: {range: Parcel, multivalued: true, inlined: true, inlined_as_list: true}
+      property_parcels: {range: PropertyParcel, multivalued: true, inlined: true, inlined_as_list: true}
+      parcel_lineage: {range: ParcelLineage, multivalued: true, inlined: true, inlined_as_list: true}
+      site: {range: Site, inlined: true}
+      structures: {range: Structure, multivalued: true, inlined: true, inlined_as_list: true}
+      spaces: {range: Space, multivalued: true, inlined: true, inlined_as_list: true}
+      associations: {range: PropertyAssociation, multivalued: true, inlined: true, inlined_as_list: true}
+      assessments: {range: Assessment, multivalued: true, inlined: true, inlined_as_list: true}
+      tax_bills: {range: TaxBill, multivalued: true, inlined: true, inlined_as_list: true}
+      transfers: {range: Transfer, multivalued: true, inlined: true, inlined_as_list: true}
+      sales: {range: SaleEvent, multivalued: true, inlined: true, inlined_as_list: true}
+      listings: {range: Listing, multivalued: true, inlined: true, inlined_as_list: true}
+      leases: {range: LeaseEvent, multivalued: true, inlined: true, inlined_as_list: true}
+      unit_rents: {range: UnitRentObservation, multivalued: true, inlined: true, inlined_as_list: true}
+      loans: {range: Loan, multivalued: true, inlined: true, inlined_as_list: true}
+      liens: {range: Lien, multivalued: true, inlined: true, inlined_as_list: true}
+      foreclosure_cases: {range: ForeclosureCase, multivalued: true, inlined: true, inlined_as_list: true}
+      permits: {range: Permit, multivalued: true, inlined: true, inlined_as_list: true}
+      ownership: {range: OwnershipPeriod, multivalued: true, inlined: true, inlined_as_list: true}
+      operating_statements: {range: OperatingStatement, multivalued: true, inlined: true, inlined_as_list: true}
+      valuations: {range: Valuation, multivalued: true, inlined: true, inlined_as_list: true}
+      provenance: {range: Provenance}
+      extras: {range: Any}
+
+  AssessorObservation:
+    description: >-
+      Thin capture envelope for a county assessor / public-records
+      fetch. The payload is a partial
+      PropertyProfile; status reports the fetch outcome.
+    attributes:
+      status: {required: true, description: success | not_found | timeout | api_error | parse_error | invalid_address | ambiguous}
+      query_address: {}
+      query_parcel_number: {}
+      assessor_url: {range: uri}
+      profile: {range: PropertyProfile, inlined: true}
+      error: {}
+      provenance: {range: Provenance, required: true}
+      extras: {range: Any}
+
+  ExtractionObservation:
+    description: >-
+      Capture envelope for LLM or scrape extraction (suitable as an LLM
+      structured-output target). The payload is a partial
+      PropertyProfile; category classifies the source page.
+    attributes:
+      category: {required: true, description: sales_transaction | sale_listing | lease_listing | in_place_lease | public_data | other}
+      source_url: {range: uri}
+      extracted_at: {range: datetime}
+      model: {description: Extraction model identifier}
+      profile: {range: PropertyProfile, inlined: true}
+      provenance: {range: Provenance, required: true}
+      extras: {range: Any}

@@ -1,0 +1,668 @@
+{
+  "parties": [
+    {
+      "id": "party-garner-d",
+      "kind": "person",
+      "name": "Garner, Daniel C",
+      "normalized_name": "garner daniel c",
+      "name_first": "Daniel",
+      "name_middle": "C",
+      "name_last": "Garner",
+      "addresses": [
+        {
+          "address": "addr-mailing-crossing",
+          "kind": "mailing",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "party-bank-ny",
+      "kind": "organization",
+      "organization_kind": "lender",
+      "name": "Bank New York",
+      "normalized_name": "bank new york"
+    },
+    {
+      "id": "party-lowell-gary",
+      "kind": "person",
+      "name": "Lowell Gary A",
+      "normalized_name": "lowell gary a",
+      "name_first": "Gary",
+      "name_middle": "A",
+      "name_last": "Lowell"
+    },
+    {
+      "id": "party-lowell-karen",
+      "kind": "person",
+      "name": "Lowell Karen J",
+      "normalized_name": "lowell karen j",
+      "name_first": "Karen",
+      "name_middle": "J",
+      "name_last": "Lowell"
+    },
+    {
+      "id": "party-suntrust-mtg",
+      "kind": "organization",
+      "organization_kind": "lender",
+      "name": "SUNTRUST MTG INC",
+      "normalized_name": "suntrust mtg inc"
+    },
+    {
+      "id": "party-suntrust-bank",
+      "kind": "organization",
+      "organization_kind": "lender",
+      "name": "SUNTRUST BANK",
+      "normalized_name": "suntrust bank"
+    },
+    {
+      "id": "party-truist",
+      "kind": "organization",
+      "organization_kind": "lender",
+      "name": "TRUIST BANK",
+      "normalized_name": "truist bank"
+    }
+  ],
+  "addresses": [
+    {
+      "id": "addr-situs-sfr-example",
+      "country": "US",
+      "street_number": "104",
+      "street_name": "Sample Knoll",
+      "street_suffix": "Way",
+      "city": "McDonough",
+      "region": "GA",
+      "postal_code": "30253",
+      "postal_code_suffix": "3758",
+      "admin_area": "Henry",
+      "admin_area_code": "13151",
+      "address_hash": "example-sfr-situs-hash",
+      "location": {
+        "latitude": 33.45,
+        "longitude": -84.16
+      },
+      "location_accuracy": "rooftop"
+    },
+    {
+      "id": "addr-mailing-crossing",
+      "country": "US",
+      "street_number": "608",
+      "street_name": "Winslow",
+      "street_suffix": "Blvd",
+      "city": "McDonough",
+      "region": "GA",
+      "postal_code": "30253",
+      "postal_code_suffix": "8110",
+      "admin_area": "Henry",
+      "address_hash": "example-sfr-mailing-hash",
+      "location": {
+        "latitude": 33.42,
+        "longitude": -84.16
+      }
+    }
+  ],
+  "jurisdictions": [
+    {
+      "id": "juris-henry-ga",
+      "country": "US",
+      "region": "GA",
+      "name": "Henry",
+      "kind": "county",
+      "authority_code": "13151"
+    }
+  ],
+  "property": {
+    "id": "prop-sfr-example",
+    "property_use_class": "residential",
+    "property_use_type": "single_family_detached",
+    "property_use_system": "pucs_1_0",
+    "situs_address": "addr-situs-sfr-example",
+    "location": {
+      "latitude": 33.45,
+      "longitude": -84.16
+    },
+    "extras": {
+      "vendor_property_type_detail": "Single Family",
+      "standardized_land_use_code": "1001",
+      "school_district": "Henry County School District"
+    }
+  },
+  "parcels": [
+    {
+      "id": "parcel-m01500000000",
+      "jurisdiction": "juris-henry-ga",
+      "parcel_number": "M01500000000",
+      "normalized_parcel_number": "m01500000000",
+      "legal_description": "LLOT: 132 LDIST:7 LOT:6 BLOCK:A PHASE:1",
+      "land_area": {
+        "value": 10669,
+        "unit": "sqft"
+      }
+    }
+  ],
+  "property_parcels": [
+    {
+      "id": "pp-tk-1",
+      "property": "prop-sfr-example",
+      "parcel": "parcel-m01500000000",
+      "is_primary": true
+    }
+  ],
+  "site": {
+    "id": "site-tk-1",
+    "property": "prop-sfr-example",
+    "lot_size": {
+      "value": 0.244,
+      "unit": "acre"
+    },
+    "zoning_code": "R2",
+    "subdivision": "WHISPERING PINES",
+    "lot_number": "6",
+    "block": "A",
+    "phase_number": "1",
+    "tract_number": "WHISPERING PINES",
+    "extras": {
+      "estimated_lot_size_sqft": 10671,
+      "land_lot": "132",
+      "district": "7",
+      "assessors_map_reference": "MB 20 PG 36",
+      "municipality": "Mcdonough"
+    }
+  },
+  "structures": [
+    {
+      "id": "struct-tk-1",
+      "property": "prop-sfr-example",
+      "kind": "building",
+      "living_area": {
+        "value": 1300,
+        "unit": "sqft"
+      },
+      "gross_area": {
+        "value": 1300,
+        "unit": "sqft"
+      },
+      "ground_floor_area": {
+        "value": 651,
+        "unit": "sqft"
+      },
+      "garage_area": {
+        "value": 385,
+        "unit": "sqft"
+      },
+      "areas": [
+        {
+          "kind": "garage_finished",
+          "area": {
+            "value": 385,
+            "unit": "sqft"
+          }
+        }
+      ],
+      "year_built": 1992,
+      "effective_year_built": 1992,
+      "stories": 2,
+      "unit_count": 1,
+      "construction_type": "Wood",
+      "exterior_wall_type": "Masonry",
+      "roof_material_type": "Asphalt",
+      "roof_style_type": "Gable",
+      "condition_rating": "Average",
+      "quality_rating": "C",
+      "rating_system": "local",
+      "heating_types": [
+        "Forced Air Unit"
+      ],
+      "cooling_types": [
+        "Central"
+      ],
+      "features": [
+        "Air Conditioning",
+        "Central Air Conditioning",
+        "Patio",
+        "Porch",
+        "Fireplace",
+        "Garage",
+        "Attached Garage"
+      ],
+      "residential": {
+        "bedrooms_total": 3,
+        "bathrooms_full": 2,
+        "rooms_total": 5,
+        "garage_type": "garage",
+        "garage_attachment": "attached",
+        "parking_spaces": 1,
+        "fireplaces": 1,
+        "extras": {
+          "other_rooms": [
+            "Utility Room"
+          ],
+          "bath_fixture_count": 9,
+          "patio": "Patio",
+          "porch": "Porch - Open"
+        }
+      },
+      "extras": {
+        "total_building_area_code": "E",
+        "total_building_area_code_description": "Heated Area",
+        "interior_walls": "Gypsum Board",
+        "floor_cover": "Carpet",
+        "building_condition_code": "6",
+        "building_quality_code": "7"
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "id": "assess-tk-2023",
+      "parcel": "parcel-m01500000000",
+      "jurisdiction": "juris-henry-ga",
+      "tax_year": 2023,
+      "roll_type": "original",
+      "assessed_land_value": {
+        "amount": "12000",
+        "currency": "USD"
+      },
+      "assessed_improvement_value": {
+        "amount": "71520",
+        "currency": "USD"
+      },
+      "assessed_total_value": {
+        "amount": "83520",
+        "currency": "USD"
+      },
+      "market_land_value": {
+        "amount": "30000",
+        "currency": "USD"
+      },
+      "market_improvement_value": {
+        "amount": "178800",
+        "currency": "USD"
+      },
+      "market_total_value": {
+        "amount": "208800",
+        "currency": "USD"
+      }
+    }
+  ],
+  "tax_bills": [
+    {
+      "id": "tax-tk-2022",
+      "parcel": "parcel-m01500000000",
+      "jurisdiction": "juris-henry-ga",
+      "tax_year": 2022,
+      "amount_billed": {
+        "amount": "2596.65",
+        "currency": "USD"
+      },
+      "rate_code_area": "0002"
+    }
+  ],
+  "transfers": [
+    {
+      "id": "xfer-2006-foreclosure",
+      "property": "prop-sfr-example",
+      "parcel": "parcel-m01500000000",
+      "transfer_kind": "foreclosure",
+      "document_type": {
+        "system": "vendor",
+        "display": "Foreclosure"
+      },
+      "recorded_on": "2006-12-27",
+      "effective_on": "2006-12-05",
+      "consideration": {
+        "amount": "84723",
+        "currency": "USD"
+      },
+      "price_disclosure": "estimated",
+      "price_code": {
+        "system": "vendor",
+        "code": "13",
+        "display": "Full amount computed from Transfer Tax or Excise Tax."
+      },
+      "recording_book": "9000",
+      "recording_page": "1",
+      "is_distressed": true,
+      "parties": [
+        {
+          "role": "grantor",
+          "name": "Lowell Gary A",
+          "party": "party-lowell-gary",
+          "sequence": 1
+        },
+        {
+          "role": "grantor",
+          "name": "Lowell Karen J",
+          "party": "party-lowell-karen",
+          "sequence": 2
+        },
+        {
+          "role": "grantee",
+          "name": "Bank New York",
+          "party": "party-bank-ny",
+          "sequence": 1
+        }
+      ]
+    },
+    {
+      "id": "xfer-2007-deed",
+      "property": "prop-sfr-example",
+      "parcel": "parcel-m01500000000",
+      "transfer_kind": "deed",
+      "document_type": {
+        "system": "vendor",
+        "display": "Deed"
+      },
+      "recorded_on": "2007-09-14",
+      "effective_on": "2007-07-16",
+      "consideration": {
+        "amount": "82000",
+        "currency": "USD"
+      },
+      "price_disclosure": "estimated",
+      "price_code": {
+        "system": "vendor",
+        "code": "13",
+        "display": "Full amount computed from Transfer Tax or Excise Tax."
+      },
+      "recording_book": "10000",
+      "recording_page": "1",
+      "parties": [
+        {
+          "role": "grantor",
+          "name": "Bnak New York",
+          "party": "party-bank-ny",
+          "sequence": 1,
+          "extras": {
+            "note": "name as recorded (sic)"
+          }
+        },
+        {
+          "role": "grantee",
+          "name": "Garner Daniel C",
+          "party": "party-garner-d",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "sales": [
+    {
+      "id": "sale-2006-foreclosure",
+      "property": "prop-sfr-example",
+      "transfer": "xfer-2006-foreclosure",
+      "sale_date": "2006-12-05",
+      "sale_price": {
+        "amount": "84723",
+        "currency": "USD"
+      },
+      "price_disclosure": "estimated",
+      "price_code": {
+        "system": "vendor",
+        "code": "13",
+        "display": "Full amount computed from Transfer Tax or Excise Tax."
+      },
+      "sale_type": "auction",
+      "price_per_area": {
+        "amount": "65",
+        "currency": "USD",
+        "denominator": "sqft"
+      },
+      "parties": [
+        {
+          "role": "buyer",
+          "name": "Bank New York",
+          "party": "party-bank-ny",
+          "sequence": 1
+        },
+        {
+          "role": "seller",
+          "name": "Lowell Gary A",
+          "party": "party-lowell-gary",
+          "sequence": 1
+        },
+        {
+          "role": "seller",
+          "name": "Lowell Karen J",
+          "party": "party-lowell-karen",
+          "sequence": 2
+        }
+      ]
+    },
+    {
+      "id": "sale-2007-reo",
+      "property": "prop-sfr-example",
+      "transfer": "xfer-2007-deed",
+      "sale_date": "2007-07-16",
+      "sale_price": {
+        "amount": "82000",
+        "currency": "USD"
+      },
+      "price_disclosure": "estimated",
+      "price_code": {
+        "system": "vendor",
+        "code": "13",
+        "display": "Full amount computed from Transfer Tax or Excise Tax."
+      },
+      "sale_type": "reo",
+      "price_per_area": {
+        "amount": "63",
+        "currency": "USD",
+        "denominator": "sqft"
+      },
+      "financing": "conventional",
+      "parties": [
+        {
+          "role": "buyer",
+          "name": "Garner Daniel C",
+          "party": "party-garner-d",
+          "sequence": 1
+        },
+        {
+          "role": "seller",
+          "name": "Bnak New York",
+          "party": "party-bank-ny",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "loans": [
+    {
+      "id": "loan-2007-suntrust-mtg",
+      "property": "prop-sfr-example",
+      "parcel": "parcel-m01500000000",
+      "transfer": "xfer-2007-deed",
+      "is_purchase_money": true,
+      "recorded_on": "2007-09-14",
+      "loan_amount": {
+        "amount": "73800",
+        "currency": "USD"
+      },
+      "lender_name": "SUNTRUST MTG INC",
+      "lender_type": "bank",
+      "loan_type": "conventional",
+      "purpose": "purchase",
+      "interest_rate": 6.62,
+      "term_months": 180,
+      "due_date": "2022-07-16",
+      "status": "satisfied",
+      "extras": {
+        "status_inference": "open lien report shows only the 2021 loan active"
+      },
+      "parties": [
+        {
+          "role": "borrower",
+          "name": "DANIEL C GARNER",
+          "party": "party-garner-d",
+          "sequence": 1
+        },
+        {
+          "role": "lender",
+          "name": "SUNTRUST MTG INC",
+          "party": "party-suntrust-mtg",
+          "sequence": 1
+        }
+      ]
+    },
+    {
+      "id": "loan-2016-suntrust",
+      "property": "prop-sfr-example",
+      "parcel": "parcel-m01500000000",
+      "recorded_on": "2016-06-01",
+      "document_number": "2016.00001",
+      "loan_amount": {
+        "amount": "80000",
+        "currency": "USD"
+      },
+      "lender_name": "SUNTRUST BANK",
+      "lender_type": "bank",
+      "loan_type": "conventional",
+      "purpose": "refinance",
+      "interest_rate": 3.59,
+      "term_months": 180,
+      "due_date": "2031-05-20",
+      "status": "satisfied",
+      "extras": {
+        "source_note": "recording found in deedHistory as documentTypeCode 93 (Stand Alone Mortgage)",
+        "status_inference": "open lien report shows only the 2021 loan active"
+      },
+      "parties": [
+        {
+          "role": "borrower",
+          "name": "GARNER DANIEL C",
+          "party": "party-garner-d",
+          "sequence": 1
+        },
+        {
+          "role": "lender",
+          "name": "SUNTRUST BANK",
+          "party": "party-suntrust-bank",
+          "sequence": 1
+        }
+      ],
+      "recording_book": "14000",
+      "recording_page": "1"
+    },
+    {
+      "id": "loan-2021-truist",
+      "property": "prop-sfr-example",
+      "parcel": "parcel-m01500000000",
+      "recorded_on": "2021-03-19",
+      "document_number": "2021.00002",
+      "loan_amount": {
+        "amount": "109298",
+        "currency": "USD"
+      },
+      "lender_name": "TRUIST BANK",
+      "lender_type": "bank",
+      "loan_type": "conventional",
+      "purpose": "refinance",
+      "interest_rate": 2.73,
+      "term_months": 180,
+      "due_date": "2036-01-01",
+      "lien_position": 1,
+      "status": "active",
+      "extras": {
+        "source_note": "recording found in deedHistory as documentTypeCode 93 (Stand Alone Mortgage)"
+      },
+      "parties": [
+        {
+          "role": "borrower",
+          "name": "GARNER DANIEL C",
+          "party": "party-garner-d",
+          "sequence": 1
+        },
+        {
+          "role": "lender",
+          "name": "TRUIST BANK",
+          "party": "party-truist",
+          "sequence": 1
+        }
+      ],
+      "recording_book": "17000",
+      "recording_page": "1"
+    }
+  ],
+  "ownership": [
+    {
+      "id": "own-lowell",
+      "property": "prop-sfr-example",
+      "ended_on": "2006-12-27",
+      "disposed_via_transfer": "xfer-2006-foreclosure",
+      "interests": [
+        {
+          "party": "party-lowell-gary",
+          "role": "owner"
+        },
+        {
+          "party": "party-lowell-karen",
+          "role": "owner"
+        }
+      ]
+    },
+    {
+      "id": "own-bank-ny",
+      "property": "prop-sfr-example",
+      "started_on": "2006-12-27",
+      "ended_on": "2007-09-14",
+      "acquired_via_transfer": "xfer-2006-foreclosure",
+      "disposed_via_transfer": "xfer-2007-deed",
+      "interests": [
+        {
+          "party": "party-bank-ny",
+          "role": "owner"
+        }
+      ]
+    },
+    {
+      "id": "own-garner",
+      "property": "prop-sfr-example",
+      "started_on": "2007-09-14",
+      "mailing_address": "addr-mailing-crossing",
+      "acquired_via_transfer": "xfer-2007-deed",
+      "interests": [
+        {
+          "party": "party-garner-d",
+          "role": "owner",
+          "is_owner_occupied": false
+        }
+      ]
+    }
+  ],
+  "valuations": [
+    {
+      "id": "avm-2023-06",
+      "property": "prop-sfr-example",
+      "kind": "avm",
+      "value_type": "market_value",
+      "value": {
+        "amount": "246583.05",
+        "currency": "USD"
+      },
+      "value_low": {
+        "amount": "194406",
+        "currency": "USD"
+      },
+      "value_high": {
+        "amount": "275277",
+        "currency": "USD"
+      },
+      "confidence_score": 77,
+      "forecast_standard_deviation": 0.1721,
+      "as_of_date": "2023-06-21"
+    }
+  ],
+  "provenance": {
+    "provider": "vendor",
+    "retrieved_at": "2023-08-27T20:32:14Z",
+    "method": "api",
+    "verification": "unverified"
+  },
+  "extras": {
+    "vendor_record_id": "example-vendor-record-sfr",
+    "vendor_date_modified": "2023-08-23T13:33:06.770Z",
+    "congressional_district": "10",
+    "census_tract": "070317"
+  }
+}

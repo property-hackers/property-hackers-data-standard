@@ -1,0 +1,598 @@
+{
+  "parties": [
+    {
+      "id": "party-ta-fulfillment",
+      "kind": "organization",
+      "organization_kind": "llc",
+      "name": "Ta Fulfillment Center Orl Llc",
+      "normalized_name": "ta fulfillment center orl llc",
+      "addresses": [
+        {
+          "address": "addr-mailing-atlanta",
+          "kind": "mailing",
+          "is_primary": true
+        }
+      ]
+    },
+    {
+      "id": "party-relp-mojo",
+      "kind": "organization",
+      "organization_kind": "llc",
+      "name": "RELP MOJO LLC",
+      "normalized_name": "relp mojo llc"
+    },
+    {
+      "id": "party-crockett",
+      "kind": "organization",
+      "organization_kind": "llc",
+      "name": "CROCKETT DEVELOPEMENT PROPERTY LLC",
+      "normalized_name": "crockett developement property llc"
+    },
+    {
+      "id": "party-wells-fargo",
+      "kind": "organization",
+      "organization_kind": "lender",
+      "name": "WELLS FARGO BANK NA",
+      "normalized_name": "wells fargo bank na"
+    },
+    {
+      "id": "party-sunbelt",
+      "kind": "organization",
+      "organization_kind": "corporation",
+      "name": "SUNBELT RENTALS INC",
+      "normalized_name": "sunbelt rentals inc"
+    },
+    {
+      "id": "party-kalmanson",
+      "kind": "person",
+      "name": "Barry Kalmanson",
+      "normalized_name": "barry kalmanson",
+      "name_first": "Barry",
+      "name_last": "Kalmanson",
+      "addresses": [
+        {
+          "address": "addr-trustee",
+          "kind": "physical"
+        }
+      ],
+      "contacts": [
+        {
+          "kind": "phone",
+          "value": "407-645-4500"
+        }
+      ]
+    },
+    {
+      "id": "party-doe",
+      "kind": "person",
+      "name": "DOE ALEX",
+      "normalized_name": "doe alex",
+      "name_first": "Alex",
+      "name_last": "Doe"
+    }
+  ],
+  "addresses": [
+    {
+      "id": "addr-situs",
+      "country": "US",
+      "street_number": "12340",
+      "street_name": "Boggy Creek",
+      "street_suffix": "Rd",
+      "city": "Orlando",
+      "region": "FL",
+      "postal_code": "32824",
+      "postal_code_suffix": "6902",
+      "admin_area": "Orange",
+      "admin_area_code": "12095",
+      "address_hash": "example-com1-situs-hash",
+      "location": {
+        "latitude": 28.384266,
+        "longitude": -81.316246
+      },
+      "location_accuracy": "postal_centroid"
+    },
+    {
+      "id": "addr-mailing-atlanta",
+      "country": "US",
+      "street_number": "3333",
+      "street_name": "Riverwood",
+      "street_suffix": "Pkwy",
+      "street_post_direction": "SE",
+      "unit_type": "STE",
+      "unit_number": "200",
+      "city": "Atlanta",
+      "region": "GA",
+      "postal_code": "30339",
+      "postal_code_suffix": "6411",
+      "admin_area": "Cobb",
+      "address_hash": "example-com1-mailing-hash",
+      "location": {
+        "latitude": 33.87812,
+        "longitude": -84.45943
+      }
+    },
+    {
+      "id": "addr-trustee",
+      "country": "US",
+      "unformatted_address": "500 N Maitland Ave Ste 305",
+      "address_hash": "trustee-500-n-maitland"
+    }
+  ],
+  "jurisdictions": [
+    {
+      "id": "juris-orange-fl",
+      "country": "US",
+      "region": "FL",
+      "name": "Orange",
+      "kind": "county",
+      "authority_code": "12095"
+    }
+  ],
+  "property": {
+    "id": "prop-amazon-orl",
+    "property_use_class": "industrial",
+    "property_use_type": "warehouse",
+    "property_use_system": "pucs_1_0",
+    "situs_address": "addr-situs",
+    "location": {
+      "latitude": 28.384266,
+      "longitude": -81.316246
+    },
+    "building_count": 2,
+    "extras": {
+      "vendor_property_type_detail": "Warehouse (Industrial)",
+      "standardized_land_use_code": "5003"
+    }
+  },
+  "identifiers": [
+    {
+      "id": "ident-apn-alt",
+      "property": "prop-amazon-orl",
+      "scheme": "apn_alternate",
+      "namespace": "US/FL/orange",
+      "value": "302421312700031"
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel-1",
+      "jurisdiction": "juris-orange-fl",
+      "parcel_number": "21-24-30-3127-00-031",
+      "normalized_parcel_number": "212430312700031",
+      "legal_description": "GINN - AIRPORT 55/44 PT OF LOT 3 DESC AS COMM AT THE SE CORNER OF SEC 31-24-30 ...",
+      "land_area": {
+        "value": 5688936,
+        "unit": "sqft"
+      }
+    }
+  ],
+  "property_parcels": [
+    {
+      "id": "pp-1",
+      "property": "prop-amazon-orl",
+      "parcel": "parcel-1",
+      "is_primary": true
+    }
+  ],
+  "site": {
+    "id": "site-1",
+    "property": "prop-amazon-orl",
+    "lot_size": {
+      "value": 130.6,
+      "unit": "acre"
+    },
+    "zoning_code": "P-D",
+    "subdivision": "GINN - AIRPORT",
+    "lot_number": "3",
+    "tract_number": "GINN - AIRPORT",
+    "section_township_range": "SEC 21 TWN 24S RNG 30E",
+    "extras": {
+      "estimated_lot_size_sqft": 5688807,
+      "lot_code": "P",
+      "municipality": "Un-incorporated"
+    }
+  },
+  "structures": [
+    {
+      "id": "struct-1",
+      "property": "prop-amazon-orl",
+      "kind": "building",
+      "gross_area": {
+        "value": 886831,
+        "unit": "sqft"
+      },
+      "living_area": {
+        "value": 870522,
+        "unit": "sqft"
+      },
+      "ground_floor_area": {
+        "value": 806970,
+        "unit": "sqft"
+      },
+      "garage_area": {
+        "value": 2500,
+        "unit": "sqft"
+      },
+      "year_built": 2018,
+      "effective_year_built": 2018,
+      "stories": 1,
+      "unit_count": 1,
+      "construction_type": "Steel",
+      "exterior_wall_type": "Concrete",
+      "roof_material_type": "Other",
+      "roof_style_type": "Rigid Frame Bar Joist",
+      "condition_rating": "Good",
+      "rating_system": "local",
+      "heating_types": [
+        "Forced Air Unit"
+      ],
+      "heating_fuel_type": "Electric",
+      "cooling_types": [
+        "Packaged Unit"
+      ],
+      "features": [
+        "Air Conditioning",
+        "Garage"
+      ],
+      "commercial": {
+        "building_class": null,
+        "extras": {
+          "vendor_building_class": "Buildings having wood or wood and steel frames.",
+          "vendor_building_class_code": "4"
+        }
+      },
+      "extras": {
+        "bathroom_count": 73,
+        "bath_fixture_count": 219,
+        "room_count": 4,
+        "interior_walls": "Minimum/Plywood",
+        "floor_cover": "Concrete",
+        "total_building_area_code": "R"
+      }
+    }
+  ],
+  "assessments": [
+    {
+      "id": "assess-2022",
+      "parcel": "parcel-1",
+      "jurisdiction": "juris-orange-fl",
+      "tax_year": 2022,
+      "roll_type": "original",
+      "assessed_land_value": {
+        "amount": "21764692",
+        "currency": "USD"
+      },
+      "assessed_improvement_value": {
+        "amount": "78509705",
+        "currency": "USD"
+      },
+      "assessed_total_value": {
+        "amount": "100274397",
+        "currency": "USD"
+      },
+      "market_land_value": {
+        "amount": "21764692",
+        "currency": "USD"
+      },
+      "market_improvement_value": {
+        "amount": "78509705",
+        "currency": "USD"
+      },
+      "market_total_value": {
+        "amount": "100274397",
+        "currency": "USD"
+      }
+    }
+  ],
+  "tax_bills": [
+    {
+      "id": "tax-2022",
+      "parcel": "parcel-1",
+      "jurisdiction": "juris-orange-fl",
+      "tax_year": 2022,
+      "amount_billed": {
+        "amount": "1474668.03",
+        "currency": "USD"
+      },
+      "rate_code_area": "10-ORG"
+    }
+  ],
+  "transfers": [
+    {
+      "id": "xfer-2017-06",
+      "property": "prop-amazon-orl",
+      "parcel": "parcel-1",
+      "transfer_kind": "deed",
+      "document_type": {
+        "system": "vendor",
+        "code": "27",
+        "display": "Deed"
+      },
+      "recorded_on": "2017-06-01",
+      "effective_on": "2017-06-01",
+      "consideration": {
+        "amount": "26900000",
+        "currency": "USD"
+      },
+      "parties": [
+        {
+          "role": "grantee",
+          "name": "RELP MOJO LLC",
+          "party": "party-relp-mojo",
+          "sequence": 1
+        }
+      ]
+    },
+    {
+      "id": "xfer-2017-07",
+      "property": "prop-amazon-orl",
+      "parcel": "parcel-1",
+      "transfer_kind": "special_warranty_deed",
+      "document_type": {
+        "system": "vendor",
+        "code": "68",
+        "display": "Special Warranty Deed"
+      },
+      "recorded_on": "2017-07-11",
+      "effective_on": "2017-07-07",
+      "consideration": {
+        "amount": "2690000",
+        "currency": "USD"
+      },
+      "document_number": "2017.380831",
+      "parties": [
+        {
+          "role": "grantor",
+          "name": "CROCKETT DEVELOPEMENT PROPERTY LLC",
+          "party": "party-crockett",
+          "sequence": 1
+        },
+        {
+          "role": "grantee",
+          "name": "RELP MOJO LLC",
+          "party": "party-relp-mojo",
+          "sequence": 1
+        }
+      ]
+    },
+    {
+      "id": "xfer-2018-09",
+      "property": "prop-amazon-orl",
+      "parcel": "parcel-1",
+      "transfer_kind": "special_warranty_deed",
+      "document_type": {
+        "system": "vendor",
+        "code": "68",
+        "display": "Special Warranty Deed"
+      },
+      "recorded_on": "2018-09-21",
+      "effective_on": "2018-09-20",
+      "consideration": {
+        "amount": "108000000",
+        "currency": "USD"
+      },
+      "document_number": "2018.559335",
+      "parties": [
+        {
+          "role": "grantor",
+          "name": "RELP MOJO LLC",
+          "party": "party-relp-mojo",
+          "sequence": 1
+        },
+        {
+          "role": "grantee",
+          "name": "TA FULFILLMENT CENTER ORL LLC",
+          "party": "party-ta-fulfillment",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "sales": [
+    {
+      "id": "sale-2017",
+      "property": "prop-amazon-orl",
+      "transfer": "xfer-2017-07",
+      "sale_date": "2017-07-07",
+      "sale_price": {
+        "amount": "2690000",
+        "currency": "USD"
+      },
+      "price_disclosure": "full",
+      "price_code": {
+        "system": "vendor",
+        "code": "14",
+        "display": "Full amount stated on Document."
+      },
+      "sale_type": "arms_length",
+      "price_per_area": {
+        "amount": "3",
+        "currency": "USD",
+        "denominator": "sqft"
+      },
+      "parties": [
+        {
+          "role": "buyer",
+          "name": "Relp Mojo Llc",
+          "party": "party-relp-mojo",
+          "sequence": 1
+        },
+        {
+          "role": "seller",
+          "name": "Crockett Developement Property Llc",
+          "party": "party-crockett",
+          "sequence": 1
+        }
+      ]
+    },
+    {
+      "id": "sale-2018",
+      "property": "prop-amazon-orl",
+      "transfer": "xfer-2018-09",
+      "sale_date": "2018-09-20",
+      "sale_price": {
+        "amount": "108000000",
+        "currency": "USD"
+      },
+      "price_disclosure": "full",
+      "price_code": {
+        "system": "vendor",
+        "code": "14",
+        "display": "Full amount stated on Document."
+      },
+      "sale_type": "arms_length",
+      "price_per_area": {
+        "amount": "122",
+        "currency": "USD",
+        "denominator": "sqft"
+      },
+      "parties": [
+        {
+          "role": "buyer",
+          "name": "Ta Fulfillment Center Orl Llc",
+          "party": "party-ta-fulfillment",
+          "sequence": 1
+        },
+        {
+          "role": "seller",
+          "name": "Relp Mojo Llc",
+          "party": "party-relp-mojo",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "loans": [
+    {
+      "id": "loan-wf-2017",
+      "property": "prop-amazon-orl",
+      "parcel": "parcel-1",
+      "transfer": "xfer-2017-07",
+      "is_purchase_money": true,
+      "recorded_on": "2017-07-11",
+      "document_number": "2017.380833",
+      "loan_amount": {
+        "amount": "45000",
+        "currency": "USD"
+      },
+      "lender_name": "WELLS FARGO BANK NA",
+      "lender_type": "bank",
+      "loan_type": "commercial",
+      "interest_rate": 3.95,
+      "term_months": 360,
+      "status": "unknown",
+      "parties": [
+        {
+          "role": "borrower",
+          "name": "RELP MOJO LLC",
+          "party": "party-relp-mojo",
+          "sequence": 1
+        },
+        {
+          "role": "lender",
+          "name": "WELLS FARGO BANK NA",
+          "party": "party-wells-fargo",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "liens": [
+    {
+      "id": "lien-mechanics-2021",
+      "property": "prop-amazon-orl",
+      "kind": "mechanics",
+      "amount": {
+        "amount": "13934",
+        "currency": "USD"
+      },
+      "recorded_on": "2021-10-06",
+      "document_number": "20210609763",
+      "document_type": {
+        "system": "vendor",
+        "code": "MLN",
+        "display": "MECHANICS LIEN"
+      },
+      "parties": [
+        {
+          "role": "claimant",
+          "name": "SUNBELT RENTALS INC",
+          "party": "party-sunbelt",
+          "sequence": 1
+        },
+        {
+          "role": "debtor",
+          "name": "DOE ALEX",
+          "party": "party-doe",
+          "sequence": 1,
+          "extras": {
+            "source_role": "Owner"
+          }
+        }
+      ]
+    }
+  ],
+  "foreclosure_cases": [
+    {
+      "id": "fc-2021",
+      "property": "prop-amazon-orl",
+      "opened_on": "2021-12-07",
+      "filings": [
+        {
+          "status": "lis_pendens",
+          "document_type": {
+            "system": "vendor",
+            "code": "79",
+            "display": "Notice of Lis Pendens"
+          },
+          "recorded_on": "2021-12-07",
+          "extras": {
+            "transaction_id": "5109927168",
+            "status_code": "LP",
+            "status_display": "Notice of Default and Lis Pendens"
+          }
+        }
+      ],
+      "parties": [
+        {
+          "role": "lender",
+          "name": "Sunbelt Rentals Inc",
+          "party": "party-sunbelt",
+          "sequence": 1
+        },
+        {
+          "role": "trustee",
+          "name": "Barry Kalmanson",
+          "party": "party-kalmanson",
+          "sequence": 1
+        }
+      ]
+    }
+  ],
+  "ownership": [
+    {
+      "id": "own-2018",
+      "property": "prop-amazon-orl",
+      "started_on": "2018-09-21",
+      "mailing_address": "addr-mailing-atlanta",
+      "acquired_via_transfer": "xfer-2018-09",
+      "interests": [
+        {
+          "party": "party-ta-fulfillment",
+          "role": "owner",
+          "is_owner_occupied": false
+        }
+      ]
+    }
+  ],
+  "provenance": {
+    "provider": "vendor",
+    "retrieved_at": "2023-08-28T13:27:32Z",
+    "method": "api",
+    "verification": "unverified"
+  },
+  "extras": {
+    "vendor_record_id": "example-vendor-record-com1",
+    "vendor_date_modified": "2023-08-24T08:21:28.669Z"
+  }
+}

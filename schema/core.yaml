@@ -1,0 +1,237 @@
+# PHDS core — value types, enums, provenance.
+# NOTE: schema ids/prefixes use example.org placeholders until a real domain
+# or w3id.org namespace is registered for PHDS.
+id: https://example.org/phds/core
+name: phds_core
+title: PHDS Core Types
+license: MIT
+version: 0.1.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  phds: https://example.org/phds/
+default_prefix: phds
+default_range: string
+
+imports:
+  - linkml:types
+
+types:
+  DecimalString:
+    typeof: string
+    description: >-
+      Canonical decimal string — optional leading '-', digits, optional
+      fractional part; no exponent notation. Used for money amounts so the
+      exact lexical value (including scale) survives every JSON parser
+      (avoids IEEE-754 float corruption in JS et al.). Clients map to
+      language-native decimals (Python Decimal, Elixir Decimal, Ruby
+      BigDecimal, JS string/big.js).
+    pattern: "^-?\\d+(\\.\\d+)?$"
+
+enums:
+  AreaUnit:
+    permissible_values: {sqft: {}, sqm: {}, acre: {}, hectare: {}}
+  LengthUnit:
+    permissible_values: {ft: {}, m: {}}
+  CaptureMethod:
+    permissible_values: {api: {}, scrape: {}, llm_extraction: {}, manual: {}, bulk: {}}
+  VerificationStatus:
+    permissible_values:
+      unverified: {}
+      pending_review: {}
+      verified: {}
+      disputed: {}
+      rejected: {}
+  PartyKind:
+    permissible_values: {person: {}, organization: {}}
+  OrganizationKind:
+    permissible_values:
+      llc: {}
+      corporation: {}
+      partnership: {}
+      trust: {}
+      estate: {}
+      government: {}
+      nonprofit: {}
+      reit: {}
+      fund: {}
+      lender: {}
+      brokerage: {}
+      hoa: {}
+      other: {}
+  SaleTypeEnum:
+    permissible_values:
+      arms_length: {}
+      reo: {description: Real-estate-owned / bank sale}
+      short_sale: {}
+      auction: {}
+      related_party: {}
+      portfolio: {}
+      partial_interest: {}
+      land_contract: {}
+      new_construction: {}
+      other: {}
+  PriceDisclosure:
+    description: Reliability of a recorded price
+    permissible_values:
+      full: {}
+      partial: {}
+      estimated: {}
+      nominal: {}
+      non_disclosure: {}
+      unknown: {}
+  LeaseTypeEnum:
+    permissible_values:
+      gross: {}
+      modified_gross: {}
+      triple_net: {}
+      double_net: {}
+      single_net: {}
+      absolute_net: {}
+      percentage: {}
+      ground: {}
+      residential: {}
+      other: {}
+  RentPeriod:
+    permissible_values:
+      daily: {}
+      monthly: {}
+      annual: {}
+      per_area_annual: {}
+      per_area_monthly: {}
+  RateBasis:
+    permissible_values:
+      per_unit: {}
+      per_bed: {}
+      per_area: {}
+      per_room: {}
+      per_key: {}
+      per_slip: {}
+      per_stall: {}
+      per_pad: {}
+      other: {}
+  RateType:
+    permissible_values: {asking: {}, effective: {}, contract: {}}
+  ListingKind:
+    permissible_values: {for_sale: {}, for_lease: {}}
+  ListingStatus:
+    permissible_values:
+      active: {}
+      pending: {}
+      sold: {}
+      leased: {}
+      withdrawn: {}
+      expired: {}
+      coming_soon: {}
+      other: {}
+  ValuationKind:
+    permissible_values: {avm: {}, appraisal: {}, bpo: {}, broker_opinion: {}, internal: {}}
+  LoanStatus:
+    permissible_values:
+      active: {}
+      satisfied: {}
+      assigned: {}
+      foreclosure: {}
+      released: {}
+      unknown: {}
+  LoanEventKind:
+    permissible_values:
+      origination: {}
+      assignment: {}
+      modification: {}
+      satisfaction: {}
+      release: {}
+      default: {}
+      reinstatement: {}
+      other: {}
+  LienKind:
+    permissible_values: {tax: {}, judgment: {}, hoa: {}, mechanics: {}, municipal: {}, other: {}}
+  ParcelLineageKind:
+    permissible_values: {split: {}, merge: {}, renumber: {}}
+  EstateType:
+    permissible_values:
+      fee_simple: {}
+      leasehold: {}
+      life_estate: {}
+      cooperative_shares: {}
+      other: {}
+  StatementBasis:
+    description: What an operating statement represents.
+    permissible_values:
+      actual: {}
+      budget: {}
+      pro_forma: {}
+      stabilized: {}
+      projected: {}
+      other: {}
+  GeocodeAccuracy:
+    permissible_values:
+      rooftop: {}
+      parcel: {}
+      street: {}
+      postal_centroid: {}
+      locality_centroid: {}
+      manual: {}
+      unknown: {}
+
+classes:
+  Any:
+    class_uri: linkml:Any
+    description: Open map — the `extras` escape hatch on every entity.
+
+  Money:
+    description: Monetary amount. JSON wire format is decimal-as-string. ISO-4217 currency.
+    attributes:
+      amount: {range: DecimalString, required: true}
+      currency: {range: string, required: true, pattern: "^[A-Z]{3}$"}
+
+  Area:
+    description: Area measurement with explicit unit.
+    attributes:
+      value: {range: decimal, required: true}
+      unit: {range: AreaUnit, required: true}
+
+  Length:
+    description: Linear measurement with explicit unit.
+    attributes:
+      value: {range: decimal, required: true}
+      unit: {range: LengthUnit, required: true}
+
+  UnitRate:
+    description: Money per explicit denominator (price/sqft, rent/sqm/month, spaces/1000 sqft).
+    attributes:
+      amount: {range: DecimalString, required: true}
+      currency: {range: string, required: true, pattern: "^[A-Z]{3}$"}
+      denominator: {range: string, required: true, description: "sqft | sqm | unit | bed | key | month | sqft_month | 1000_sqft | ..."}
+
+  CodeableConcept:
+    description: Source coding preserved alongside canonical values (system + code + display).
+    attributes:
+      system: {}
+      code: {}
+      display: {}
+
+  GeoPoint:
+    description: WGS84 coordinate.
+    attributes:
+      latitude: {range: decimal, required: true, minimum_value: -90, maximum_value: 90}
+      longitude: {range: decimal, required: true, minimum_value: -180, maximum_value: 180}
+
+  Geometry:
+    description: GeoJSON Geometry object (typed-in-standard; optional everywhere).
+    attributes:
+      type: {required: true, description: "Point | MultiPolygon | ..."}
+      coordinates: {range: Any}
+
+  Provenance:
+    description: >-
+      Record-level source envelope. Pure child rows (parties, areas,
+      escalations, filings) inherit the parent envelope unless they carry
+      their own.
+    attributes:
+      provider: {}
+      source_url: {range: uri}
+      retrieved_at: {range: datetime}
+      method: {range: CaptureMethod}
+      confidence: {range: float, minimum_value: 0, maximum_value: 1}
+      verification: {range: VerificationStatus}
