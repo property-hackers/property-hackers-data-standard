@@ -42,6 +42,16 @@ enums:
       verified: {}
       disputed: {}
       rejected: {}
+  AssessorStatus:
+    description: Outcome of an assessor or public-records lookup.
+    permissible_values:
+      success: {}
+      not_found: {}
+      timeout: {}
+      api_error: {}
+      parse_error: {}
+      invalid_address: {}
+      ambiguous: {}
   PartyKind:
     permissible_values: {person: {}, organization: {}}
   OrganizationKind:
@@ -182,7 +192,10 @@ classes:
   Money:
     description: Monetary amount. JSON wire format is decimal-as-string. ISO-4217 currency.
     attributes:
-      amount: {range: DecimalString, required: true}
+      # Repeat the named type's pattern at the slot boundary because LinkML's
+      # Pydantic generator does not currently carry custom-type patterns into
+      # generated field validators.
+      amount: {range: DecimalString, required: true, pattern: "^-?\\d+(\\.\\d+)?$"}
       currency: {range: string, required: true, pattern: "^[A-Z]{3}$"}
 
   Area:
@@ -200,7 +213,7 @@ classes:
   UnitRate:
     description: Money per explicit denominator (price/sqft, rent/sqm/month, spaces/1000 sqft).
     attributes:
-      amount: {range: DecimalString, required: true}
+      amount: {range: DecimalString, required: true, pattern: "^-?\\d+(\\.\\d+)?$"}
       currency: {range: string, required: true, pattern: "^[A-Z]{3}$"}
       denominator: {range: string, required: true, description: "sqft | sqm | unit | bed | key | month | sqft_month | 1000_sqft | ..."}
 

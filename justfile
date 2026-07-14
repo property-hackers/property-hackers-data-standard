@@ -17,6 +17,7 @@ type date = string;
     rm schema/generated/phds.ts.tmp
     mkdir -p schema/generated/phds-rust
     .venv/bin/gen-rust schema/profiles.yaml --output schema/generated/phds-rust --force
+    .venv/bin/python tools/postprocess_generated.py
 
 # examples must validate; counter_examples must fail
 validate:
@@ -29,4 +30,8 @@ validate:
       else echo "PASS (correctly rejected) $f"; fi; \
     done
 
-check: gen validate
+# Generated client contracts must agree with the LinkML/JSON Schema behavior.
+test-generated:
+    .venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
+
+check: gen validate test-generated

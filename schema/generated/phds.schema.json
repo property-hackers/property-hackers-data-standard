@@ -428,8 +428,7 @@
                     ]
                 },
                 "status": {
-                    "description": "success | not_found | timeout | api_error | parse_error | invalid_address | ambiguous",
-                    "type": "string"
+                    "$ref": "#/$defs/AssessorStatus"
                 }
             },
             "required": [
@@ -438,6 +437,20 @@
             ],
             "title": "AssessorObservation",
             "type": "object"
+        },
+        "AssessorStatus": {
+            "description": "Outcome of an assessor or public-records lookup.",
+            "enum": [
+                "success",
+                "not_found",
+                "timeout",
+                "api_error",
+                "parse_error",
+                "invalid_address",
+                "ambiguous"
+            ],
+            "title": "AssessorStatus",
+            "type": "string"
         },
         "CaptureMethod": {
             "description": "",

@@ -737,6 +737,85 @@ impl ::pyo3_stub_gen::PyStubType for VerificationStatus {
 }
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
+pub enum AssessorStatus {
+    Success,
+    NotFound,
+    Timeout,
+    ApiError,
+    ParseError,
+    InvalidAddress,
+    Ambiguous,
+}
+
+impl core::fmt::Display for AssessorStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            AssessorStatus::Success => f.write_str("success"),
+            AssessorStatus::NotFound => f.write_str("not_found"),
+            AssessorStatus::Timeout => f.write_str("timeout"),
+            AssessorStatus::ApiError => f.write_str("api_error"),
+            AssessorStatus::ParseError => f.write_str("parse_error"),
+            AssessorStatus::InvalidAddress => f.write_str("invalid_address"),
+            AssessorStatus::Ambiguous => f.write_str("ambiguous"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for AssessorStatus {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            AssessorStatus::Success => "success",
+            AssessorStatus::NotFound => "not_found",
+            AssessorStatus::Timeout => "timeout",
+            AssessorStatus::ApiError => "api_error",
+            AssessorStatus::ParseError => "parse_error",
+            AssessorStatus::InvalidAddress => "invalid_address",
+            AssessorStatus::Ambiguous => "ambiguous",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for AssessorStatus {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "success" | "Success" => Ok(AssessorStatus::Success),
+                "not_found" | "NotFound" => Ok(AssessorStatus::NotFound),
+                "timeout" | "Timeout" => Ok(AssessorStatus::Timeout),
+                "api_error" | "ApiError" => Ok(AssessorStatus::ApiError),
+                "parse_error" | "ParseError" => Ok(AssessorStatus::ParseError),
+                "invalid_address" | "InvalidAddress" => Ok(AssessorStatus::InvalidAddress),
+                "ambiguous" | "Ambiguous" => Ok(AssessorStatus::Ambiguous),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for AssessorStatus: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(AssessorStatus)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for AssessorStatus {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['success', 'not_found', 'timeout', 'api_error', 'parse_error', 'invalid_address', 'ambiguous']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PartyKind {
     Person,
     Organization,
@@ -8222,7 +8301,7 @@ impl<'py> FromPyObject<'py> for Box<PropertyProfile> {
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct AssessorObservation {
-    pub status: String,
+    pub status: AssessorStatus,
     #[cfg_attr(feature = "serde", serde(default))]
     pub query_address: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -8243,7 +8322,7 @@ pub struct AssessorObservation {
 impl AssessorObservation {
     #[new]
     #[pyo3(signature = (status, provenance, query_address=None, query_parcel_number=None, assessor_url=None, profile=None, error=None, extras=None))]
-    pub fn new(status: String, provenance: serde_utils::PyValue<Provenance>, query_address: Option<String>, query_parcel_number: Option<String>, assessor_url: Option<uri>, profile: Option<serde_utils::PyValue<PropertyProfile>>, error: Option<String>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    pub fn new(status: AssessorStatus, provenance: serde_utils::PyValue<Provenance>, query_address: Option<String>, query_parcel_number: Option<String>, assessor_url: Option<uri>, profile: Option<serde_utils::PyValue<PropertyProfile>>, error: Option<String>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let provenance = provenance.into_inner();
         let profile = profile.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
@@ -8338,3 +8417,30 @@ impl<'py> FromPyObject<'py> for Box<ExtractionObservation> {
 
 #[cfg(feature = "stubgen")]
 define_stub_info_gatherer!(stub_info);
+
+
+#[cfg(all(test, feature = "serde"))]
+mod assessor_status_serde_tests {
+    use super::AssessorStatus;
+
+    #[test]
+    fn canonical_wire_values_round_trip() {
+        let cases = [
+            (AssessorStatus::Success, "success"),
+            (AssessorStatus::NotFound, "not_found"),
+            (AssessorStatus::Timeout, "timeout"),
+            (AssessorStatus::ApiError, "api_error"),
+            (AssessorStatus::ParseError, "parse_error"),
+            (AssessorStatus::InvalidAddress, "invalid_address"),
+            (AssessorStatus::Ambiguous, "ambiguous"),
+        ];
+
+        for (value, wire) in cases {
+            let encoded = serde_yml::to_string(&value).expect("serialize assessor status");
+            assert_eq!(encoded.trim(), wire);
+            let decoded: AssessorStatus =
+                serde_yml::from_str(wire).expect("deserialize assessor status");
+            assert_eq!(decoded, value);
+        }
+    }
+}
