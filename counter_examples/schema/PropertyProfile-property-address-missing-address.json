@@ -1,0 +1,6 @@
+{
+  "property": {"id": "property-address-invalid"},
+  "property_addresses": [
+    {"id": "property-address-invalid-1", "property": "property-address-invalid"}
+  ]
+}

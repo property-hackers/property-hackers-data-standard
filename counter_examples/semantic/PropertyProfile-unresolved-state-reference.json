@@ -1,0 +1,18 @@
+{
+  "property": {
+    "id": "https://example.org/properties/unresolved-state-reference"
+  },
+  "property_state_snapshots": [
+    {
+      "id": "https://example.org/property-state-snapshots/unresolved-state-reference",
+      "property": "https://example.org/properties/unresolved-state-reference",
+      "as_of_date": "2025-01-01",
+      "structure_states": [
+        {
+          "id": "https://example.org/structure-states/unresolved-state-reference",
+          "subject": "https://example.org/structures/missing"
+        }
+      ]
+    }
+  ]
+}

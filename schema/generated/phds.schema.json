@@ -5,8 +5,20 @@
             "description": "",
             "properties": {
                 "address_hash": {
-                    "description": "App-computed dedup key",
-                    "type": "string"
+                    "description": "Producer-computed matching key; comparable only under the same scheme",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "address_hash_scheme": {
+                    "description": "Producer-namespaced normalization and hashing scheme",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "admin_area": {
                     "description": "county/district name",
@@ -16,7 +28,7 @@
                     ]
                 },
                 "admin_area_code": {
-                    "description": "authority code (US: county FIPS)",
+                    "description": "authority code",
                     "type": [
                         "string",
                         "null"
@@ -43,6 +55,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "location": {
@@ -124,7 +138,7 @@
                     ]
                 },
                 "unformatted_address": {
-                    "description": "Fallback when components don't parse",
+                    "description": "Fallback when components do not parse",
                     "type": [
                         "string",
                         "null"
@@ -141,14 +155,68 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
                 "country",
-                "address_hash",
                 "id"
             ],
             "title": "Address",
+            "type": "object"
+        },
+        "AddressAssociation": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "address": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "role": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "situs | entrance | alias | address_range | former | mailing | other (open vocabulary)"
+                },
+                "valid_from": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "valid_to": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "address"
+            ],
+            "title": "AddressAssociation",
             "type": "object"
         },
         "Any": {
@@ -304,6 +372,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "jurisdiction": {
@@ -364,6 +434,15 @@
                     "maximum": 2200,
                     "minimum": 1000,
                     "type": "integer"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -379,6 +458,16 @@
             "additionalProperties": false,
             "description": "Thin capture envelope for a county assessor / public-records fetch. The payload is a sparse PropertyProfile (only the sections the source provides; a valid profile still requires its `property` section); status reports the fetch outcome. By convention profile accompanies success and error accompanies failure statuses \u2014 validators deliberately do not enforce this pairing, so consumers must branch on status, not on field presence.",
             "properties": {
+                "artifact_refs": {
+                    "description": "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "assessor_url": {
                     "format": "uri",
                     "type": [
@@ -464,6 +553,32 @@
             "title": "CaptureMethod",
             "type": "string"
         },
+        "Classification": {
+            "additionalProperties": false,
+            "description": "An open-vocabulary classification qualified by the system that defines its code. Codes from different systems are not assumed equivalent.",
+            "properties": {
+                "code": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "display": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "system": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "system",
+                "code"
+            ],
+            "title": "Classification",
+            "type": "object"
+        },
         "CodeableConcept": {
             "additionalProperties": false,
             "description": "Source coding preserved alongside canonical values (system + code + display).",
@@ -492,15 +607,8 @@
         },
         "CommercialDetails": {
             "additionalProperties": false,
-            "description": "BOMA/OSCRE-cited semantics. Like all detail records, this is a CURRENT-STATE snapshot whose as-of date is provenance.retrieved_at; time-varying fields (occupancy_pct, tenant_count, condition) are not individually dated. Historical/per-period figures belong on dated records: OperatingStatement, UnitRentObservation, or as-of-event snapshots on SaleEvent.",
+            "description": "Internationally neutral commercial facts. When nested in Structure, these fields describe observation-derived current state. When nested in StructureState, they are asserted historical facts governed by PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval metadata, not the effective date. Historical/per-period financial figures belong on dated records such as OperatingStatement and UnitRentObservation. Events reference a separately bundled PropertyStateSnapshot rather than containing the snapshot. Optional standards profiles may constrain values for a specific use case.",
             "properties": {
-                "building_class": {
-                    "description": "A | B | C",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "clear_height": {
                     "anyOf": [
                         {
@@ -545,7 +653,19 @@
                         "null"
                     ]
                 },
+                "market_classification": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Rating"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Competitive market positioning under the named rating system; distinct from physical condition and construction quality."
+                },
                 "occupancy_pct": {
+                    "description": "0\u2013100 percentage points; 95 means 95 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -605,7 +725,7 @@
                     ]
                 },
                 "tenant_count": {
-                    "description": "Distinct legal tenants (not suites or leases); current-state, dated by provenance",
+                    "description": "Distinct legal tenants (not suites or leases); timing follows the containing Structure or StructureState context",
                     "type": [
                         "integer",
                         "null"
@@ -630,6 +750,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "provenance": {
@@ -640,6 +762,15 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
                     ]
                 }
             },
@@ -653,6 +784,7 @@
             "description": "",
             "enum": [
                 "fee_simple",
+                "leased_fee",
                 "leasehold",
                 "life_estate",
                 "cooperative_shares",
@@ -727,6 +859,16 @@
             "additionalProperties": false,
             "description": "Capture envelope for LLM or scrape extraction (suitable as an LLM structured-output target). The payload is a sparse PropertyProfile (only the sections the source provides; a valid profile still requires its `property` section); status reports the extraction outcome. By convention profile and category accompany success and error accompanies failure statuses \u2014 validators deliberately do not enforce this pairing (LinkML rules would materialize in only some generated validators, diverging the contracts), so consumers must branch on status, not on field presence.",
             "properties": {
+                "artifact_refs": {
+                    "description": "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "category": {
                     "$ref": "#/$defs/ExtractionCategory",
                     "description": "Content classification; expected when status is success"
@@ -856,6 +998,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "loan": {
@@ -937,6 +1081,15 @@
                             "type": "null"
                         }
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -948,7 +1101,7 @@
         },
         "ForeclosureCaseParty": {
             "additionalProperties": false,
-            "description": "role = lender | trustee | borrower",
+            "description": "Open contextual role. Mortgage and deed-of-trust proceedings commonly use lender | trustee | borrower; lien foreclosures may instead use claimant | debtor.",
             "properties": {
                 "extras": {
                     "anyOf": [
@@ -960,14 +1113,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -982,7 +1130,7 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "ForeclosureCaseParty",
             "type": "object"
@@ -991,6 +1139,15 @@
             "additionalProperties": false,
             "description": "One recorded filing; postponements append as new filings.",
             "properties": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "auction_at_time": {
                     "description": "Time-of-day as published",
                     "type": [
@@ -1249,6 +1406,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "kind": {
@@ -1279,6 +1438,15 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -1301,6 +1469,7 @@
                     ]
                 },
                 "abatement_percent": {
+                    "description": "0\u2013100 percentage points; 10 means 10 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -1370,12 +1539,14 @@
             "description": "",
             "properties": {
                 "cpi_cap": {
+                    "description": "CPI escalation cap in percentage points; 5 means 5 percent.",
                     "type": [
                         "number",
                         "null"
                     ]
                 },
                 "cpi_floor": {
+                    "description": "CPI escalation floor in percentage points; 2 means 2 percent.",
                     "type": [
                         "number",
                         "null"
@@ -1406,6 +1577,7 @@
                     "type": "string"
                 },
                 "escalation_value": {
+                    "description": "For escalation_type=fixed_percent, a value from 0-100 percentage points; 3 means 3 percent. For escalation_type=fixed_amount, the increment in the currency of the parent LeaseEvent.rent and the period specified by LeaseEvent.rent_period.",
                     "type": [
                         "number",
                         "null"
@@ -1523,6 +1695,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "lease_type": {
@@ -1536,12 +1710,6 @@
                         {
                             "type": "null"
                         }
-                    ]
-                },
-                "lessee_industry": {
-                    "type": [
-                        "string",
-                        "null"
                     ]
                 },
                 "net_effective_rent_per_area": {
@@ -1566,6 +1734,12 @@
                 "property": {
                     "type": "string"
                 },
+                "property_state": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "provenance": {
                     "anyOf": [
                         {
@@ -1574,6 +1748,13 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "remarks": {
+                    "description": "Source- or vendor-authored narrative interpreted through provenance.",
+                    "type": [
+                        "string",
+                        "null"
                     ]
                 },
                 "rent": {
@@ -1621,6 +1802,15 @@
                             "type": "null"
                         }
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -1644,14 +1834,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -1666,7 +1851,7 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "LeaseEventParty",
             "type": "object"
@@ -1729,6 +1914,15 @@
                         }
                     ]
                 },
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "document_number": {
                     "description": "Primary identifier assigned by the recording/registry authority",
                     "type": [
@@ -1757,6 +1951,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "instrument_date": {
@@ -1841,6 +2037,15 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -1878,14 +2083,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -1900,29 +2100,21 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "LienParty",
             "type": "object"
         },
         "Listing": {
             "additionalProperties": false,
-            "description": "Listing header. Lifecycle lives in events[]; header status/list_price are denormalized conveniences reconstructible from events.",
+            "description": "Listing identity and non-lifecycle facts. Process events by occurred_on ascending; array order breaks same-date ties. Carry status, asking_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.",
             "properties": {
-                "close_price": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Money"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                },
-                "closed_on": {
-                    "format": "date",
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
                     "type": [
-                        "string",
+                        "array",
                         "null"
                     ]
                 },
@@ -1946,40 +2138,12 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "kind": {
                     "$ref": "#/$defs/ListingKind"
-                },
-                "list_price": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Money"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                },
-                "list_rent": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Money"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                },
-                "list_rent_period": {
-                    "$ref": "#/$defs/RentPeriod"
-                },
-                "listed_on": {
-                    "format": "date",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
                 },
                 "listing_type": {
                     "description": "mls | fsbo | auction | pocket",
@@ -1994,16 +2158,6 @@
                         "null"
                     ]
                 },
-                "original_list_price": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Money"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                },
                 "participants": {
                     "items": {
                         "$ref": "#/$defs/ListingParticipant"
@@ -2016,6 +2170,12 @@
                 "property": {
                     "type": "string"
                 },
+                "property_state": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "provenance": {
                     "anyOf": [
                         {
@@ -2026,8 +2186,21 @@
                         }
                     ]
                 },
-                "status": {
-                    "$ref": "#/$defs/ListingStatus"
+                "remarks": {
+                    "description": "Source- or vendor-authored narrative interpreted through provenance.",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -2040,8 +2213,28 @@
         },
         "ListingEvent": {
             "additionalProperties": false,
-            "description": "",
+            "description": "A dated listing assertion. asking_price is a sale price or periodic rent; rent_period states the period when asking_price is rent. close_price is asserted on a closed event.",
             "properties": {
+                "asking_price": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "close_price": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
                 "event_kind": {
                     "description": "listed | price_change | status_change | relisted | closed",
                     "type": "string"
@@ -2050,16 +2243,6 @@
                     "anyOf": [
                         {
                             "$ref": "#/$defs/Any"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                },
-                "list_price": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Money"
                         },
                         {
                             "type": "null"
@@ -2079,6 +2262,9 @@
                             "type": "null"
                         }
                     ]
+                },
+                "rent_period": {
+                    "$ref": "#/$defs/RentPeriod"
                 },
                 "status": {
                     "$ref": "#/$defs/ListingStatus"
@@ -2114,14 +2300,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -2136,7 +2317,7 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "ListingParticipant",
             "type": "object"
@@ -2158,8 +2339,17 @@
         },
         "Loan": {
             "additionalProperties": false,
-            "description": "Recorded debt. lender_name is the immutable ORIGINATING lender; assignments and status changes are dated loan events. status is a derived projection of events.",
+            "description": "Recorded debt. Originating lender identity and classification live on the canonical Party referenced by a LoanParty. Assignments, modifications, satisfactions, and other lifecycle assertions are dated events; consumers derive current status and satisfaction dates.",
             "properties": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "document_number": {
                     "description": "Primary identifier assigned by the recording/registry authority",
                     "type": [
@@ -2204,6 +2394,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "instrument_date": {
@@ -2215,6 +2407,7 @@
                     ]
                 },
                 "interest_rate": {
+                    "description": "Nominal interest rate in percentage points; 6.5 means 6.5 percent.",
                     "minimum": 0,
                     "type": [
                         "number",
@@ -2254,19 +2447,6 @@
                 "is_variable_rate": {
                     "type": [
                         "boolean",
-                        "null"
-                    ]
-                },
-                "lender_name": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
-                "lender_type": {
-                    "description": "bank | credit_union | private | seller | ...",
-                    "type": [
-                        "string",
                         "null"
                     ]
                 },
@@ -2372,16 +2552,6 @@
                         "null"
                     ]
                 },
-                "satisfied_on": {
-                    "format": "date",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
-                "status": {
-                    "$ref": "#/$defs/LoanStatus"
-                },
                 "term_months": {
                     "minimum": 1,
                     "type": [
@@ -2393,6 +2563,15 @@
                     "description": "Purchase-money linkage",
                     "type": [
                         "string",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 }
@@ -2416,6 +2595,15 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
                     ]
                 },
                 "document_number": {
@@ -2516,14 +2704,9 @@
                         "null"
                     ]
                 },
-                "to_name": {
-                    "description": "Assignee lender name (assignments)",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "to_party": {
+                    "description": "Canonical assignee for assignment-like events",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": [
                         "string",
                         "null"
@@ -2565,14 +2748,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -2587,23 +2765,10 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "LoanParty",
             "type": "object"
-        },
-        "LoanStatus": {
-            "description": "",
-            "enum": [
-                "active",
-                "satisfied",
-                "assigned",
-                "foreclosure",
-                "released",
-                "unknown"
-            ],
-            "title": "LoanStatus",
-            "type": "string"
         },
         "Money": {
             "additionalProperties": false,
@@ -2678,6 +2843,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "line_items": {
@@ -2797,10 +2964,20 @@
                     ]
                 },
                 "vacancy_pct": {
+                    "description": "0\u2013100 percentage points; 5 means 5 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
                         "number",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 }
@@ -2812,26 +2989,6 @@
             ],
             "title": "OperatingStatement",
             "type": "object"
-        },
-        "OrganizationKind": {
-            "description": "",
-            "enum": [
-                "llc",
-                "corporation",
-                "partnership",
-                "trust",
-                "estate",
-                "government",
-                "nonprofit",
-                "reit",
-                "fund",
-                "lender",
-                "brokerage",
-                "hoa",
-                "other"
-            ],
-            "title": "OrganizationKind",
-            "type": "string"
         },
         "OwnershipInterest": {
             "additionalProperties": false,
@@ -2848,6 +3005,7 @@
                     ]
                 },
                 "interest_pct": {
+                    "description": "0\u2013100 percentage points; 75 means 75 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -2862,6 +3020,7 @@
                     ]
                 },
                 "party": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "role": {
@@ -2912,6 +3071,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "interests": {
@@ -2925,6 +3086,7 @@
                 },
                 "mailing_address": {
                     "description": "Owner's mailing address during THIS period",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": [
                         "string",
                         "null"
@@ -2947,6 +3109,15 @@
                     "format": "date",
                     "type": [
                         "string",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
                         "null"
                     ]
                 },
@@ -2991,6 +3162,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "jurisdiction": {
@@ -3054,6 +3227,15 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -3086,6 +3268,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "kind": {
@@ -3106,6 +3290,15 @@
                 },
                 "successor_parcel": {
                     "type": "string"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -3129,11 +3322,21 @@
         },
         "Party": {
             "additionalProperties": false,
-            "description": "One model for every actor \u2014 owners, buyers, borrowers, lenders, brokers, trustees, claimants, contractors, HOAs.",
+            "description": "One canonical model for every actor \u2014 owners, buyers, tenants and lessees, borrowers, lenders, brokers, trustees, claimants, contractors, associations, and valuation performers.",
             "properties": {
                 "addresses": {
                     "items": {
                         "$ref": "#/$defs/PartyAddress"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "classifications": {
+                    "description": "System-qualified actor classifications from an open vocabulary; use producer-namespaced system and code values",
+                    "items": {
+                        "$ref": "#/$defs/Classification"
                     },
                     "type": [
                         "array",
@@ -3160,48 +3363,56 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "kind": {
                     "$ref": "#/$defs/PartyKind"
                 },
-                "license_number": {
-                    "description": "Agents / brokers / appraisers",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                "legal_form": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Classification"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Optional system-qualified legal form for an organization under an identified jurisdictional or producer vocabulary. This is not an industry classification or a contextual role such as lender, broker, tenant, or association."
                 },
                 "name": {
-                    "description": "Display name as recorded",
+                    "description": "Canonical display name for this Party in the profile; nonblank with no leading or trailing whitespace. Source-specific wording is attributed through provenance or SourceArtifact.",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "name_first": {
+                    "description": "Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "name_last": {
+                    "description": "Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "name_middle": {
+                    "description": "Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "normalized_name": {
+                    "description": "Producer-derived matching key for the canonical display name. Its normalization algorithm is producer-defined; it is not authoritative display text or a separate identity.",
                     "type": [
                         "string",
                         "null"
                     ]
-                },
-                "organization_kind": {
-                    "$ref": "#/$defs/OrganizationKind"
                 },
                 "provenance": {
                     "anyOf": [
@@ -3211,6 +3422,15 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
                     ]
                 }
             },
@@ -3224,9 +3444,10 @@
         },
         "PartyAddress": {
             "additionalProperties": false,
-            "description": "mailing | physical | registered_agent | previous | other",
+            "description": "",
             "properties": {
                 "address": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "extras": {
@@ -3245,12 +3466,6 @@
                         "null"
                     ]
                 },
-                "kind": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "provenance": {
                     "anyOf": [
                         {
@@ -3259,6 +3474,31 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "role": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "situs | entrance | alias | address_range | former | mailing | other (open vocabulary)"
+                },
+                "valid_from": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "valid_to": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
                     ]
                 }
             },
@@ -3345,19 +3585,18 @@
                         "null"
                     ]
                 },
-                "contractor_license": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
                     "type": [
-                        "string",
-                        "null"
-                    ]
-                },
-                "contractor_name": {
-                    "type": [
-                        "string",
+                        "array",
                         "null"
                     ]
                 },
                 "contractor_party": {
+                    "description": "Canonical contractor Party reference; credential records are outside core v0.2",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": [
                         "string",
                         "null"
@@ -3404,6 +3643,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "issued_on": {
@@ -3467,6 +3708,15 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -3491,10 +3741,10 @@
         },
         "Property": {
             "additionalProperties": false,
-            "description": "The immutable anchor. Parcel numbers/APNs/vendor IDs are labels about a property, never its key.",
+            "description": "Stable property identity; mutable descriptive fields come from PropertyFacts.",
             "properties": {
                 "building_count": {
-                    "description": "Vendor summary when structures are not enumerated",
+                    "description": "Producer summary when structures are not enumerated",
                     "type": [
                         "integer",
                         "null"
@@ -3514,6 +3764,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "location": {
@@ -3533,7 +3785,7 @@
                     ]
                 },
                 "property_use_class": {
-                    "description": "PUCS class when property_use_system = pucs_1_0",
+                    "description": "PUCS class when property_use_system identifies PUCS",
                     "type": [
                         "string",
                         "null"
@@ -3546,7 +3798,7 @@
                     ]
                 },
                 "property_use_system": {
-                    "description": "'pucs_1_0' | local system; REQUIRED when use fields are set (no default)",
+                    "description": "Required when use fields are set; no default",
                     "type": [
                         "string",
                         "null"
@@ -3568,9 +3820,12 @@
                         }
                     ]
                 },
-                "situs_address": {
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
                     "type": [
-                        "string",
+                        "array",
                         "null"
                     ]
                 }
@@ -3581,9 +3836,94 @@
             "title": "Property",
             "type": "object"
         },
+        "PropertyAddress": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "address": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "is_primary": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "property": {
+                    "type": "string"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "role": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "situs | entrance | alias | address_range | former | mailing | other (open vocabulary)"
+                },
+                "valid_from": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "valid_to": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "property",
+                "address",
+                "id"
+            ],
+            "title": "PropertyAddress",
+            "type": "object"
+        },
         "PropertyAssociation": {
             "additionalProperties": false,
-            "description": "HOA / property association \u2014 minimal v1 footprint.",
+            "description": "HOA or property-association relationship; identity and classification live on the canonical Party.",
             "properties": {
                 "extras": {
                     "anyOf": [
@@ -3609,20 +3949,14 @@
                     "$ref": "#/$defs/RentPeriod"
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
-                "name": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "party": {
-                    "description": "The association as an organization",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "description": "The canonical association organization",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "property": {
                     "type": "string"
@@ -3636,13 +3970,83 @@
                             "type": "null"
                         }
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
                 "property",
+                "party",
                 "id"
             ],
             "title": "PropertyAssociation",
+            "type": "object"
+        },
+        "PropertyFacts": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "building_count": {
+                    "description": "Producer summary when structures are not enumerated",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "estate_type": {
+                    "$ref": "#/$defs/EstateType"
+                },
+                "location": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/GeoPoint"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_class": {
+                    "description": "PUCS class when property_use_system identifies PUCS",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_subtype": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_system": {
+                    "description": "Required when use fields are set; no default",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "PropertyFacts",
             "type": "object"
         },
         "PropertyIdentifier": {
@@ -3660,6 +4064,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "namespace": {
@@ -3686,6 +4092,15 @@
                 },
                 "value": {
                     "type": "string"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -3719,6 +4134,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "is_primary": {
@@ -3749,6 +4166,15 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -3761,12 +4187,21 @@
         },
         "PropertyProfile": {
             "additionalProperties": false,
-            "description": "The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any event (required for lossless round-trip). Conformance requires passing the entities \u2192 profile \u2192 entities round-trip test.",
+            "description": "The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any record, including tenants, lenders, contractors, associations, and valuation performers (required for lossless round-trip). Conformance requires passing the entities \u2192 profile \u2192 entities round-trip test.",
             "properties": {
                 "addresses": {
                     "description": "Address bundle referenced by property/parties/ownership",
                     "items": {
                         "$ref": "#/$defs/Address"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "artifacts": {
+                    "items": {
+                        "$ref": "#/$defs/SourceArtifact"
                     },
                     "type": [
                         "array",
@@ -3921,9 +4356,27 @@
                 "property": {
                     "$ref": "#/$defs/Property"
                 },
+                "property_addresses": {
+                    "items": {
+                        "$ref": "#/$defs/PropertyAddress"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "property_parcels": {
                     "items": {
                         "$ref": "#/$defs/PropertyParcel"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "property_state_snapshots": {
+                    "items": {
+                        "$ref": "#/$defs/PropertyStateSnapshot"
                     },
                     "type": [
                         "array",
@@ -3938,6 +4391,15 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "rent_rolls": {
+                    "items": {
+                        "$ref": "#/$defs/RentRoll"
+                    },
+                    "type": [
+                        "array",
+                        "null"
                     ]
                 },
                 "sales": {
@@ -4020,11 +4482,215 @@
             "title": "PropertyProfile",
             "type": "object"
         },
+        "PropertyState": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "building_count": {
+                    "description": "Producer summary when structures are not enumerated",
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "estate_type": {
+                    "$ref": "#/$defs/EstateType"
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "location": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/GeoPoint"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_class": {
+                    "description": "PUCS class when property_use_system identifies PUCS",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_subtype": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_system": {
+                    "description": "Required when use fields are set; no default",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "property_use_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "subject",
+                "id"
+            ],
+            "title": "PropertyState",
+            "type": "object"
+        },
+        "PropertyStateSnapshot": {
+            "additionalProperties": false,
+            "description": "Sparse asserted physical state effective on as_of_date.",
+            "properties": {
+                "as_of_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "basis": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "at_sale | at_listing | at_lease | inspection | reported | inferred (open vocabulary)"
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "property": {
+                    "type": "string"
+                },
+                "property_state": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PropertyState"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "site_states": {
+                    "items": {
+                        "$ref": "#/$defs/SiteState"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "space_states": {
+                    "items": {
+                        "$ref": "#/$defs/SpaceState"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "structure_states": {
+                    "items": {
+                        "$ref": "#/$defs/StructureState"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "property",
+                "as_of_date",
+                "id"
+            ],
+            "title": "PropertyStateSnapshot",
+            "type": "object"
+        },
         "Provenance": {
             "additionalProperties": false,
             "description": "Record-level source envelope. Pure child rows (parties, areas, escalations, filings) inherit the parent envelope unless they carry their own.",
             "properties": {
                 "confidence": {
+                    "description": "Fraction from 0 through 1; 0.8 means 80 percent confidence.",
                     "maximum": 1,
                     "minimum": 0,
                     "type": [
@@ -4082,16 +4748,73 @@
             "description": "",
             "enum": [
                 "asking",
+                "market",
                 "effective",
                 "contract"
             ],
             "title": "RateType",
             "type": "string"
         },
+        "Rating": {
+            "additionalProperties": false,
+            "description": "A rating qualified by the system that defines its code. PHDS does not assume codes from different systems are ordinally or semantically equal.",
+            "properties": {
+                "code": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "display": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "scope": {
+                    "$ref": "#/$defs/RatingScope"
+                },
+                "system": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "system",
+                "code"
+            ],
+            "title": "Rating",
+            "type": "object"
+        },
+        "RatingScope": {
+            "description": "",
+            "enum": [
+                "overall",
+                "exterior",
+                "interior",
+                "component",
+                "other"
+            ],
+            "title": "RatingScope",
+            "type": "string"
+        },
         "RecordedInstrument": {
             "additionalProperties": false,
             "description": "This row corresponds to a document recorded/registered with an authority (county recorder, land registry, notarial protocol). Narrowly about document identity and recording \u2014 legal effect lives on the host class.",
             "properties": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "document_number": {
                     "description": "Primary identifier assigned by the recording/registry authority",
                     "type": [
@@ -4242,6 +4965,192 @@
             "title": "RentPeriod",
             "type": "string"
         },
+        "RentRoll": {
+            "additionalProperties": false,
+            "description": "Dated rent and occupancy observation applicable to any property use. Header totals are authoritative reported values; lines are supporting detail and are not required to sum to the totals. All Money values on one rent roll MUST use one currency (validator-enforced). For its as_of_date, this record governs reported occupancy and rent facts; current-state fields such as Space.occupancy and CommercialDetails.occupancy_pct do not override it. A line preserves dated rent-roll assertions and does not by itself create a canonical Space, Party, or LeaseEvent.",
+            "properties": {
+                "as_of_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "lines": {
+                    "items": {
+                        "$ref": "#/$defs/RentRollLine"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "occupancy_pct": {
+                    "description": "Occupancy in 0\u2013100 percentage points; 95 means 95 percent.",
+                    "maximum": 100,
+                    "minimum": 0,
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "occupied_unit_count": {
+                    "minimum": 0,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "property": {
+                    "type": "string"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "rent_period": {
+                    "$ref": "#/$defs/RentPeriod"
+                },
+                "total_contract_rent": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "total_market_rent": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "unit_count": {
+                    "minimum": 0,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "property",
+                "as_of_date",
+                "id"
+            ],
+            "title": "RentRoll",
+            "type": "object"
+        },
+        "RentRollLine": {
+            "additionalProperties": false,
+            "description": "Supporting rent-roll detail. space resolves to canonical Space. tenant is the canonical legal lessee Party when present, and lease resolves to canonical LeaseEvent when known. When both tenant and lease are present, tenant must match a party with role: lessee declared by that lease, if the lease declares any lessee. References remain optional for aggregate, vacant, unleased, or unresolved lines; the line does not duplicate canonical space identity, tenant names, or lease dates. When a source tenant cannot be resolved to a canonical Party, omit tenant and preserve the source evidence through the RentRoll provenance and profile-level SourceArtifact records; do not mint a placeholder Party or copy the source name into extras.",
+            "properties": {
+                "contract_rent": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "lease": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "market_rent": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "occupancy_status": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "reported_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "space": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "tenant": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "RentRollLine",
+            "type": "object"
+        },
         "RentStep": {
             "additionalProperties": false,
             "description": "",
@@ -4263,7 +5172,7 @@
         },
         "ResidentialDetails": {
             "additionalProperties": false,
-            "description": "International core; the UAD 3.6 profile constrains enums for US appraisal use. A CURRENT-STATE snapshot dated by provenance.retrieved_at (see CommercialDetails note).",
+            "description": "Internationally neutral residential facts. When nested in Structure, these fields describe observation-derived current state. When nested in StructureState, they are asserted historical facts governed by PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval metadata, not the effective date. Events reference a separately bundled PropertyStateSnapshot rather than containing the snapshot. Optional standards profiles may constrain values for a specific use case.",
             "properties": {
                 "adu_legally_rentable": {
                     "type": [
@@ -4413,6 +5322,7 @@
             "description": "A market sale referencing its recorded transfer. A quitclaim never becomes a comp.",
             "properties": {
                 "cap_rate": {
+                    "description": "Capitalization rate in percentage points; 5.75 means 5.75 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -4448,6 +5358,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "noi_at_sale": {
@@ -4461,6 +5373,7 @@
                     ]
                 },
                 "occupancy_at_sale_pct": {
+                    "description": "0\u2013100 percentage points; 90 means 90 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -4523,6 +5436,12 @@
                 "property": {
                     "type": "string"
                 },
+                "property_state": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "provenance": {
                     "anyOf": [
                         {
@@ -4531,6 +5450,13 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "remarks": {
+                    "description": "Source- or vendor-authored narrative interpreted through provenance.",
+                    "type": [
+                        "string",
+                        "null"
                     ]
                 },
                 "sale_date": {
@@ -4569,6 +5495,15 @@
                         "integer",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -4593,14 +5528,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -4615,7 +5545,7 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "SaleEventParty",
             "type": "object"
@@ -4639,7 +5569,7 @@
         },
         "Site": {
             "additionalProperties": false,
-            "description": "1:1 with property.",
+            "description": "",
             "properties": {
                 "block": {
                     "type": [
@@ -4673,7 +5603,6 @@
                     ]
                 },
                 "entitlement_status": {
-                    "description": "raw | entitled | permitted | ... (open; construction/dev)",
                     "type": [
                         "string",
                         "null"
@@ -4715,6 +5644,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "is_corner": {
@@ -4731,11 +5662,9 @@
                         {
                             "type": "null"
                         }
-                    ],
-                    "description": "County code + label, system-tagged"
+                    ]
                 },
                 "land_use_category": {
-                    "description": "Standardized (PUCS land classes)",
                     "type": [
                         "string",
                         "null"
@@ -4786,14 +5715,12 @@
                     ]
                 },
                 "section_township_range": {
-                    "description": "US PLSS (US-specific, optional)",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
                 "site_influences": {
-                    "description": "UAD SiteInfluenceBase-seeded",
                     "items": {
                         "type": "string"
                     },
@@ -4828,11 +5755,9 @@
                         {
                             "type": "null"
                         }
-                    ],
-                    "description": "Usable portion of the lot; see usable_land_area_basis"
+                    ]
                 },
                 "usable_land_area_basis": {
-                    "description": "surveyed | buildable | net_of_constraints | ... (what \"usable\" means here)",
                     "type": [
                         "string",
                         "null"
@@ -4847,8 +5772,16 @@
                         "null"
                     ]
                 },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "view_types": {
-                    "description": "UAD ViewBase-seeded",
                     "items": {
                         "type": "string"
                     },
@@ -4869,6 +5802,558 @@
                 "id"
             ],
             "title": "Site",
+            "type": "object"
+        },
+        "SiteFacts": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "block": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "buildable_units": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "depth": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Length"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "easements": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "entitlement_status": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "flood_zone": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "frontage": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Length"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "hazard_zones": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "is_corner": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "land_use": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "land_use_category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lot_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lot_size": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "phase_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "restrictions": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "section_township_range": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_influences": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "subdivision": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "topography": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "tract_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "usable_land_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "usable_land_area_basis": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "utilities": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "view_types": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "zoning_code": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "title": "SiteFacts",
+            "type": "object"
+        },
+        "SiteState": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "block": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "buildable_units": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "depth": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Length"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "easements": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "entitlement_status": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "flood_zone": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "frontage": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Length"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "hazard_zones": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "is_corner": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "land_use": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "land_use_category": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lot_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "lot_size": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "phase_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "restrictions": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "section_township_range": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "site_influences": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "subdivision": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "topography": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "tract_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "usable_land_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "usable_land_area_basis": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "utilities": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "view_types": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "zoning_code": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "subject",
+                "id"
+            ],
+            "title": "SiteState",
+            "type": "object"
+        },
+        "SourceArtifact": {
+            "additionalProperties": false,
+            "description": "Source material that supports or preserves an assertion. Semantic validation requires at least one nonblank uri or storage_reference.",
+            "properties": {
+                "captured_on": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "content_hash": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "hash_scheme": {
+                    "description": "Producer-namespaced content hashing scheme",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "kind": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "media_type": {
+                    "description": "MIME media type",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "original_filename": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "page_count": {
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "storage_reference": {
+                    "description": "Producer-defined object or document storage reference",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "title": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "uri": {
+                    "format": "uri",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "id"
+            ],
+            "title": "SourceArtifact",
             "type": "object"
         },
         "Space": {
@@ -4904,6 +6389,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "is_active": {
@@ -4972,6 +6459,15 @@
                             "type": "null"
                         }
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -4980,6 +6476,189 @@
                 "id"
             ],
             "title": "Space",
+            "type": "object"
+        },
+        "SpaceFacts": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "bathrooms": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "bedrooms": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "floor_number": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "is_active": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "is_adu": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "occupancy": {
+                    "description": "owner_occupied | tenant | vacant",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "rentable_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "space_use": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "usable_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                }
+            },
+            "title": "SpaceFacts",
+            "type": "object"
+        },
+        "SpaceState": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "bathrooms": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "bedrooms": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "floor_number": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "is_adu": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "occupancy": {
+                    "description": "owner_occupied | tenant | vacant",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "rentable_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "space_use": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "usable_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "subject",
+                "id"
+            ],
+            "title": "SpaceState",
             "type": "object"
         },
         "StatementBasis": {
@@ -5072,9 +6751,13 @@
                         }
                     ]
                 },
-                "condition_rating": {
+                "condition_ratings": {
+                    "description": "Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair.",
+                    "items": {
+                        "$ref": "#/$defs/Rating"
+                    },
                     "type": [
-                        "string",
+                        "array",
                         "null"
                     ]
                 },
@@ -5130,7 +6813,7 @@
                     ]
                 },
                 "features": {
-                    "description": "Open vocab seeded from UAD AmenityBase",
+                    "description": "Open vocabulary for physical features and amenities",
                     "items": {
                         "type": "string"
                     },
@@ -5197,6 +6880,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "kind": {
@@ -5215,7 +6900,7 @@
                             "type": "null"
                         }
                     ],
-                    "description": "Finished above-grade living area per UAD 3.6 definition"
+                    "description": "Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance."
                 },
                 "name": {
                     "type": [
@@ -5236,16 +6921,13 @@
                         }
                     ]
                 },
-                "quality_rating": {
+                "quality_ratings": {
+                    "description": "Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair.",
+                    "items": {
+                        "$ref": "#/$defs/Rating"
+                    },
                     "type": [
-                        "string",
-                        "null"
-                    ]
-                },
-                "rating_system": {
-                    "description": "'uad_3_6' (C1\u2013C6/Q1\u2013Q6) | 'local' | ...",
-                    "type": [
-                        "string",
+                        "array",
                         "null"
                     ]
                 },
@@ -5267,7 +6949,307 @@
                             "type": "null"
                         }
                     ],
-                    "description": "BOMA definitions"
+                    "description": "Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method."
+                },
+                "residential": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ResidentialDetails"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "roof_material_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "roof_style_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sewer_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "stories": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "structure_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "unit_count": {
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "water_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "year_built": {
+                    "maximum": 2200,
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "year_built_estimated": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "property",
+                "id"
+            ],
+            "title": "Structure",
+            "type": "object"
+        },
+        "StructureFacts": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "areas": {
+                    "description": "Long-tail area kinds; canonical kinds forbidden here (validator-enforced)",
+                    "items": {
+                        "$ref": "#/$defs/AreaMeasure"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "basement_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "basement_finished_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "commercial": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CommercialDetails"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "condition_ratings": {
+                    "description": "Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair.",
+                    "items": {
+                        "$ref": "#/$defs/Rating"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "construction_method": {
+                    "description": "site_built | manufactured | modular | container | 3d_printed | ...",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "construction_status": {
+                    "description": "complete | proposed | under_construction",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "construction_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "cooling_types": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "effective_year_built": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "exterior_wall_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "features": {
+                    "description": "Open vocabulary for physical features and amenities",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "foundation_material": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "foundation_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "garage_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "gross_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "ground_floor_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "heating_fuel_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "heating_types": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "kind": {
+                    "description": "building | barn | silo | shed | outbuilding | ... (open)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "living_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance."
+                },
+                "name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "quality_ratings": {
+                    "description": "Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair.",
+                    "items": {
+                        "$ref": "#/$defs/Rating"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "renovations": {
+                    "items": {
+                        "$ref": "#/$defs/Renovation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "rentable_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method."
                 },
                 "residential": {
                     "anyOf": [
@@ -5337,11 +7319,335 @@
                     ]
                 }
             },
+            "title": "StructureFacts",
+            "type": "object"
+        },
+        "StructureState": {
+            "additionalProperties": false,
+            "description": "",
+            "properties": {
+                "areas": {
+                    "description": "Long-tail area kinds; canonical kinds forbidden here (validator-enforced)",
+                    "items": {
+                        "$ref": "#/$defs/AreaMeasure"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "basement_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "basement_finished_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "commercial": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CommercialDetails"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "condition_ratings": {
+                    "description": "Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair.",
+                    "items": {
+                        "$ref": "#/$defs/Rating"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "construction_method": {
+                    "description": "site_built | manufactured | modular | container | 3d_printed | ...",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "construction_status": {
+                    "description": "complete | proposed | under_construction",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "construction_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "cooling_types": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "effective_year_built": {
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "exterior_wall_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "features": {
+                    "description": "Open vocabulary for physical features and amenities",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "foundation_material": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "foundation_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "garage_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "gross_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "ground_floor_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "heating_fuel_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "heating_types": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "kind": {
+                    "description": "building | barn | silo | shed | outbuilding | ... (open)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "living_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance."
+                },
+                "name": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "quality_ratings": {
+                    "description": "Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair.",
+                    "items": {
+                        "$ref": "#/$defs/Rating"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "renovations": {
+                    "items": {
+                        "$ref": "#/$defs/Renovation"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "rentable_area": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Area"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method."
+                },
+                "residential": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/ResidentialDetails"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "roof_material_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "roof_style_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sewer_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "stories": {
+                    "type": [
+                        "number",
+                        "null"
+                    ]
+                },
+                "structure_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "subject": {
+                    "type": "string"
+                },
+                "unit_count": {
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "water_type": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "year_built": {
+                    "maximum": 2200,
+                    "minimum": 1,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
+                "year_built_estimated": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                }
+            },
             "required": [
-                "property",
+                "subject",
                 "id"
             ],
-            "title": "Structure",
+            "title": "StructureState",
             "type": "object"
         },
         "TaxBill": {
@@ -5401,6 +7707,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "installments": {
@@ -5452,6 +7760,15 @@
                 },
                 "tax_year": {
                     "type": "integer"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -5576,13 +7893,6 @@
                         }
                     ]
                 },
-                "authority": {
-                    "description": "Taxing authority name or code",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "extras": {
                     "anyOf": [
                         {
@@ -5593,8 +7903,16 @@
                         }
                     ]
                 },
+                "jurisdiction": {
+                    "description": "Optional canonical taxing jurisdiction responsible for this line item",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "rate": {
-                    "description": "Mill rate / levy",
+                    "description": "Source-defined tax rate or levy value; not governed by the _pct percentage-points convention.",
                     "type": [
                         "number",
                         "null"
@@ -5606,7 +7924,7 @@
         },
         "TransactionParty": {
             "additionalProperties": false,
-            "description": "A participant in an event, as recorded on the instrument. `name` is the immutable recorded fact; `party` is optional resolution to a canonical Party. Multi-party is the norm (couples on deeds, co-borrowers).",
+            "description": "A contextual role-bearing relationship from an event or record to a canonical Party. Exact source wording belongs in provenance or source artifacts, not in a second actor-name field. Multi-party is the norm (couples on deeds, co-borrowers).",
             "properties": {
                 "extras": {
                     "anyOf": [
@@ -5618,14 +7936,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -5640,7 +7953,7 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "TransactionParty",
             "type": "object"
@@ -5649,6 +7962,15 @@
             "additionalProperties": false,
             "description": "Every recorded deed/instrument \u2014 the ownership ledger, NOT comps.",
             "properties": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "consideration": {
                     "anyOf": [
                         {
@@ -5696,6 +8018,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "instrument_date": {
@@ -5705,6 +8029,17 @@
                         "string",
                         "null"
                     ]
+                },
+                "interest_conveyed": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "The legal or beneficial interest conveyed by this transfer."
                 },
                 "is_distressed": {
                     "type": [
@@ -5725,6 +8060,7 @@
                     ]
                 },
                 "partial_interest_pct": {
+                    "description": "0\u2013100 percentage points; 25 means 25 percent.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -5824,6 +8160,15 @@
                         }
                     ],
                     "description": "Doc stamps; price-inference basis in many places"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -5848,14 +8193,9 @@
                         }
                     ]
                 },
-                "name": {
-                    "type": "string"
-                },
                 "party": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
                 },
                 "role": {
                     "type": "string"
@@ -5870,7 +8210,7 @@
             },
             "required": [
                 "role",
-                "name"
+                "party"
             ],
             "title": "TransferParty",
             "type": "object"
@@ -5934,6 +8274,8 @@
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "observed_on": {
@@ -5991,6 +8333,15 @@
                         "integer",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -6007,11 +8358,21 @@
             "additionalProperties": false,
             "description": "Opinions of value \u2014 AVM/appraisal/BPO. Never tax-roll values (those are assessments). Append-only.",
             "properties": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "as_of_date": {
                     "format": "date",
                     "type": "string"
                 },
                 "confidence_score": {
+                    "description": "Source-defined confidence score; not governed by the _pct percentage-points convention.",
                     "maximum": 100,
                     "minimum": 0,
                     "type": [
@@ -6036,13 +8397,15 @@
                     ]
                 },
                 "forecast_standard_deviation": {
-                    "description": "AVM FSD",
+                    "description": "Source-defined AVM forecast standard deviation; not governed by the _pct percentage-points convention.",
                     "type": [
                         "number",
                         "null"
                     ]
                 },
                 "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
                 "indicated_value_cost": {
@@ -6076,7 +8439,7 @@
                     ]
                 },
                 "interest": {
-                    "description": "fee_simple | leased_fee | leasehold",
+                    "description": "Interest valued for this opinion; independent of Property.estate_type and Transfer.interest_conveyed.",
                     "type": [
                         "string",
                         "null"
@@ -6096,13 +8459,9 @@
                     ],
                     "description": "Cost-approach site value"
                 },
-                "performed_by": {
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "performed_by_party": {
+                    "description": "Canonical person or organization that performed the valuation",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": [
                         "string",
                         "null"
@@ -6110,6 +8469,12 @@
                 },
                 "property": {
                     "type": "string"
+                },
+                "property_state": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "provenance": {
                     "anyOf": [
@@ -6181,6 +8546,15 @@
                         "string",
                         "null"
                     ]
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 }
             },
             "required": [
@@ -6205,6 +8579,42 @@
             "title": "ValuationKind",
             "type": "string"
         },
+        "VerificationAttribution": {
+            "additionalProperties": false,
+            "description": "Verification performed by one canonical party.",
+            "properties": {
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "note": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "verified_at": {
+                    "format": "date-time",
+                    "type": "string"
+                },
+                "verifier": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "verifier",
+                "verified_at"
+            ],
+            "title": "VerificationAttribution",
+            "type": "object"
+        },
         "VerificationStatus": {
             "description": "",
             "enum": [
@@ -6221,13 +8631,22 @@
     "$id": "https://example.org/phds",
     "$schema": "https://json-schema.org/draft/2019-09/schema",
     "additionalProperties": true,
-    "description": "The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any event (required for lossless round-trip). Conformance requires passing the entities \u2192 profile \u2192 entities round-trip test.",
+    "description": "The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any record, including tenants, lenders, contractors, associations, and valuation performers (required for lossless round-trip). Conformance requires passing the entities \u2192 profile \u2192 entities round-trip test.",
     "metamodel_version": "1.11.0",
     "properties": {
         "addresses": {
             "description": "Address bundle referenced by property/parties/ownership",
             "items": {
                 "$ref": "#/$defs/Address"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "artifacts": {
+            "items": {
+                "$ref": "#/$defs/SourceArtifact"
             },
             "type": [
                 "array",
@@ -6382,9 +8801,27 @@
         "property": {
             "$ref": "#/$defs/Property"
         },
+        "property_addresses": {
+            "items": {
+                "$ref": "#/$defs/PropertyAddress"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
         "property_parcels": {
             "items": {
                 "$ref": "#/$defs/PropertyParcel"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "property_state_snapshots": {
+            "items": {
+                "$ref": "#/$defs/PropertyStateSnapshot"
             },
             "type": [
                 "array",
@@ -6399,6 +8836,15 @@
                 {
                     "type": "null"
                 }
+            ]
+        },
+        "rent_rolls": {
+            "items": {
+                "$ref": "#/$defs/RentRoll"
+            },
+            "type": [
+                "array",
+                "null"
             ]
         },
         "sales": {
@@ -6480,6 +8926,5 @@
     ],
     "title": "phds",
     "type": "object",
-    "version": "0.1.0"
+    "version": "0.2.0"
 }
-

@@ -21,6 +21,9 @@ default_prefix: ex
 default_range: string
 imports:
   - linkml:types
+types:
+  DecimalString:
+    typeof: string
 enums:
   Color:
     permissible_values: {red: {}, deep_blue: {}}
@@ -33,6 +36,14 @@ classes:
       color: {range: Color}
       colors: {range: Color, multivalued: true}
       kind: {range: Color, subproperty_of: measurement, multivalued: true}
+      ratio: {range: decimal}
+      ratios: {range: decimal, multivalued: true}
+      exact_amount: {range: DecimalString}
+      observed_on: {range: date}
+  RefinedReading:
+    is_a: Reading
+    slot_usage:
+      color: {range: Color, required: true}
 """
 
 
@@ -50,6 +61,14 @@ def _declaration(source: str, field: str) -> str:
         if stripped.startswith(f"{field}:") or stripped.startswith(f"{field}?:"):
             return stripped
     raise AssertionError(f"no declaration for {field!r} in generated TypeScript")
+
+
+def _interface_body(source: str, name: str) -> str:
+    declaration = f"export interface {name}"
+    start = source.index(declaration)
+    body_start = source.index("{", start) + 1
+    body_end = source.index("}", body_start)
+    return source[body_start:body_end]
 
 
 class EnumAwareTypescriptGeneratorTests(unittest.TestCase):
@@ -80,6 +99,41 @@ class EnumAwareTypescriptGeneratorTests(unittest.TestCase):
         self.assertEqual(
             _declaration(self.upstream, "kind"),
             _declaration(self.wrapped, "kind"),
+        )
+
+    def test_decimal_slots_are_json_numbers_but_decimal_strings_remain_strings(self):
+        self.assertEqual("ratio?: number,", _declaration(self.wrapped, "ratio"))
+        self.assertEqual("ratios?: number[],", _declaration(self.wrapped, "ratios"))
+        self.assertEqual(
+            "exact_amount?: string,",
+            _declaration(self.wrapped, "exact_amount"),
+        )
+
+    def test_linkml_dates_are_iso_8601_strings(self):
+        self.assertEqual(
+            "observed_on?: string,",
+            _declaration(self.wrapped, "observed_on"),
+        )
+        self.assertNotIn("type date =", self.wrapped)
+
+    def test_slot_usage_refinement_is_direct_without_flattening_inherited_slots(self):
+        body = _interface_body(self.wrapped, "RefinedReading")
+        self.assertIn("color: Color,", body)
+        self.assertNotIn("colors", body)
+        self.assertNotIn("kind", body)
+
+    def test_generated_source_has_no_trailing_whitespace(self):
+        self.assertTrue(self.wrapped.endswith("\n"))
+        self.assertFalse(self.wrapped.endswith("\n\n"))
+        self.assertEqual(
+            [],
+            [
+                (line_number, line)
+                for line_number, line in enumerate(
+                    self.wrapped.splitlines(), start=1
+                )
+                if line != line.rstrip()
+            ],
         )
 
 

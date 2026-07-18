@@ -1,0 +1,33 @@
+{
+  "property": {
+    "id": "property-1"
+  },
+  "jurisdictions": [
+    {
+      "id": "jurisdiction-bill",
+      "country": "CA",
+      "name": "Bill authority",
+      "kind": "taxing_district"
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel-1",
+      "jurisdiction": "jurisdiction-bill",
+      "parcel_number": "P-1"
+    }
+  ],
+  "tax_bills": [
+    {
+      "id": "tax-bill-1",
+      "parcel": "parcel-1",
+      "jurisdiction": "jurisdiction-bill",
+      "tax_year": 2026,
+      "line_items": [
+        {
+          "jurisdiction": "jurisdiction-missing"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "property": {
+    "id": "https://example.org/properties/state-missing-date"
+  },
+  "property_state_snapshots": [
+    {
+      "id": "https://example.org/property-state-snapshots/state-missing-date",
+      "property": "https://example.org/properties/state-missing-date"
+    }
+  ]
+}

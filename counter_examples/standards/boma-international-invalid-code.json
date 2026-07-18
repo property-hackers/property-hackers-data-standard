@@ -1,0 +1,11 @@
+{
+  "property": {"id": "property-boma-international-bad-code"},
+  "structures": [{
+    "id": "structure-boma-international-bad-code",
+    "property": "property-boma-international-bad-code",
+    "commercial": {"market_classification": {
+      "system": "urn:phds:standard:boma:office:international",
+      "code": "A"
+    }}
+  }]
+}

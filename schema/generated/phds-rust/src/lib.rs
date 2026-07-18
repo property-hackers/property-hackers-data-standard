@@ -9,7 +9,7 @@ pub mod stub_utils;
 
 #[cfg(feature = "serde")]
 use serde_yml as _ ;
-use chrono::{NaiveDate,NaiveDateTime};
+use chrono::{DateTime,FixedOffset,NaiveDate};
 #[cfg(feature = "pyo3")]
 use pyo3::{FromPyObject,prelude::*};
 #[cfg(feature = "stubgen")]
@@ -55,19 +55,22 @@ pub type denominator = String;
 pub type system = String;
 pub type code = String;
 pub type display = String;
+pub type description = String;
+pub type scope = RatingScope;
 pub type latitude = f64;
 pub type longitude = f64;
 pub type type_ = String;
 pub type coordinates = Any;
 pub type provider = String;
 pub type source_url = String;
-pub type retrieved_at = NaiveDateTime;
+pub type retrieved_at = DateTime<FixedOffset>;
 pub type method = CaptureMethod;
 pub type confidence = f64;
 pub type verification = VerificationStatus;
 pub type id = String;
 pub type extras = String;
 pub type provenance = String;
+pub type verifications = Vec<VerificationAttribution>;
 pub type relationship_type = CodeableConcept;
 pub type document_number = String;
 pub type registry_reference = String;
@@ -78,12 +81,13 @@ pub type recorded_on = NaiveDate;
 pub type instrument_date = NaiveDate;
 pub type document_type = CodeableConcept;
 pub type related_instruments = Vec<InstrumentReference>;
+pub type artifacts = String;
 pub type role = String;
-pub type name = String;
 pub type party = String;
 pub type sequence = isize;
 pub type country = String;
 pub type region = String;
+pub type name = String;
 pub type kind = String;
 pub type authority_code = String;
 pub type parent = Jurisdiction;
@@ -103,6 +107,7 @@ pub type postal_code_suffix = String;
 pub type admin_area = String;
 pub type admin_area_code = String;
 pub type address_hash = String;
+pub type address_hash_scheme = String;
 pub type location = String;
 pub type location_accuracy = GeocodeAccuracy;
 pub type property_use_class = String;
@@ -110,7 +115,6 @@ pub type property_use_type = String;
 pub type property_use_subtype = String;
 pub type property_use_system = String;
 pub type estate_type = EstateType;
-pub type situs_address = Address;
 pub type building_count = isize;
 pub type jurisdiction = String;
 pub type parcel_number = String;
@@ -130,15 +134,28 @@ pub type successor_parcel = Parcel;
 pub type effective_on = String;
 pub type scheme = String;
 pub type namespace = String;
-pub type organization_kind = OrganizationKind;
+pub type legal_form = Classification;
 pub type normalized_name = String;
 pub type name_first = String;
 pub type name_middle = String;
 pub type name_last = String;
-pub type license_number = String;
+pub type classifications = Vec<Classification>;
 pub type addresses = String;
 pub type contacts = Vec<PartyContact>;
+pub type verifier = Party;
+pub type verified_at = DateTime<FixedOffset>;
+pub type note = String;
+pub type storage_reference = String;
+pub type media_type = String;
+pub type title = String;
+pub type original_filename = String;
+pub type content_hash = String;
+pub type hash_scheme = String;
+pub type page_count = isize;
+pub type captured_on = DateTime<FixedOffset>;
 pub type address = Address;
+pub type valid_from = NaiveDate;
+pub type valid_to = NaiveDate;
 pub type label = String;
 pub type do_not_contact = bool;
 pub type vesting_type = String;
@@ -170,9 +187,8 @@ pub type roof_material_type = String;
 pub type roof_style_type = String;
 pub type foundation_type = String;
 pub type foundation_material = String;
-pub type condition_rating = String;
-pub type quality_rating = String;
-pub type rating_system = String;
+pub type condition_ratings = Vec<Rating>;
+pub type quality_ratings = Vec<Rating>;
 pub type heating_types = Vec<String>;
 pub type heating_fuel_type = String;
 pub type cooling_types = Vec<String>;
@@ -201,11 +217,11 @@ pub type has_adu = bool;
 pub type adu_legally_rentable = bool;
 pub type occupancy = String;
 pub type renewable_energy_components = Vec<String>;
-pub type building_class = String;
+pub type market_classification = Rating;
 pub type clear_height = Length;
 pub type dock_doors = isize;
 pub type drive_in_doors = isize;
-pub type occupancy_pct = f64;
+pub type occupancy_pct = String;
 pub type parking_ratio = UnitRate;
 pub type tenancy = String;
 pub type tenant_count = isize;
@@ -213,7 +229,6 @@ pub type parking_types = Vec<String>;
 pub type has_sprinkler = bool;
 pub type elevators = isize;
 pub type submarket = String;
-pub type description = String;
 pub type completed_year = isize;
 pub type completed_on = NaiveDate;
 pub type cost = Money;
@@ -242,8 +257,6 @@ pub type block = String;
 pub type tract_number = String;
 pub type phase_number = String;
 pub type section_township_range = String;
-pub type structure = String;
-pub type space_identifier = String;
 pub type floor_number = isize;
 pub type space_use = String;
 pub type usable_area = Area;
@@ -251,6 +264,15 @@ pub type bedrooms = String;
 pub type bathrooms = String;
 pub type is_adu = bool;
 pub type is_active = bool;
+pub type structure = String;
+pub type space_identifier = String;
+pub type subject = String;
+pub type as_of_date = String;
+pub type basis = CodeableConcept;
+pub type property_state = String;
+pub type site_states = Vec<SiteState>;
+pub type structure_states = Vec<StructureState>;
+pub type space_states = Vec<SpaceState>;
 pub type fee = Money;
 pub type fee_period = RentPeriod;
 pub type tax_year = String;
@@ -277,13 +299,13 @@ pub type line_items = String;
 pub type installment_number = isize;
 pub type due_on = NaiveDate;
 pub type paid_on = NaiveDate;
-pub type authority = String;
 pub type rate = String;
 pub type transfer_kind = String;
 pub type consideration = Money;
 pub type transfer_tax = Money;
 pub type price_disclosure = String;
 pub type price_code = String;
+pub type interest_conveyed = CodeableConcept;
 pub type partial_interest_pct = f64;
 pub type is_inter_family = bool;
 pub type is_distressed = bool;
@@ -302,21 +324,18 @@ pub type opex_at_sale = Money;
 pub type occupancy_at_sale_pct = f64;
 pub type unit_count_at_sale = isize;
 pub type supporting_operating_statement = OperatingStatement;
+pub type remarks = String;
 pub type listing_type = String;
-pub type status = String;
-pub type original_list_price = Money;
-pub type list_price = String;
-pub type list_rent = Money;
-pub type list_rent_period = RentPeriod;
-pub type listed_on = NaiveDate;
-pub type closed_on = NaiveDate;
-pub type close_price = Money;
 pub type mls_number = String;
 pub type events = String;
 pub type participants = Vec<ListingParticipant>;
 pub type occurred_on = String;
 pub type event_kind = String;
-pub type space = Space;
+pub type status = String;
+pub type asking_price = Money;
+pub type rent_period = String;
+pub type close_price = Money;
+pub type space = String;
 pub type lease_type = LeaseTypeEnum;
 pub type execution_date = NaiveDate;
 pub type commencement_date = NaiveDate;
@@ -324,14 +343,12 @@ pub type expiration_date = NaiveDate;
 pub type term_months = String;
 pub type leased_area = Area;
 pub type rent = Money;
-pub type rent_period = RentPeriod;
 pub type starting_rent_per_area = UnitRate;
 pub type effective_rent_per_area = UnitRate;
 pub type net_effective_rent_per_area = UnitRate;
 pub type free_rent_months = f64;
 pub type ti_allowance_per_area = UnitRate;
 pub type expense_structure = ExpenseStructure;
-pub type lessee_industry = String;
 pub type escalations = Vec<LeaseEscalation>;
 pub type taxes_paid_by = String;
 pub type insurance_paid_by = String;
@@ -363,8 +380,6 @@ pub type observed_on = NaiveDate;
 pub type concessions_note = String;
 pub type is_purchase_money = bool;
 pub type loan_amount = Money;
-pub type lender_name = String;
-pub type lender_type = String;
 pub type loan_type = String;
 pub type purpose = String;
 pub type is_heloc = bool;
@@ -375,8 +390,6 @@ pub type interest_rate = f64;
 pub type is_variable_rate = bool;
 pub type due_date = NaiveDate;
 pub type lien_position = isize;
-pub type satisfied_on = NaiveDate;
-pub type to_name = String;
 pub type to_party = Party;
 pub type released_on = NaiveDate;
 pub type loan = Loan;
@@ -400,8 +413,6 @@ pub type finaled_on = NaiveDate;
 pub type expires_on = NaiveDate;
 pub type job_value = Money;
 pub type fees = Money;
-pub type contractor_name = String;
-pub type contractor_license = String;
 pub type contractor_party = Party;
 pub type statement_year = isize;
 pub type period_start = NaiveDate;
@@ -420,6 +431,16 @@ pub type reserves_included_in_opex = bool;
 pub type ground_lease_expense = Money;
 pub type ground_lease_included_in_opex = bool;
 pub type category = String;
+pub type occupied_unit_count = isize;
+pub type total_contract_rent = Money;
+pub type total_market_rent = Money;
+pub type lines = Vec<RentRollLine>;
+pub type tenant = Party;
+pub type lease = LeaseEvent;
+pub type occupancy_status = CodeableConcept;
+pub type reported_area = Area;
+pub type contract_rent = Money;
+pub type market_rent = Money;
 pub type valuation_method = String;
 pub type value_type = String;
 pub type value_low = Money;
@@ -434,10 +455,9 @@ pub type indicated_value_cost = Money;
 pub type indicated_value_income = Money;
 pub type value_premise = String;
 pub type interest = String;
-pub type performed_by = String;
 pub type performed_by_party = Party;
-pub type as_of_date = NaiveDate;
 pub type report_date = NaiveDate;
+pub type property_addresses = Vec<PropertyAddress>;
 pub type identifiers = Vec<PropertyIdentifier>;
 pub type jurisdictions = Vec<Jurisdiction>;
 pub type parcels = Vec<Parcel>;
@@ -446,6 +466,7 @@ pub type parcel_lineage = Vec<ParcelLineage>;
 pub type site = Site;
 pub type structures = Vec<Structure>;
 pub type spaces = Vec<Space>;
+pub type property_state_snapshots = Vec<PropertyStateSnapshot>;
 pub type associations = Vec<PropertyAssociation>;
 pub type assessments = Vec<Assessment>;
 pub type tax_bills = Vec<TaxBill>;
@@ -454,6 +475,7 @@ pub type sales = Vec<SaleEvent>;
 pub type listings = Vec<Listing>;
 pub type leases = Vec<LeaseEvent>;
 pub type unit_rents = Vec<UnitRentObservation>;
+pub type rent_rolls = Vec<RentRoll>;
 pub type loans = Vec<Loan>;
 pub type liens = Vec<Lien>;
 pub type foreclosure_cases = Vec<ForeclosureCase>;
@@ -466,8 +488,9 @@ pub type query_parcel_number = String;
 pub type assessor_url = uri;
 pub type profile = String;
 pub type error = String;
+pub type artifact_refs = String;
 pub type source_category = String;
-pub type extracted_at = NaiveDateTime;
+pub type extracted_at = DateTime<FixedOffset>;
 pub type model = String;
 
 // Enums
@@ -808,121 +831,6 @@ impl ::pyo3_stub_gen::PyStubType for PartyKind {
     fn type_output() -> ::pyo3_stub_gen::TypeInfo {
         ::pyo3_stub_gen::TypeInfo::with_module(
             "typing.Literal['person', 'organization']",
-            "typing".into(),
-        )
-    }
-}
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum OrganizationKind {
-#[cfg_attr(feature = "serde", serde(rename = "llc"))]
-    Llc,
-#[cfg_attr(feature = "serde", serde(rename = "corporation"))]
-    Corporation,
-#[cfg_attr(feature = "serde", serde(rename = "partnership"))]
-    Partnership,
-#[cfg_attr(feature = "serde", serde(rename = "trust"))]
-    Trust,
-#[cfg_attr(feature = "serde", serde(rename = "estate"))]
-    Estate,
-#[cfg_attr(feature = "serde", serde(rename = "government"))]
-    Government,
-#[cfg_attr(feature = "serde", serde(rename = "nonprofit"))]
-    Nonprofit,
-#[cfg_attr(feature = "serde", serde(rename = "reit"))]
-    Reit,
-#[cfg_attr(feature = "serde", serde(rename = "fund"))]
-    Fund,
-#[cfg_attr(feature = "serde", serde(rename = "lender"))]
-    Lender,
-#[cfg_attr(feature = "serde", serde(rename = "brokerage"))]
-    Brokerage,
-#[cfg_attr(feature = "serde", serde(rename = "hoa"))]
-    Hoa,
-#[cfg_attr(feature = "serde", serde(rename = "other"))]
-    Other,
-}
-
-impl core::fmt::Display for OrganizationKind {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            OrganizationKind::Llc => f.write_str("llc"),
-            OrganizationKind::Corporation => f.write_str("corporation"),
-            OrganizationKind::Partnership => f.write_str("partnership"),
-            OrganizationKind::Trust => f.write_str("trust"),
-            OrganizationKind::Estate => f.write_str("estate"),
-            OrganizationKind::Government => f.write_str("government"),
-            OrganizationKind::Nonprofit => f.write_str("nonprofit"),
-            OrganizationKind::Reit => f.write_str("reit"),
-            OrganizationKind::Fund => f.write_str("fund"),
-            OrganizationKind::Lender => f.write_str("lender"),
-            OrganizationKind::Brokerage => f.write_str("brokerage"),
-            OrganizationKind::Hoa => f.write_str("hoa"),
-            OrganizationKind::Other => f.write_str("other"),
-        }
-    }
-}
-
-#[cfg(feature = "pyo3")]
-impl<'py> IntoPyObject<'py> for OrganizationKind {
-    type Target = PyAny;
-    type Output = Bound<'py, Self::Target>;
-    type Error = PyErr;
-    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        let s: &str = match self {
-            OrganizationKind::Llc => "llc",
-            OrganizationKind::Corporation => "corporation",
-            OrganizationKind::Partnership => "partnership",
-            OrganizationKind::Trust => "trust",
-            OrganizationKind::Estate => "estate",
-            OrganizationKind::Government => "government",
-            OrganizationKind::Nonprofit => "nonprofit",
-            OrganizationKind::Reit => "reit",
-            OrganizationKind::Fund => "fund",
-            OrganizationKind::Lender => "lender",
-            OrganizationKind::Brokerage => "brokerage",
-            OrganizationKind::Hoa => "hoa",
-            OrganizationKind::Other => "other",
-        };
-        Ok(pyo3::types::PyString::new(py, s).into_any())
-    }
-}
-
-#[cfg(feature = "pyo3")]
-impl<'py> FromPyObject<'py> for OrganizationKind {
-    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
-        if let Ok(s) = ob.extract::<&str>() {
-            match s {
-                "llc" | "Llc" => Ok(OrganizationKind::Llc),
-                "corporation" | "Corporation" => Ok(OrganizationKind::Corporation),
-                "partnership" | "Partnership" => Ok(OrganizationKind::Partnership),
-                "trust" | "Trust" => Ok(OrganizationKind::Trust),
-                "estate" | "Estate" => Ok(OrganizationKind::Estate),
-                "government" | "Government" => Ok(OrganizationKind::Government),
-                "nonprofit" | "Nonprofit" => Ok(OrganizationKind::Nonprofit),
-                "reit" | "Reit" => Ok(OrganizationKind::Reit),
-                "fund" | "Fund" => Ok(OrganizationKind::Fund),
-                "lender" | "Lender" => Ok(OrganizationKind::Lender),
-                "brokerage" | "Brokerage" => Ok(OrganizationKind::Brokerage),
-                "hoa" | "Hoa" => Ok(OrganizationKind::Hoa),
-                "other" | "Other" => Ok(OrganizationKind::Other),
-                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("invalid value for OrganizationKind: {}", s),
-                )),
-            }
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                concat!("expected str for ", stringify!(OrganizationKind)),
-            ))
-        }
-    }
-}
-
-#[cfg(feature = "stubgen")]
-impl ::pyo3_stub_gen::PyStubType for OrganizationKind {
-    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
-        ::pyo3_stub_gen::TypeInfo::with_module(
-            "typing.Literal['llc', 'corporation', 'partnership', 'trust', 'estate', 'government', 'nonprofit', 'reit', 'fund', 'lender', 'brokerage', 'hoa', 'other']",
             "typing".into(),
         )
     }
@@ -1382,6 +1290,8 @@ impl ::pyo3_stub_gen::PyStubType for RateBasis {
 pub enum RateType {
 #[cfg_attr(feature = "serde", serde(rename = "asking"))]
     Asking,
+#[cfg_attr(feature = "serde", serde(rename = "market"))]
+    Market,
 #[cfg_attr(feature = "serde", serde(rename = "effective"))]
     Effective,
 #[cfg_attr(feature = "serde", serde(rename = "contract"))]
@@ -1392,6 +1302,7 @@ impl core::fmt::Display for RateType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             RateType::Asking => f.write_str("asking"),
+            RateType::Market => f.write_str("market"),
             RateType::Effective => f.write_str("effective"),
             RateType::Contract => f.write_str("contract"),
         }
@@ -1406,6 +1317,7 @@ impl<'py> IntoPyObject<'py> for RateType {
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let s: &str = match self {
             RateType::Asking => "asking",
+            RateType::Market => "market",
             RateType::Effective => "effective",
             RateType::Contract => "contract",
         };
@@ -1419,6 +1331,7 @@ impl<'py> FromPyObject<'py> for RateType {
         if let Ok(s) = ob.extract::<&str>() {
             match s {
                 "asking" | "Asking" => Ok(RateType::Asking),
+                "market" | "Market" => Ok(RateType::Market),
                 "effective" | "Effective" => Ok(RateType::Effective),
                 "contract" | "Contract" => Ok(RateType::Contract),
                 _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
@@ -1437,7 +1350,7 @@ impl<'py> FromPyObject<'py> for RateType {
 impl ::pyo3_stub_gen::PyStubType for RateType {
     fn type_output() -> ::pyo3_stub_gen::TypeInfo {
         ::pyo3_stub_gen::TypeInfo::with_module(
-            "typing.Literal['asking', 'effective', 'contract']",
+            "typing.Literal['asking', 'market', 'effective', 'contract']",
             "typing".into(),
         )
     }
@@ -1663,86 +1576,6 @@ impl ::pyo3_stub_gen::PyStubType for ValuationKind {
     fn type_output() -> ::pyo3_stub_gen::TypeInfo {
         ::pyo3_stub_gen::TypeInfo::with_module(
             "typing.Literal['avm', 'appraisal', 'bpo', 'broker_opinion', 'internal']",
-            "typing".into(),
-        )
-    }
-}
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-pub enum LoanStatus {
-#[cfg_attr(feature = "serde", serde(rename = "active"))]
-    Active,
-#[cfg_attr(feature = "serde", serde(rename = "satisfied"))]
-    Satisfied,
-#[cfg_attr(feature = "serde", serde(rename = "assigned"))]
-    Assigned,
-#[cfg_attr(feature = "serde", serde(rename = "foreclosure"))]
-    Foreclosure,
-#[cfg_attr(feature = "serde", serde(rename = "released"))]
-    Released,
-#[cfg_attr(feature = "serde", serde(rename = "unknown"))]
-    Unknown,
-}
-
-impl core::fmt::Display for LoanStatus {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            LoanStatus::Active => f.write_str("active"),
-            LoanStatus::Satisfied => f.write_str("satisfied"),
-            LoanStatus::Assigned => f.write_str("assigned"),
-            LoanStatus::Foreclosure => f.write_str("foreclosure"),
-            LoanStatus::Released => f.write_str("released"),
-            LoanStatus::Unknown => f.write_str("unknown"),
-        }
-    }
-}
-
-#[cfg(feature = "pyo3")]
-impl<'py> IntoPyObject<'py> for LoanStatus {
-    type Target = PyAny;
-    type Output = Bound<'py, Self::Target>;
-    type Error = PyErr;
-    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        let s: &str = match self {
-            LoanStatus::Active => "active",
-            LoanStatus::Satisfied => "satisfied",
-            LoanStatus::Assigned => "assigned",
-            LoanStatus::Foreclosure => "foreclosure",
-            LoanStatus::Released => "released",
-            LoanStatus::Unknown => "unknown",
-        };
-        Ok(pyo3::types::PyString::new(py, s).into_any())
-    }
-}
-
-#[cfg(feature = "pyo3")]
-impl<'py> FromPyObject<'py> for LoanStatus {
-    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
-        if let Ok(s) = ob.extract::<&str>() {
-            match s {
-                "active" | "Active" => Ok(LoanStatus::Active),
-                "satisfied" | "Satisfied" => Ok(LoanStatus::Satisfied),
-                "assigned" | "Assigned" => Ok(LoanStatus::Assigned),
-                "foreclosure" | "Foreclosure" => Ok(LoanStatus::Foreclosure),
-                "released" | "Released" => Ok(LoanStatus::Released),
-                "unknown" | "Unknown" => Ok(LoanStatus::Unknown),
-                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("invalid value for LoanStatus: {}", s),
-                )),
-            }
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                concat!("expected str for ", stringify!(LoanStatus)),
-            ))
-        }
-    }
-}
-
-#[cfg(feature = "stubgen")]
-impl ::pyo3_stub_gen::PyStubType for LoanStatus {
-    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
-        ::pyo3_stub_gen::TypeInfo::with_module(
-            "typing.Literal['active', 'satisfied', 'assigned', 'foreclosure', 'released', 'unknown']",
             "typing".into(),
         )
     }
@@ -1987,6 +1820,8 @@ impl ::pyo3_stub_gen::PyStubType for ParcelLineageKind {
 pub enum EstateType {
 #[cfg_attr(feature = "serde", serde(rename = "fee_simple"))]
     FeeSimple,
+#[cfg_attr(feature = "serde", serde(rename = "leased_fee"))]
+    LeasedFee,
 #[cfg_attr(feature = "serde", serde(rename = "leasehold"))]
     Leasehold,
 #[cfg_attr(feature = "serde", serde(rename = "life_estate"))]
@@ -2001,6 +1836,7 @@ impl core::fmt::Display for EstateType {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             EstateType::FeeSimple => f.write_str("fee_simple"),
+            EstateType::LeasedFee => f.write_str("leased_fee"),
             EstateType::Leasehold => f.write_str("leasehold"),
             EstateType::LifeEstate => f.write_str("life_estate"),
             EstateType::CooperativeShares => f.write_str("cooperative_shares"),
@@ -2017,6 +1853,7 @@ impl<'py> IntoPyObject<'py> for EstateType {
     fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
         let s: &str = match self {
             EstateType::FeeSimple => "fee_simple",
+            EstateType::LeasedFee => "leased_fee",
             EstateType::Leasehold => "leasehold",
             EstateType::LifeEstate => "life_estate",
             EstateType::CooperativeShares => "cooperative_shares",
@@ -2032,6 +1869,7 @@ impl<'py> FromPyObject<'py> for EstateType {
         if let Ok(s) = ob.extract::<&str>() {
             match s {
                 "fee_simple" | "FeeSimple" => Ok(EstateType::FeeSimple),
+                "leased_fee" | "LeasedFee" => Ok(EstateType::LeasedFee),
                 "leasehold" | "Leasehold" => Ok(EstateType::Leasehold),
                 "life_estate" | "LifeEstate" => Ok(EstateType::LifeEstate),
                 "cooperative_shares" | "CooperativeShares" => Ok(EstateType::CooperativeShares),
@@ -2052,7 +1890,82 @@ impl<'py> FromPyObject<'py> for EstateType {
 impl ::pyo3_stub_gen::PyStubType for EstateType {
     fn type_output() -> ::pyo3_stub_gen::TypeInfo {
         ::pyo3_stub_gen::TypeInfo::with_module(
-            "typing.Literal['fee_simple', 'leasehold', 'life_estate', 'cooperative_shares', 'other']",
+            "typing.Literal['fee_simple', 'leased_fee', 'leasehold', 'life_estate', 'cooperative_shares', 'other']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum RatingScope {
+#[cfg_attr(feature = "serde", serde(rename = "overall"))]
+    Overall,
+#[cfg_attr(feature = "serde", serde(rename = "exterior"))]
+    Exterior,
+#[cfg_attr(feature = "serde", serde(rename = "interior"))]
+    Interior,
+#[cfg_attr(feature = "serde", serde(rename = "component"))]
+    Component,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
+    Other,
+}
+
+impl core::fmt::Display for RatingScope {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            RatingScope::Overall => f.write_str("overall"),
+            RatingScope::Exterior => f.write_str("exterior"),
+            RatingScope::Interior => f.write_str("interior"),
+            RatingScope::Component => f.write_str("component"),
+            RatingScope::Other => f.write_str("other"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for RatingScope {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            RatingScope::Overall => "overall",
+            RatingScope::Exterior => "exterior",
+            RatingScope::Interior => "interior",
+            RatingScope::Component => "component",
+            RatingScope::Other => "other",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for RatingScope {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "overall" | "Overall" => Ok(RatingScope::Overall),
+                "exterior" | "Exterior" => Ok(RatingScope::Exterior),
+                "interior" | "Interior" => Ok(RatingScope::Interior),
+                "component" | "Component" => Ok(RatingScope::Component),
+                "other" | "Other" => Ok(RatingScope::Other),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for RatingScope: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(RatingScope)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for RatingScope {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['overall', 'exterior', 'interior', 'component', 'other']",
             "typing".into(),
         )
     }
@@ -2460,19 +2373,165 @@ impl ::pyo3_stub_gen::PyStubType for AssessorStatus {
 
 // Classes
 
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
-#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
-pub struct Any {
+#[derive(Clone, PartialEq)]
+pub struct Anything(
+    #[cfg(feature = "serde")] pub serde_value::Value,
+    #[cfg(not(feature = "serde"))] pub (),
+);
+
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for Anything {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::any()
+    }
 }
+
+
+#[cfg(feature = "serde")]
+impl Serialize for Anything {
+    fn serialize<S>(&self, to_ser: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        self.0.serialize(to_ser)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Anything {
+    fn deserialize<D>(de: D) -> Result<Self, D::Error>
+    where D: serde::Deserializer<'de> {
+        <serde_value::Value as Deserialize>::deserialize(de).map(Anything)
+    }
+}
+
+#[cfg(all(feature = "pyo3", feature = "serde"))]
+impl<'py> FromPyObject<'py> for Anything {
+    fn extract_bound(obj: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        use pyo3::types::{PyAny, PyDict, PyList, PyTuple};
+        use serde_value::Value;
+
+        fn py_to_value<'py>(o: &pyo3::Bound<'py, PyAny>) -> pyo3::PyResult<Value> {
+            // None -> Unit
+            if o.is_none() {
+                return Ok(Value::Unit);
+            }
+
+            // Try simple primitives first
+            if let Ok(s) = o.extract::<&str>() {
+                return Ok(Value::String(s.to_string()));
+            }
+            if let Ok(b) = o.extract::<bool>() {
+                return Ok(Value::Bool(b));
+            }
+
+            // Sequences (list/tuple)
+            if let Ok(list) = o.downcast::<PyList>() {
+                let mut out = Vec::with_capacity(list.len());
+                for item in list.iter() {
+                    out.push(py_to_value(&item)?);
+                }
+                return Ok(Value::Seq(out));
+            }
+            if let Ok(t) = o.downcast::<PyTuple>() {
+                let mut out = Vec::with_capacity(t.len());
+                for item in t.iter() {
+                    out.push(py_to_value(&item)?);
+                }
+                return Ok(Value::Seq(out));
+            }
+
+            // Mappings (dict with string-like keys)
+            if let Ok(d) = o.downcast::<PyDict>() {
+                let mut map = std::collections::BTreeMap::<Value, Value>::new();
+                for (k, v) in d.iter() {
+                    // Only accept string-like keys for deterministic ordering
+                    if let Ok(ks) = k.extract::<&str>() {
+                        map.insert(Value::String(ks.to_string()), py_to_value(&v)?);
+                    } else {
+                        return Err(pyo3::exceptions::PyTypeError::new_err(
+                            "dict keys for Anything must be str",
+                        ));
+                    }
+                }
+                return Ok(Value::Map(map));
+            }
+
+            // Fallback: stringify unknown types
+            let s = format!("{}", o.str()?);
+            Ok(Value::String(s))
+        }
+
+        Ok(Anything(py_to_value(obj)?))
+    }
+}
+
+/* ---------- getter side ---------- */
+#[cfg(all(feature = "pyo3", feature = "serde"))]
+impl<'py> IntoPyObject<'py> for Anything {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        use pyo3::types::{PyAny, PyDict, PyList, PyString};
+        use serde_value::Value;
+
+        fn value_to_py<'py>(py: Python<'py>, v: &Value) -> pyo3::PyResult<Bound<'py, PyAny>> {
+            match v {
+                Value::Unit => Ok(py.None().into_bound(py)),
+                Value::Bool(b) => Ok(pyo3::types::PyBool::new(py, *b).to_owned().into_any()),
+                Value::String(s) => Ok(PyString::new(py, s).into_any()),
+                Value::Seq(seq) => {
+                    let list = PyList::empty(py);
+                    for item in seq.iter() {
+                        let ob = value_to_py(py, item)?;
+                        list.append(ob)?;
+                    }
+                    Ok(list.into_any())
+                }
+                Value::Map(map) => {
+                    let dict = PyDict::new(py);
+                    for (k, v) in map.iter() {
+                        let pk = value_to_py(py, k)?;
+                        let pv = value_to_py(py, v)?;
+                        dict.set_item(pk, pv)?;
+                    }
+                    Ok(dict.into_any())
+                }
+                // Best-effort for other serde_value variants
+                // (numbers, bytes, chars, etc.)
+                other => {
+                    // Try common cases without bringing extra deps
+                    // Numbers are converted via string if not covered above
+                    let s = format!("{:?}", other);
+                    Ok(PyString::new(py, &s).into_any())
+                }
+            }
+        }
+
+        value_to_py(py, &self.0)
+    }
+}
+
+impl std::fmt::Debug for Anything {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        #[cfg(feature = "serde")]
+        return write!(f, "Anything({:?})", self.0);
+
+        #[cfg(not(feature = "serde"))]
+        return f.write_str("Anything(<opaque>)");
+    }
+}pub type Any = Anything;
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Money {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_decimal_string"))]
     pub amount: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_iso_currency"))]
     pub currency: String
 }
 #[cfg(feature = "pyo3")]
@@ -2513,6 +2572,7 @@ impl<'py> FromPyObject<'py> for Box<Money> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Area {
@@ -2557,6 +2617,7 @@ impl<'py> FromPyObject<'py> for Box<Area> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Length {
@@ -2601,10 +2662,13 @@ impl<'py> FromPyObject<'py> for Box<Length> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct UnitRate {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_decimal_string"))]
     pub amount: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_iso_currency"))]
     pub currency: String,
     pub denominator: String
 }
@@ -2646,6 +2710,7 @@ impl<'py> FromPyObject<'py> for Box<UnitRate> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct CodeableConcept {
@@ -2691,9 +2756,178 @@ impl<'py> FromPyObject<'py> for Box<CodeableConcept> {
 }
 
 
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", serde(untagged))]
+pub enum CodeableConceptOrSubtype {    Classification(Classification),     Rating(Rating),     CodeableConcept(CodeableConcept)}
+
+impl From<Classification>   for CodeableConceptOrSubtype { fn from(x: Classification)   -> Self { Self::Classification(x) } }
+impl From<Rating>   for CodeableConceptOrSubtype { fn from(x: Rating)   -> Self { Self::Rating(x) } }
+impl From<CodeableConcept>   for CodeableConceptOrSubtype { fn from(x: CodeableConcept)   -> Self { Self::CodeableConcept(x) } }
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for CodeableConceptOrSubtype {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Classification>() {
+            return Ok(CodeableConceptOrSubtype::Classification(val));
+        }        if let Ok(val) = ob.extract::<Rating>() {
+            return Ok(CodeableConceptOrSubtype::Rating(val));
+        }        if let Ok(val) = ob.extract::<CodeableConcept>() {
+            return Ok(CodeableConceptOrSubtype::CodeableConcept(val));
+        }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid CodeableConceptOrSubtype",
+        ))
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for CodeableConceptOrSubtype {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        match self {
+            CodeableConceptOrSubtype::Classification(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            CodeableConceptOrSubtype::Rating(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            CodeableConceptOrSubtype::CodeableConcept(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+        }
+    }
+}
+
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<CodeableConceptOrSubtype>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<CodeableConceptOrSubtype> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<CodeableConceptOrSubtype>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid CodeableConceptOrSubtype",
+        ))
+    }
+}
+
+
+#[cfg(feature = "stubgen")]
+::pyo3_stub_gen::impl_stub_type!(CodeableConceptOrSubtype = Classification | Rating | CodeableConcept);
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct Classification {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub system: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub code: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub display: Option<String>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl Classification {
+    #[new]
+    #[pyo3(signature = (system, code, display=None))]
+    pub fn new(system: String, code: String, display: Option<String>) -> Self {
+        Classification{system, code, display}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<Classification>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<Classification> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Classification>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid Classification",
+        ))
+    }
+}
+
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct Rating {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub system: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub code: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub description: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub scope: Option<RatingScope>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub display: Option<String>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl Rating {
+    #[new]
+    #[pyo3(signature = (system, code, description=None, scope=None, display=None))]
+    pub fn new(system: String, code: String, description: Option<String>, scope: Option<RatingScope>, display: Option<String>) -> Self {
+        Rating{system, code, description, scope, display}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<Rating>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<Rating> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Rating>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid Rating",
+        ))
+    }
+}
+
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct GeoPoint {
@@ -2738,9 +2972,11 @@ impl<'py> FromPyObject<'py> for Box<GeoPoint> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Geometry {
+    #[cfg_attr(feature = "serde", serde(rename = "type"))]
     pub type_: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub coordinates: Option<Any>
@@ -2784,6 +3020,7 @@ impl<'py> FromPyObject<'py> for Box<Geometry> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Provenance {
@@ -2792,7 +3029,7 @@ pub struct Provenance {
     #[cfg_attr(feature = "serde", serde(default))]
     pub source_url: Option<uri>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub retrieved_at: Option<NaiveDateTime>,
+    pub retrieved_at: Option<DateTime<FixedOffset>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub method: Option<CaptureMethod>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -2806,7 +3043,7 @@ pub struct Provenance {
 impl Provenance {
     #[new]
     #[pyo3(signature = (provider=None, source_url=None, retrieved_at=None, method=None, confidence=None, verification=None))]
-    pub fn new(provider: Option<String>, source_url: Option<uri>, retrieved_at: Option<NaiveDateTime>, method: Option<CaptureMethod>, confidence: Option<f64>, verification: Option<VerificationStatus>) -> Self {
+    pub fn new(provider: Option<String>, source_url: Option<uri>, retrieved_at: Option<DateTime<FixedOffset>>, method: Option<CaptureMethod>, confidence: Option<f64>, verification: Option<VerificationStatus>) -> Self {
         Provenance{provider, source_url, retrieved_at, method, confidence, verification}
     }
 }
@@ -2838,25 +3075,30 @@ impl<'py> FromPyObject<'py> for Box<Provenance> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Entity {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Entity {
     #[new]
-    #[pyo3(signature = (id, extras=None, provenance=None))]
-    pub fn new(id: String, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (id, extras=None, provenance=None, verifications=None))]
+    pub fn new(id: String, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Entity{id, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Entity{id, extras, provenance, verifications}
     }
 }
 
@@ -2942,7 +3184,7 @@ impl serde_utils::InlinedPair for Entity {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 #[cfg_attr(feature="serde", serde(untagged))]
-pub enum EntityOrSubtype {    Jurisdiction(Jurisdiction),     Address(Address),     Property(Property),     Parcel(Parcel),     PropertyParcel(PropertyParcel),     ParcelLineage(ParcelLineage),     PropertyIdentifier(PropertyIdentifier),     Party(Party),     OwnershipPeriod(OwnershipPeriod),     Structure(Structure),     Site(Site),     Space(Space),     PropertyAssociation(PropertyAssociation),     Assessment(Assessment),     TaxBill(TaxBill),     Transfer(Transfer),     SaleEvent(SaleEvent),     Listing(Listing),     LeaseEvent(LeaseEvent),     UnitRentObservation(UnitRentObservation),     Loan(Loan),     Lien(Lien),     ForeclosureCase(ForeclosureCase),     Permit(Permit),     OperatingStatement(OperatingStatement),     Valuation(Valuation)}
+pub enum EntityOrSubtype {    Jurisdiction(Jurisdiction),     Address(Address),     Property(Property),     Parcel(Parcel),     PropertyParcel(PropertyParcel),     ParcelLineage(ParcelLineage),     PropertyIdentifier(PropertyIdentifier),     Party(Party),     SourceArtifact(SourceArtifact),     PropertyAddress(PropertyAddress),     OwnershipPeriod(OwnershipPeriod),     Structure(Structure),     Site(Site),     Space(Space),     PropertyState(PropertyState),     SiteState(SiteState),     StructureState(StructureState),     SpaceState(SpaceState),     PropertyStateSnapshot(PropertyStateSnapshot),     PropertyAssociation(PropertyAssociation),     Assessment(Assessment),     TaxBill(TaxBill),     Transfer(Transfer),     SaleEvent(SaleEvent),     Listing(Listing),     LeaseEvent(LeaseEvent),     UnitRentObservation(UnitRentObservation),     Loan(Loan),     Lien(Lien),     ForeclosureCase(ForeclosureCase),     Permit(Permit),     OperatingStatement(OperatingStatement),     RentRoll(RentRoll),     Valuation(Valuation)}
 
 impl From<Jurisdiction>   for EntityOrSubtype { fn from(x: Jurisdiction)   -> Self { Self::Jurisdiction(x) } }
 impl From<Address>   for EntityOrSubtype { fn from(x: Address)   -> Self { Self::Address(x) } }
@@ -2952,10 +3194,17 @@ impl From<PropertyParcel>   for EntityOrSubtype { fn from(x: PropertyParcel)   -
 impl From<ParcelLineage>   for EntityOrSubtype { fn from(x: ParcelLineage)   -> Self { Self::ParcelLineage(x) } }
 impl From<PropertyIdentifier>   for EntityOrSubtype { fn from(x: PropertyIdentifier)   -> Self { Self::PropertyIdentifier(x) } }
 impl From<Party>   for EntityOrSubtype { fn from(x: Party)   -> Self { Self::Party(x) } }
+impl From<SourceArtifact>   for EntityOrSubtype { fn from(x: SourceArtifact)   -> Self { Self::SourceArtifact(x) } }
+impl From<PropertyAddress>   for EntityOrSubtype { fn from(x: PropertyAddress)   -> Self { Self::PropertyAddress(x) } }
 impl From<OwnershipPeriod>   for EntityOrSubtype { fn from(x: OwnershipPeriod)   -> Self { Self::OwnershipPeriod(x) } }
 impl From<Structure>   for EntityOrSubtype { fn from(x: Structure)   -> Self { Self::Structure(x) } }
 impl From<Site>   for EntityOrSubtype { fn from(x: Site)   -> Self { Self::Site(x) } }
 impl From<Space>   for EntityOrSubtype { fn from(x: Space)   -> Self { Self::Space(x) } }
+impl From<PropertyState>   for EntityOrSubtype { fn from(x: PropertyState)   -> Self { Self::PropertyState(x) } }
+impl From<SiteState>   for EntityOrSubtype { fn from(x: SiteState)   -> Self { Self::SiteState(x) } }
+impl From<StructureState>   for EntityOrSubtype { fn from(x: StructureState)   -> Self { Self::StructureState(x) } }
+impl From<SpaceState>   for EntityOrSubtype { fn from(x: SpaceState)   -> Self { Self::SpaceState(x) } }
+impl From<PropertyStateSnapshot>   for EntityOrSubtype { fn from(x: PropertyStateSnapshot)   -> Self { Self::PropertyStateSnapshot(x) } }
 impl From<PropertyAssociation>   for EntityOrSubtype { fn from(x: PropertyAssociation)   -> Self { Self::PropertyAssociation(x) } }
 impl From<Assessment>   for EntityOrSubtype { fn from(x: Assessment)   -> Self { Self::Assessment(x) } }
 impl From<TaxBill>   for EntityOrSubtype { fn from(x: TaxBill)   -> Self { Self::TaxBill(x) } }
@@ -2969,6 +3218,7 @@ impl From<Lien>   for EntityOrSubtype { fn from(x: Lien)   -> Self { Self::Lien(
 impl From<ForeclosureCase>   for EntityOrSubtype { fn from(x: ForeclosureCase)   -> Self { Self::ForeclosureCase(x) } }
 impl From<Permit>   for EntityOrSubtype { fn from(x: Permit)   -> Self { Self::Permit(x) } }
 impl From<OperatingStatement>   for EntityOrSubtype { fn from(x: OperatingStatement)   -> Self { Self::OperatingStatement(x) } }
+impl From<RentRoll>   for EntityOrSubtype { fn from(x: RentRoll)   -> Self { Self::RentRoll(x) } }
 impl From<Valuation>   for EntityOrSubtype { fn from(x: Valuation)   -> Self { Self::Valuation(x) } }
 
 #[cfg(feature = "pyo3")]
@@ -2990,6 +3240,10 @@ impl<'py> FromPyObject<'py> for EntityOrSubtype {
             return Ok(EntityOrSubtype::PropertyIdentifier(val));
         }        if let Ok(val) = ob.extract::<Party>() {
             return Ok(EntityOrSubtype::Party(val));
+        }        if let Ok(val) = ob.extract::<SourceArtifact>() {
+            return Ok(EntityOrSubtype::SourceArtifact(val));
+        }        if let Ok(val) = ob.extract::<PropertyAddress>() {
+            return Ok(EntityOrSubtype::PropertyAddress(val));
         }        if let Ok(val) = ob.extract::<OwnershipPeriod>() {
             return Ok(EntityOrSubtype::OwnershipPeriod(val));
         }        if let Ok(val) = ob.extract::<Structure>() {
@@ -2998,6 +3252,16 @@ impl<'py> FromPyObject<'py> for EntityOrSubtype {
             return Ok(EntityOrSubtype::Site(val));
         }        if let Ok(val) = ob.extract::<Space>() {
             return Ok(EntityOrSubtype::Space(val));
+        }        if let Ok(val) = ob.extract::<PropertyState>() {
+            return Ok(EntityOrSubtype::PropertyState(val));
+        }        if let Ok(val) = ob.extract::<SiteState>() {
+            return Ok(EntityOrSubtype::SiteState(val));
+        }        if let Ok(val) = ob.extract::<StructureState>() {
+            return Ok(EntityOrSubtype::StructureState(val));
+        }        if let Ok(val) = ob.extract::<SpaceState>() {
+            return Ok(EntityOrSubtype::SpaceState(val));
+        }        if let Ok(val) = ob.extract::<PropertyStateSnapshot>() {
+            return Ok(EntityOrSubtype::PropertyStateSnapshot(val));
         }        if let Ok(val) = ob.extract::<PropertyAssociation>() {
             return Ok(EntityOrSubtype::PropertyAssociation(val));
         }        if let Ok(val) = ob.extract::<Assessment>() {
@@ -3024,6 +3288,8 @@ impl<'py> FromPyObject<'py> for EntityOrSubtype {
             return Ok(EntityOrSubtype::Permit(val));
         }        if let Ok(val) = ob.extract::<OperatingStatement>() {
             return Ok(EntityOrSubtype::OperatingStatement(val));
+        }        if let Ok(val) = ob.extract::<RentRoll>() {
+            return Ok(EntityOrSubtype::RentRoll(val));
         }        if let Ok(val) = ob.extract::<Valuation>() {
             return Ok(EntityOrSubtype::Valuation(val));
         }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
@@ -3048,10 +3314,17 @@ impl<'py> IntoPyObject<'py> for EntityOrSubtype {
             EntityOrSubtype::ParcelLineage(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::PropertyIdentifier(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Party(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::SourceArtifact(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::PropertyAddress(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::OwnershipPeriod(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Structure(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Site(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Space(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::PropertyState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::SiteState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::StructureState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::SpaceState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::PropertyStateSnapshot(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::PropertyAssociation(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Assessment(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::TaxBill(val) => val.into_pyobject(py).map(move |b| b.into_any()),
@@ -3065,6 +3338,7 @@ impl<'py> IntoPyObject<'py> for EntityOrSubtype {
             EntityOrSubtype::ForeclosureCase(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Permit(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::OperatingStatement(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            EntityOrSubtype::RentRoll(val) => val.into_pyobject(py).map(move |b| b.into_any()),
             EntityOrSubtype::Valuation(val) => val.into_pyobject(py).map(move |b| b.into_any()),
         }
     }
@@ -3125,6 +3399,12 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
         if let Ok(x) = Party::from_pair_mapping(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::Party(x));
         }
+        if let Ok(x) = SourceArtifact::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::SourceArtifact(x));
+        }
+        if let Ok(x) = PropertyAddress::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::PropertyAddress(x));
+        }
         if let Ok(x) = OwnershipPeriod::from_pair_mapping(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::OwnershipPeriod(x));
         }
@@ -3136,6 +3416,21 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
         }
         if let Ok(x) = Space::from_pair_mapping(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::Space(x));
+        }
+        if let Ok(x) = PropertyState::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::PropertyState(x));
+        }
+        if let Ok(x) = SiteState::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::SiteState(x));
+        }
+        if let Ok(x) = StructureState::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::StructureState(x));
+        }
+        if let Ok(x) = SpaceState::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::SpaceState(x));
+        }
+        if let Ok(x) = PropertyStateSnapshot::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::PropertyStateSnapshot(x));
         }
         if let Ok(x) = PropertyAssociation::from_pair_mapping(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::PropertyAssociation(x));
@@ -3176,6 +3471,9 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
         if let Ok(x) = OperatingStatement::from_pair_mapping(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::OperatingStatement(x));
         }
+        if let Ok(x) = RentRoll::from_pair_mapping(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::RentRoll(x));
+        }
         if let Ok(x) = Valuation::from_pair_mapping(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::Valuation(x));
         }
@@ -3207,6 +3505,12 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
         if let Ok(x) = Party::from_pair_simple(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::Party(x));
         }
+        if let Ok(x) = SourceArtifact::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::SourceArtifact(x));
+        }
+        if let Ok(x) = PropertyAddress::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::PropertyAddress(x));
+        }
         if let Ok(x) = OwnershipPeriod::from_pair_simple(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::OwnershipPeriod(x));
         }
@@ -3218,6 +3522,21 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
         }
         if let Ok(x) = Space::from_pair_simple(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::Space(x));
+        }
+        if let Ok(x) = PropertyState::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::PropertyState(x));
+        }
+        if let Ok(x) = SiteState::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::SiteState(x));
+        }
+        if let Ok(x) = StructureState::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::StructureState(x));
+        }
+        if let Ok(x) = SpaceState::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::SpaceState(x));
+        }
+        if let Ok(x) = PropertyStateSnapshot::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::PropertyStateSnapshot(x));
         }
         if let Ok(x) = PropertyAssociation::from_pair_simple(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::PropertyAssociation(x));
@@ -3258,6 +3577,9 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
         if let Ok(x) = OperatingStatement::from_pair_simple(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::OperatingStatement(x));
         }
+        if let Ok(x) = RentRoll::from_pair_simple(k.clone(), v.clone()) {
+            return Ok(EntityOrSubtype::RentRoll(x));
+        }
         if let Ok(x) = Valuation::from_pair_simple(k.clone(), v.clone()) {
             return Ok(EntityOrSubtype::Valuation(x));
         }
@@ -3274,10 +3596,17 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
             EntityOrSubtype::ParcelLineage(inner) => inner.extract_key(),
             EntityOrSubtype::PropertyIdentifier(inner) => inner.extract_key(),
             EntityOrSubtype::Party(inner) => inner.extract_key(),
+            EntityOrSubtype::SourceArtifact(inner) => inner.extract_key(),
+            EntityOrSubtype::PropertyAddress(inner) => inner.extract_key(),
             EntityOrSubtype::OwnershipPeriod(inner) => inner.extract_key(),
             EntityOrSubtype::Structure(inner) => inner.extract_key(),
             EntityOrSubtype::Site(inner) => inner.extract_key(),
             EntityOrSubtype::Space(inner) => inner.extract_key(),
+            EntityOrSubtype::PropertyState(inner) => inner.extract_key(),
+            EntityOrSubtype::SiteState(inner) => inner.extract_key(),
+            EntityOrSubtype::StructureState(inner) => inner.extract_key(),
+            EntityOrSubtype::SpaceState(inner) => inner.extract_key(),
+            EntityOrSubtype::PropertyStateSnapshot(inner) => inner.extract_key(),
             EntityOrSubtype::PropertyAssociation(inner) => inner.extract_key(),
             EntityOrSubtype::Assessment(inner) => inner.extract_key(),
             EntityOrSubtype::TaxBill(inner) => inner.extract_key(),
@@ -3291,21 +3620,23 @@ impl serde_utils::InlinedPair for EntityOrSubtype {
             EntityOrSubtype::ForeclosureCase(inner) => inner.extract_key(),
             EntityOrSubtype::Permit(inner) => inner.extract_key(),
             EntityOrSubtype::OperatingStatement(inner) => inner.extract_key(),
+            EntityOrSubtype::RentRoll(inner) => inner.extract_key(),
             EntityOrSubtype::Valuation(inner) => inner.extract_key(),
         }
     }
 }
 
 #[cfg(feature = "stubgen")]
-::pyo3_stub_gen::impl_stub_type!(EntityOrSubtype = Jurisdiction | Address | Property | Parcel | PropertyParcel | ParcelLineage | PropertyIdentifier | Party | OwnershipPeriod | Structure | Site | Space | PropertyAssociation | Assessment | TaxBill | Transfer | SaleEvent | Listing | LeaseEvent | UnitRentObservation | Loan | Lien | ForeclosureCase | Permit | OperatingStatement | Valuation);
+::pyo3_stub_gen::impl_stub_type!(EntityOrSubtype = Jurisdiction | Address | Property | Parcel | PropertyParcel | ParcelLineage | PropertyIdentifier | Party | SourceArtifact | PropertyAddress | OwnershipPeriod | Structure | Site | Space | PropertyState | SiteState | StructureState | SpaceState | PropertyStateSnapshot | PropertyAssociation | Assessment | TaxBill | Transfer | SaleEvent | Listing | LeaseEvent | UnitRentObservation | Loan | Lien | ForeclosureCase | Permit | OperatingStatement | RentRoll | Valuation);
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct InstrumentReference {
     #[cfg_attr(feature = "serde", serde(default))]
-    pub relationship_type: Option<CodeableConcept>,
+    pub relationship_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub document_number: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -3321,7 +3652,7 @@ pub struct InstrumentReference {
 impl InstrumentReference {
     #[new]
     #[pyo3(signature = (relationship_type=None, document_number=None, registry_reference=None, recording_authority=None, extras=None))]
-    pub fn new(relationship_type: Option<serde_utils::PyValue<CodeableConcept>>, document_number: Option<String>, registry_reference: Option<String>, recording_authority: Option<String>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    pub fn new(relationship_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, document_number: Option<String>, registry_reference: Option<String>, recording_authority: Option<String>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let relationship_type = relationship_type.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         InstrumentReference{relationship_type, document_number, registry_reference, recording_authority, extras}
@@ -3355,6 +3686,7 @@ impl<'py> FromPyObject<'py> for Box<InstrumentReference> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct RecordedInstrument {
@@ -3369,24 +3701,26 @@ pub struct RecordedInstrument {
     #[cfg_attr(feature = "serde", serde(default))]
     pub instrument_date: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub document_type: Option<CodeableConcept>,
+    pub document_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub recording_authority: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub registry_reference: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub related_instruments: Option<Vec<InstrumentReference>>
+    pub related_instruments: Option<Vec<InstrumentReference>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl RecordedInstrument {
     #[new]
-    #[pyo3(signature = (document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None))]
-    pub fn new(document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConcept>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>) -> Self {
+    #[pyo3(signature = (document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, artifacts=None))]
+    pub fn new(document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, artifacts: Option<Vec<String>>) -> Self {
         let document_type = document_type.map(|v| v.into_inner());
         let related_instruments = related_instruments.map(|v| v.into_inner());
-        RecordedInstrument{document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments}
+        RecordedInstrument{document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, artifacts}
     }
 }
 
@@ -3491,13 +3825,13 @@ impl<'py> FromPyObject<'py> for Box<RecordedInstrumentOrSubtype> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct TransactionParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -3508,10 +3842,10 @@ pub struct TransactionParty {
 #[pymethods]
 impl TransactionParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        TransactionParty{role, name, party, sequence, extras}
+        TransactionParty{role, party, sequence, extras}
     }
 }
 
@@ -3624,9 +3958,11 @@ impl<'py> FromPyObject<'py> for Box<TransactionPartyOrSubtype> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Jurisdiction {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_iso_country"))]
     pub country: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub region: Option<String>,
@@ -3638,23 +3974,27 @@ pub struct Jurisdiction {
     pub parent: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub boundary: Option<Geometry>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Jurisdiction {
     #[new]
-    #[pyo3(signature = (country, name, kind, id, region=None, authority_code=None, parent=None, boundary=None, extras=None, provenance=None))]
-    pub fn new(country: String, name: String, kind: String, id: String, region: Option<String>, authority_code: Option<String>, parent: Option<String>, boundary: Option<serde_utils::PyValue<Geometry>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (country, name, kind, id, region=None, authority_code=None, parent=None, boundary=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(country: String, name: String, kind: String, id: String, region: Option<String>, authority_code: Option<String>, parent: Option<String>, boundary: Option<serde_utils::PyValue<Geometry>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let boundary = boundary.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Jurisdiction{country, name, kind, id, region, authority_code, parent, boundary, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Jurisdiction{country, name, kind, id, region, authority_code, parent, boundary, extras, provenance, verifications}
     }
 }
 
@@ -3730,9 +4070,11 @@ impl serde_utils::InlinedPair for Jurisdiction {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Address {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_iso_country"))]
     pub country: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub unformatted_address: Option<String>,
@@ -3764,28 +4106,37 @@ pub struct Address {
     pub admin_area: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub admin_area_code: Option<String>,
-    pub address_hash: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub address_hash: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub address_hash_scheme: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub location: Option<GeoPoint>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub location_accuracy: Option<GeocodeAccuracy>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<Box<VerificationAttribution>>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Address {
     #[new]
-    #[pyo3(signature = (country, address_hash, id, unformatted_address=None, street_number=None, street_pre_direction=None, street_name=None, street_suffix=None, street_post_direction=None, unit_type=None, unit_number=None, sublocality=None, city=None, region=None, postal_code=None, postal_code_suffix=None, admin_area=None, admin_area_code=None, location=None, location_accuracy=None, extras=None, provenance=None))]
-    pub fn new(country: String, address_hash: String, id: String, unformatted_address: Option<String>, street_number: Option<String>, street_pre_direction: Option<String>, street_name: Option<String>, street_suffix: Option<String>, street_post_direction: Option<String>, unit_type: Option<String>, unit_number: Option<String>, sublocality: Option<String>, city: Option<String>, region: Option<String>, postal_code: Option<String>, postal_code_suffix: Option<String>, admin_area: Option<String>, admin_area_code: Option<String>, location: Option<serde_utils::PyValue<GeoPoint>>, location_accuracy: Option<GeocodeAccuracy>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (country, id, unformatted_address=None, street_number=None, street_pre_direction=None, street_name=None, street_suffix=None, street_post_direction=None, unit_type=None, unit_number=None, sublocality=None, city=None, region=None, postal_code=None, postal_code_suffix=None, admin_area=None, admin_area_code=None, address_hash=None, address_hash_scheme=None, location=None, location_accuracy=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(country: String, id: String, unformatted_address: Option<String>, street_number: Option<String>, street_pre_direction: Option<String>, street_name: Option<String>, street_suffix: Option<String>, street_post_direction: Option<String>, unit_type: Option<String>, unit_number: Option<String>, sublocality: Option<String>, city: Option<String>, region: Option<String>, postal_code: Option<String>, postal_code_suffix: Option<String>, admin_area: Option<String>, admin_area_code: Option<String>, address_hash: Option<String>, address_hash_scheme: Option<String>, location: Option<serde_utils::PyValue<GeoPoint>>, location_accuracy: Option<GeocodeAccuracy>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<Box<VerificationAttribution>>>>) -> Self {
         let location = location.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Address{country, address_hash, id, unformatted_address, street_number, street_pre_direction, street_name, street_suffix, street_post_direction, unit_type, unit_number, sublocality, city, region, postal_code, postal_code_suffix, admin_area, admin_area_code, location, location_accuracy, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Address{country, id, unformatted_address, street_number, street_pre_direction, street_name, street_suffix, street_post_direction, unit_type, unit_number, sublocality, city, region, postal_code, postal_code_suffix, admin_area, admin_area_code, address_hash, address_hash_scheme, location, location_accuracy, extras, provenance, verifications}
     }
 }
 
@@ -3861,6 +4212,129 @@ impl serde_utils::InlinedPair for Address {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct PropertyFacts {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub name: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_use_class: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_use_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_use_subtype: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_use_system: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub estate_type: Option<EstateType>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub location: Option<GeoPoint>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub building_count: Option<isize>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl PropertyFacts {
+    #[new]
+    #[pyo3(signature = (name=None, property_use_class=None, property_use_type=None, property_use_subtype=None, property_use_system=None, estate_type=None, location=None, building_count=None))]
+    pub fn new(name: Option<String>, property_use_class: Option<String>, property_use_type: Option<String>, property_use_subtype: Option<String>, property_use_system: Option<String>, estate_type: Option<EstateType>, location: Option<serde_utils::PyValue<GeoPoint>>, building_count: Option<isize>) -> Self {
+        let location = location.map(|v| v.into_inner());
+        PropertyFacts{name, property_use_class, property_use_type, property_use_subtype, property_use_system, estate_type, location, building_count}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<PropertyFacts>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<PropertyFacts> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<PropertyFacts>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid PropertyFacts",
+        ))
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", serde(untagged))]
+pub enum PropertyFactsOrSubtype {    Property(Property),     PropertyState(PropertyState)}
+
+impl From<Property>   for PropertyFactsOrSubtype { fn from(x: Property)   -> Self { Self::Property(x) } }
+impl From<PropertyState>   for PropertyFactsOrSubtype { fn from(x: PropertyState)   -> Self { Self::PropertyState(x) } }
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for PropertyFactsOrSubtype {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Property>() {
+            return Ok(PropertyFactsOrSubtype::Property(val));
+        }        if let Ok(val) = ob.extract::<PropertyState>() {
+            return Ok(PropertyFactsOrSubtype::PropertyState(val));
+        }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid PropertyFactsOrSubtype",
+        ))
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for PropertyFactsOrSubtype {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        match self {
+            PropertyFactsOrSubtype::Property(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            PropertyFactsOrSubtype::PropertyState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+        }
+    }
+}
+
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<PropertyFactsOrSubtype>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<PropertyFactsOrSubtype> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<PropertyFactsOrSubtype>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid PropertyFactsOrSubtype",
+        ))
+    }
+}
+
+
+#[cfg(feature = "stubgen")]
+::pyo3_stub_gen::impl_stub_type!(PropertyFactsOrSubtype = Property | PropertyState);
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Property {
@@ -3877,28 +4351,30 @@ pub struct Property {
     #[cfg_attr(feature = "serde", serde(default))]
     pub estate_type: Option<EstateType>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub situs_address: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
     pub location: Option<GeoPoint>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub building_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Property {
     #[new]
-    #[pyo3(signature = (id, name=None, property_use_class=None, property_use_type=None, property_use_subtype=None, property_use_system=None, estate_type=None, situs_address=None, location=None, building_count=None, extras=None, provenance=None))]
-    pub fn new(id: String, name: Option<String>, property_use_class: Option<String>, property_use_type: Option<String>, property_use_subtype: Option<String>, property_use_system: Option<String>, estate_type: Option<EstateType>, situs_address: Option<String>, location: Option<serde_utils::PyValue<GeoPoint>>, building_count: Option<isize>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (id, name=None, property_use_class=None, property_use_type=None, property_use_subtype=None, property_use_system=None, estate_type=None, location=None, building_count=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(id: String, name: Option<String>, property_use_class: Option<String>, property_use_type: Option<String>, property_use_subtype: Option<String>, property_use_system: Option<String>, estate_type: Option<EstateType>, location: Option<serde_utils::PyValue<GeoPoint>>, building_count: Option<isize>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let location = location.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Property{id, name, property_use_class, property_use_type, property_use_subtype, property_use_system, estate_type, situs_address, location, building_count, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Property{id, name, property_use_class, property_use_type, property_use_subtype, property_use_system, estate_type, location, building_count, extras, provenance, verifications}
     }
 }
 
@@ -3984,6 +4460,7 @@ impl serde_utils::InlinedPair for Property {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Parcel {
@@ -4003,24 +4480,28 @@ pub struct Parcel {
     pub boundary: Option<Geometry>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub retired_on: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Parcel {
     #[new]
-    #[pyo3(signature = (jurisdiction, parcel_number, id, normalized_parcel_number=None, unit_designator=None, reso_upi=None, legal_description=None, land_area=None, boundary=None, retired_on=None, extras=None, provenance=None))]
-    pub fn new(jurisdiction: String, parcel_number: String, id: String, normalized_parcel_number: Option<String>, unit_designator: Option<String>, reso_upi: Option<String>, legal_description: Option<String>, land_area: Option<serde_utils::PyValue<Area>>, boundary: Option<serde_utils::PyValue<Geometry>>, retired_on: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (jurisdiction, parcel_number, id, normalized_parcel_number=None, unit_designator=None, reso_upi=None, legal_description=None, land_area=None, boundary=None, retired_on=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(jurisdiction: String, parcel_number: String, id: String, normalized_parcel_number: Option<String>, unit_designator: Option<String>, reso_upi: Option<String>, legal_description: Option<String>, land_area: Option<serde_utils::PyValue<Area>>, boundary: Option<serde_utils::PyValue<Geometry>>, retired_on: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let land_area = land_area.map(|v| v.into_inner());
         let boundary = boundary.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Parcel{jurisdiction, parcel_number, id, normalized_parcel_number, unit_designator, reso_upi, legal_description, land_area, boundary, retired_on, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Parcel{jurisdiction, parcel_number, id, normalized_parcel_number, unit_designator, reso_upi, legal_description, land_area, boundary, retired_on, extras, provenance, verifications}
     }
 }
 
@@ -4096,6 +4577,7 @@ impl serde_utils::InlinedPair for Parcel {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct PropertyParcel {
@@ -4107,22 +4589,26 @@ pub struct PropertyParcel {
     pub started_on: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub ended_on: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl PropertyParcel {
     #[new]
-    #[pyo3(signature = (property, parcel, id, is_primary=None, started_on=None, ended_on=None, extras=None, provenance=None))]
-    pub fn new(property: String, parcel: String, id: String, is_primary: Option<bool>, started_on: Option<NaiveDate>, ended_on: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, parcel, id, is_primary=None, started_on=None, ended_on=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, parcel: String, id: String, is_primary: Option<bool>, started_on: Option<NaiveDate>, ended_on: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        PropertyParcel{property, parcel, id, is_primary, started_on, ended_on, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        PropertyParcel{property, parcel, id, is_primary, started_on, ended_on, extras, provenance, verifications}
     }
 }
 
@@ -4198,6 +4684,7 @@ impl serde_utils::InlinedPair for PropertyParcel {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ParcelLineage {
@@ -4206,22 +4693,26 @@ pub struct ParcelLineage {
     pub kind: ParcelLineageKind,
     #[cfg_attr(feature = "serde", serde(default))]
     pub effective_on: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl ParcelLineage {
     #[new]
-    #[pyo3(signature = (predecessor_parcel, successor_parcel, kind, id, effective_on=None, extras=None, provenance=None))]
-    pub fn new(predecessor_parcel: String, successor_parcel: String, kind: ParcelLineageKind, id: String, effective_on: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (predecessor_parcel, successor_parcel, kind, id, effective_on=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(predecessor_parcel: String, successor_parcel: String, kind: ParcelLineageKind, id: String, effective_on: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        ParcelLineage{predecessor_parcel, successor_parcel, kind, id, effective_on, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        ParcelLineage{predecessor_parcel, successor_parcel, kind, id, effective_on, extras, provenance, verifications}
     }
 }
 
@@ -4297,6 +4788,7 @@ impl serde_utils::InlinedPair for ParcelLineage {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct PropertyIdentifier {
@@ -4305,22 +4797,26 @@ pub struct PropertyIdentifier {
     #[cfg_attr(feature = "serde", serde(default))]
     pub namespace: Option<String>,
     pub value: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl PropertyIdentifier {
     #[new]
-    #[pyo3(signature = (property, scheme, value, id, namespace=None, extras=None, provenance=None))]
-    pub fn new(property: String, scheme: String, value: String, id: String, namespace: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, scheme, value, id, namespace=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, scheme: String, value: String, id: String, namespace: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        PropertyIdentifier{property, scheme, value, id, namespace, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        PropertyIdentifier{property, scheme, value, id, namespace, extras, provenance, verifications}
     }
 }
 
@@ -4396,12 +4892,14 @@ impl serde_utils::InlinedPair for PropertyIdentifier {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Party {
     pub kind: PartyKind,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub organization_kind: Option<OrganizationKind>,
+    pub legal_form: Option<Classification>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub name: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub normalized_name: Option<String>,
@@ -4412,29 +4910,35 @@ pub struct Party {
     #[cfg_attr(feature = "serde", serde(default))]
     pub name_last: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub license_number: Option<String>,
+    pub classifications: Option<Vec<Classification>>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub addresses: Option<Vec<PartyAddress>>,
+    pub addresses: Option<Vec<Box<PartyAddress>>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub contacts: Option<Vec<PartyContact>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<Box<VerificationAttribution>>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Party {
     #[new]
-    #[pyo3(signature = (kind, name, id, organization_kind=None, normalized_name=None, name_first=None, name_middle=None, name_last=None, license_number=None, addresses=None, contacts=None, extras=None, provenance=None))]
-    pub fn new(kind: PartyKind, name: String, id: String, organization_kind: Option<OrganizationKind>, normalized_name: Option<String>, name_first: Option<String>, name_middle: Option<String>, name_last: Option<String>, license_number: Option<String>, addresses: Option<serde_utils::PyValue<Vec<PartyAddress>>>, contacts: Option<serde_utils::PyValue<Vec<PartyContact>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (kind, name, id, legal_form=None, normalized_name=None, name_first=None, name_middle=None, name_last=None, classifications=None, addresses=None, contacts=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(kind: PartyKind, name: String, id: String, legal_form: Option<serde_utils::PyValue<Classification>>, normalized_name: Option<String>, name_first: Option<String>, name_middle: Option<String>, name_last: Option<String>, classifications: Option<serde_utils::PyValue<Vec<Classification>>>, addresses: Option<serde_utils::PyValue<Vec<Box<PartyAddress>>>>, contacts: Option<serde_utils::PyValue<Vec<PartyContact>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<Box<VerificationAttribution>>>>) -> Self {
+        let legal_form = legal_form.map(|v| v.into_inner());
+        let classifications = classifications.map(|v| v.into_inner());
         let addresses = addresses.map(|v| v.into_inner());
         let contacts = contacts.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Party{kind, name, id, organization_kind, normalized_name, name_first, name_middle, name_last, license_number, addresses, contacts, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Party{kind, name, id, legal_form, normalized_name, name_first, name_middle, name_last, classifications, addresses, contacts, extras, provenance, verifications}
     }
 }
 
@@ -4510,29 +5014,337 @@ impl serde_utils::InlinedPair for Party {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
-pub struct PartyAddress {
-    pub address: String,
+pub struct VerificationAttribution {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub verifier: String,
+    pub verified_at: DateTime<FixedOffset>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub kind: Option<String>,
+    pub note: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub is_primary: Option<bool>,
+    pub extras: Option<Any>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl VerificationAttribution {
+    #[new]
+    #[pyo3(signature = (verifier, verified_at, note=None, extras=None))]
+    pub fn new(verifier: String, verified_at: DateTime<FixedOffset>, note: Option<String>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+        let extras = extras.map(|v| v.into_inner());
+        VerificationAttribution{verifier, verified_at, note, extras}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<VerificationAttribution>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<VerificationAttribution> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<VerificationAttribution>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid VerificationAttribution",
+        ))
+    }
+}
+
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct SourceArtifact {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub uri: Option<uri>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub storage_reference: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub media_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub kind: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub title: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub original_filename: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub content_hash: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub hash_scheme: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub page_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub captured_on: Option<DateTime<FixedOffset>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl SourceArtifact {
+    #[new]
+    #[pyo3(signature = (id, uri=None, storage_reference=None, media_type=None, kind=None, title=None, original_filename=None, content_hash=None, hash_scheme=None, page_count=None, captured_on=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(id: String, uri: Option<uri>, storage_reference: Option<String>, media_type: Option<String>, kind: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, title: Option<String>, original_filename: Option<String>, content_hash: Option<String>, hash_scheme: Option<String>, page_count: Option<isize>, captured_on: Option<DateTime<FixedOffset>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let kind = kind.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        SourceArtifact{id, uri, storage_reference, media_type, kind, title, original_filename, content_hash, hash_scheme, page_count, captured_on, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SourceArtifact>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SourceArtifact> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SourceArtifact>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SourceArtifact",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for SourceArtifact {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        let mut map:  BTreeMap<Value, Value> = BTreeMap::new();
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+
+
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct AddressAssociation {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub address: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub role: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_primary: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub valid_from: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub valid_to: Option<NaiveDate>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl AddressAssociation {
+    #[new]
+    #[pyo3(signature = (address, role=None, is_primary=None, valid_from=None, valid_to=None))]
+    pub fn new(address: String, role: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, is_primary: Option<bool>, valid_from: Option<NaiveDate>, valid_to: Option<NaiveDate>) -> Self {
+        let role = role.map(|v| v.into_inner());
+        AddressAssociation{address, role, is_primary, valid_from, valid_to}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<AddressAssociation>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<AddressAssociation> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<AddressAssociation>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid AddressAssociation",
+        ))
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", serde(untagged))]
+pub enum AddressAssociationOrSubtype {    PartyAddress(PartyAddress),     PropertyAddress(PropertyAddress)}
+
+impl From<PartyAddress>   for AddressAssociationOrSubtype { fn from(x: PartyAddress)   -> Self { Self::PartyAddress(x) } }
+impl From<PropertyAddress>   for AddressAssociationOrSubtype { fn from(x: PropertyAddress)   -> Self { Self::PropertyAddress(x) } }
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for AddressAssociationOrSubtype {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<PartyAddress>() {
+            return Ok(AddressAssociationOrSubtype::PartyAddress(val));
+        }        if let Ok(val) = ob.extract::<PropertyAddress>() {
+            return Ok(AddressAssociationOrSubtype::PropertyAddress(val));
+        }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid AddressAssociationOrSubtype",
+        ))
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for AddressAssociationOrSubtype {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        match self {
+            AddressAssociationOrSubtype::PartyAddress(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            AddressAssociationOrSubtype::PropertyAddress(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+        }
+    }
+}
+
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<AddressAssociationOrSubtype>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<AddressAssociationOrSubtype> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<AddressAssociationOrSubtype>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid AddressAssociationOrSubtype",
+        ))
+    }
+}
+
+
+#[cfg(feature = "stubgen")]
+::pyo3_stub_gen::impl_stub_type!(AddressAssociationOrSubtype = PartyAddress | PropertyAddress);
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct PartyAddress {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub address: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub role: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_primary: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub valid_from: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub valid_to: Option<NaiveDate>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl PartyAddress {
     #[new]
-    #[pyo3(signature = (address, kind=None, is_primary=None, extras=None, provenance=None))]
-    pub fn new(address: String, kind: Option<String>, is_primary: Option<bool>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (address, extras=None, provenance=None, role=None, is_primary=None, valid_from=None, valid_to=None))]
+    pub fn new(address: String, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, role: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, is_primary: Option<bool>, valid_from: Option<NaiveDate>, valid_to: Option<NaiveDate>) -> Self {
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        PartyAddress{address, kind, is_primary, extras, provenance}
+        let role = role.map(|v| v.into_inner());
+        PartyAddress{address, extras, provenance, role, is_primary, valid_from, valid_to}
     }
 }
 
@@ -4563,6 +5375,118 @@ impl<'py> FromPyObject<'py> for Box<PartyAddress> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct PropertyAddress {
+    pub property: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub address: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub role: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_primary: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub valid_from: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub valid_to: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl PropertyAddress {
+    #[new]
+    #[pyo3(signature = (property, address, id, role=None, is_primary=None, valid_from=None, valid_to=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, address: String, id: String, role: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, is_primary: Option<bool>, valid_from: Option<NaiveDate>, valid_to: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let role = role.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        PropertyAddress{property, address, id, role, is_primary, valid_from, valid_to, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<PropertyAddress>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<PropertyAddress> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<PropertyAddress>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid PropertyAddress",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for PropertyAddress {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a PropertyAddress from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct PartyContact {
@@ -4619,6 +5543,7 @@ impl<'py> FromPyObject<'py> for Box<PartyContact> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct OwnershipPeriod {
@@ -4629,6 +5554,7 @@ pub struct OwnershipPeriod {
     pub ended_on: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub vesting_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
     #[cfg_attr(feature = "serde", serde(default))]
     pub mailing_address: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -4637,23 +5563,27 @@ pub struct OwnershipPeriod {
     pub disposed_via_transfer: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub interests: Option<Vec<OwnershipInterest>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl OwnershipPeriod {
     #[new]
-    #[pyo3(signature = (property, id, started_on=None, ended_on=None, vesting_type=None, mailing_address=None, acquired_via_transfer=None, disposed_via_transfer=None, interests=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, started_on: Option<NaiveDate>, ended_on: Option<NaiveDate>, vesting_type: Option<String>, mailing_address: Option<String>, acquired_via_transfer: Option<String>, disposed_via_transfer: Option<String>, interests: Option<serde_utils::PyValue<Vec<OwnershipInterest>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, started_on=None, ended_on=None, vesting_type=None, mailing_address=None, acquired_via_transfer=None, disposed_via_transfer=None, interests=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, started_on: Option<NaiveDate>, ended_on: Option<NaiveDate>, vesting_type: Option<String>, mailing_address: Option<String>, acquired_via_transfer: Option<String>, disposed_via_transfer: Option<String>, interests: Option<serde_utils::PyValue<Vec<OwnershipInterest>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let interests = interests.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        OwnershipPeriod{property, id, started_on, ended_on, vesting_type, mailing_address, acquired_via_transfer, disposed_via_transfer, interests, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        OwnershipPeriod{property, id, started_on, ended_on, vesting_type, mailing_address, acquired_via_transfer, disposed_via_transfer, interests, extras, provenance, verifications}
     }
 }
 
@@ -4729,9 +5659,11 @@ impl serde_utils::InlinedPair for OwnershipPeriod {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct OwnershipInterest {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub interest_pct: Option<f64>,
@@ -4781,6 +5713,207 @@ impl<'py> FromPyObject<'py> for Box<OwnershipInterest> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct StructureFacts {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub kind: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub name: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub structure_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub living_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub gross_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub rentable_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub ground_floor_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub basement_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub basement_finished_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub garage_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub areas: Option<Vec<AreaMeasure>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub year_built: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub year_built_estimated: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub effective_year_built: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub stories: Option<f64>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub unit_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub construction_method: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub construction_status: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub construction_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub exterior_wall_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub roof_material_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub roof_style_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub foundation_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub foundation_material: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub condition_ratings: Option<Vec<Rating>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub quality_ratings: Option<Vec<Rating>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub heating_types: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub heating_fuel_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub cooling_types: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub sewer_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub water_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub features: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub residential: Option<ResidentialDetails>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub commercial: Option<CommercialDetails>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub renovations: Option<Vec<Renovation>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl StructureFacts {
+    #[new]
+    #[pyo3(signature = (kind=None, name=None, structure_number=None, living_area=None, gross_area=None, rentable_area=None, ground_floor_area=None, basement_area=None, basement_finished_area=None, garage_area=None, areas=None, year_built=None, year_built_estimated=None, effective_year_built=None, stories=None, unit_count=None, construction_method=None, construction_status=None, construction_type=None, exterior_wall_type=None, roof_material_type=None, roof_style_type=None, foundation_type=None, foundation_material=None, condition_ratings=None, quality_ratings=None, heating_types=None, heating_fuel_type=None, cooling_types=None, sewer_type=None, water_type=None, features=None, residential=None, commercial=None, renovations=None))]
+    pub fn new(kind: Option<String>, name: Option<String>, structure_number: Option<String>, living_area: Option<serde_utils::PyValue<Area>>, gross_area: Option<serde_utils::PyValue<Area>>, rentable_area: Option<serde_utils::PyValue<Area>>, ground_floor_area: Option<serde_utils::PyValue<Area>>, basement_area: Option<serde_utils::PyValue<Area>>, basement_finished_area: Option<serde_utils::PyValue<Area>>, garage_area: Option<serde_utils::PyValue<Area>>, areas: Option<serde_utils::PyValue<Vec<AreaMeasure>>>, year_built: Option<isize>, year_built_estimated: Option<bool>, effective_year_built: Option<isize>, stories: Option<f64>, unit_count: Option<isize>, construction_method: Option<String>, construction_status: Option<String>, construction_type: Option<String>, exterior_wall_type: Option<String>, roof_material_type: Option<String>, roof_style_type: Option<String>, foundation_type: Option<String>, foundation_material: Option<String>, condition_ratings: Option<serde_utils::PyValue<Vec<Rating>>>, quality_ratings: Option<serde_utils::PyValue<Vec<Rating>>>, heating_types: Option<Vec<String>>, heating_fuel_type: Option<String>, cooling_types: Option<Vec<String>>, sewer_type: Option<String>, water_type: Option<String>, features: Option<Vec<String>>, residential: Option<serde_utils::PyValue<ResidentialDetails>>, commercial: Option<serde_utils::PyValue<CommercialDetails>>, renovations: Option<serde_utils::PyValue<Vec<Renovation>>>) -> Self {
+        let living_area = living_area.map(|v| v.into_inner());
+        let gross_area = gross_area.map(|v| v.into_inner());
+        let rentable_area = rentable_area.map(|v| v.into_inner());
+        let ground_floor_area = ground_floor_area.map(|v| v.into_inner());
+        let basement_area = basement_area.map(|v| v.into_inner());
+        let basement_finished_area = basement_finished_area.map(|v| v.into_inner());
+        let garage_area = garage_area.map(|v| v.into_inner());
+        let areas = areas.map(|v| v.into_inner());
+        let condition_ratings = condition_ratings.map(|v| v.into_inner());
+        let quality_ratings = quality_ratings.map(|v| v.into_inner());
+        let residential = residential.map(|v| v.into_inner());
+        let commercial = commercial.map(|v| v.into_inner());
+        let renovations = renovations.map(|v| v.into_inner());
+        StructureFacts{kind, name, structure_number, living_area, gross_area, rentable_area, ground_floor_area, basement_area, basement_finished_area, garage_area, areas, year_built, year_built_estimated, effective_year_built, stories, unit_count, construction_method, construction_status, construction_type, exterior_wall_type, roof_material_type, roof_style_type, foundation_type, foundation_material, condition_ratings, quality_ratings, heating_types, heating_fuel_type, cooling_types, sewer_type, water_type, features, residential, commercial, renovations}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<StructureFacts>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<StructureFacts> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<StructureFacts>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid StructureFacts",
+        ))
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", serde(untagged))]
+pub enum StructureFactsOrSubtype {    Structure(Structure),     StructureState(StructureState)}
+
+impl From<Structure>   for StructureFactsOrSubtype { fn from(x: Structure)   -> Self { Self::Structure(x) } }
+impl From<StructureState>   for StructureFactsOrSubtype { fn from(x: StructureState)   -> Self { Self::StructureState(x) } }
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for StructureFactsOrSubtype {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Structure>() {
+            return Ok(StructureFactsOrSubtype::Structure(val));
+        }        if let Ok(val) = ob.extract::<StructureState>() {
+            return Ok(StructureFactsOrSubtype::StructureState(val));
+        }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid StructureFactsOrSubtype",
+        ))
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for StructureFactsOrSubtype {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        match self {
+            StructureFactsOrSubtype::Structure(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            StructureFactsOrSubtype::StructureState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+        }
+    }
+}
+
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<StructureFactsOrSubtype>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<StructureFactsOrSubtype> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<StructureFactsOrSubtype>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid StructureFactsOrSubtype",
+        ))
+    }
+}
+
+
+#[cfg(feature = "stubgen")]
+::pyo3_stub_gen::impl_stub_type!(StructureFactsOrSubtype = Structure | StructureState);
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Structure {
@@ -4834,11 +5967,9 @@ pub struct Structure {
     #[cfg_attr(feature = "serde", serde(default))]
     pub foundation_material: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub condition_rating: Option<String>,
+    pub condition_ratings: Option<Vec<Rating>>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub quality_rating: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub rating_system: Option<String>,
+    pub quality_ratings: Option<Vec<Rating>>,
     #[cfg_attr(feature = "serde", serde(
         deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
         serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
@@ -4869,19 +6000,22 @@ pub struct Structure {
     pub commercial: Option<CommercialDetails>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub renovations: Option<Vec<Renovation>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Structure {
     #[new]
-    #[pyo3(signature = (property, id, kind=None, name=None, structure_number=None, living_area=None, gross_area=None, rentable_area=None, ground_floor_area=None, basement_area=None, basement_finished_area=None, garage_area=None, areas=None, year_built=None, year_built_estimated=None, effective_year_built=None, stories=None, unit_count=None, construction_method=None, construction_status=None, construction_type=None, exterior_wall_type=None, roof_material_type=None, roof_style_type=None, foundation_type=None, foundation_material=None, condition_rating=None, quality_rating=None, rating_system=None, heating_types=None, heating_fuel_type=None, cooling_types=None, sewer_type=None, water_type=None, features=None, residential=None, commercial=None, renovations=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, kind: Option<String>, name: Option<String>, structure_number: Option<String>, living_area: Option<serde_utils::PyValue<Area>>, gross_area: Option<serde_utils::PyValue<Area>>, rentable_area: Option<serde_utils::PyValue<Area>>, ground_floor_area: Option<serde_utils::PyValue<Area>>, basement_area: Option<serde_utils::PyValue<Area>>, basement_finished_area: Option<serde_utils::PyValue<Area>>, garage_area: Option<serde_utils::PyValue<Area>>, areas: Option<serde_utils::PyValue<Vec<AreaMeasure>>>, year_built: Option<isize>, year_built_estimated: Option<bool>, effective_year_built: Option<isize>, stories: Option<f64>, unit_count: Option<isize>, construction_method: Option<String>, construction_status: Option<String>, construction_type: Option<String>, exterior_wall_type: Option<String>, roof_material_type: Option<String>, roof_style_type: Option<String>, foundation_type: Option<String>, foundation_material: Option<String>, condition_rating: Option<String>, quality_rating: Option<String>, rating_system: Option<String>, heating_types: Option<Vec<String>>, heating_fuel_type: Option<String>, cooling_types: Option<Vec<String>>, sewer_type: Option<String>, water_type: Option<String>, features: Option<Vec<String>>, residential: Option<serde_utils::PyValue<ResidentialDetails>>, commercial: Option<serde_utils::PyValue<CommercialDetails>>, renovations: Option<serde_utils::PyValue<Vec<Renovation>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, kind=None, name=None, structure_number=None, living_area=None, gross_area=None, rentable_area=None, ground_floor_area=None, basement_area=None, basement_finished_area=None, garage_area=None, areas=None, year_built=None, year_built_estimated=None, effective_year_built=None, stories=None, unit_count=None, construction_method=None, construction_status=None, construction_type=None, exterior_wall_type=None, roof_material_type=None, roof_style_type=None, foundation_type=None, foundation_material=None, condition_ratings=None, quality_ratings=None, heating_types=None, heating_fuel_type=None, cooling_types=None, sewer_type=None, water_type=None, features=None, residential=None, commercial=None, renovations=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, kind: Option<String>, name: Option<String>, structure_number: Option<String>, living_area: Option<serde_utils::PyValue<Area>>, gross_area: Option<serde_utils::PyValue<Area>>, rentable_area: Option<serde_utils::PyValue<Area>>, ground_floor_area: Option<serde_utils::PyValue<Area>>, basement_area: Option<serde_utils::PyValue<Area>>, basement_finished_area: Option<serde_utils::PyValue<Area>>, garage_area: Option<serde_utils::PyValue<Area>>, areas: Option<serde_utils::PyValue<Vec<AreaMeasure>>>, year_built: Option<isize>, year_built_estimated: Option<bool>, effective_year_built: Option<isize>, stories: Option<f64>, unit_count: Option<isize>, construction_method: Option<String>, construction_status: Option<String>, construction_type: Option<String>, exterior_wall_type: Option<String>, roof_material_type: Option<String>, roof_style_type: Option<String>, foundation_type: Option<String>, foundation_material: Option<String>, condition_ratings: Option<serde_utils::PyValue<Vec<Rating>>>, quality_ratings: Option<serde_utils::PyValue<Vec<Rating>>>, heating_types: Option<Vec<String>>, heating_fuel_type: Option<String>, cooling_types: Option<Vec<String>>, sewer_type: Option<String>, water_type: Option<String>, features: Option<Vec<String>>, residential: Option<serde_utils::PyValue<ResidentialDetails>>, commercial: Option<serde_utils::PyValue<CommercialDetails>>, renovations: Option<serde_utils::PyValue<Vec<Renovation>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let living_area = living_area.map(|v| v.into_inner());
         let gross_area = gross_area.map(|v| v.into_inner());
         let rentable_area = rentable_area.map(|v| v.into_inner());
@@ -4890,12 +6024,15 @@ impl Structure {
         let basement_finished_area = basement_finished_area.map(|v| v.into_inner());
         let garage_area = garage_area.map(|v| v.into_inner());
         let areas = areas.map(|v| v.into_inner());
+        let condition_ratings = condition_ratings.map(|v| v.into_inner());
+        let quality_ratings = quality_ratings.map(|v| v.into_inner());
         let residential = residential.map(|v| v.into_inner());
         let commercial = commercial.map(|v| v.into_inner());
         let renovations = renovations.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Structure{property, id, kind, name, structure_number, living_area, gross_area, rentable_area, ground_floor_area, basement_area, basement_finished_area, garage_area, areas, year_built, year_built_estimated, effective_year_built, stories, unit_count, construction_method, construction_status, construction_type, exterior_wall_type, roof_material_type, roof_style_type, foundation_type, foundation_material, condition_rating, quality_rating, rating_system, heating_types, heating_fuel_type, cooling_types, sewer_type, water_type, features, residential, commercial, renovations, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Structure{property, id, kind, name, structure_number, living_area, gross_area, rentable_area, ground_floor_area, basement_area, basement_finished_area, garage_area, areas, year_built, year_built_estimated, effective_year_built, stories, unit_count, construction_method, construction_status, construction_type, exterior_wall_type, roof_material_type, roof_style_type, foundation_type, foundation_material, condition_ratings, quality_ratings, heating_types, heating_fuel_type, cooling_types, sewer_type, water_type, features, residential, commercial, renovations, extras, provenance, verifications}
     }
 }
 
@@ -4971,6 +6108,7 @@ impl serde_utils::InlinedPair for Structure {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct AreaMeasure {
@@ -5019,6 +6157,7 @@ impl<'py> FromPyObject<'py> for Box<AreaMeasure> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ResidentialDetails {
@@ -5107,11 +6246,12 @@ impl<'py> FromPyObject<'py> for Box<ResidentialDetails> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct CommercialDetails {
     #[cfg_attr(feature = "serde", serde(default))]
-    pub building_class: Option<String>,
+    pub market_classification: Option<Rating>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub clear_height: Option<Length>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -5150,13 +6290,14 @@ pub struct CommercialDetails {
 #[pymethods]
 impl CommercialDetails {
     #[new]
-    #[pyo3(signature = (building_class=None, clear_height=None, dock_doors=None, drive_in_doors=None, occupancy_pct=None, parking_spaces=None, parking_ratio=None, tenancy=None, tenant_count=None, parking_types=None, has_sprinkler=None, elevators=None, submarket=None, extras=None, provenance=None))]
-    pub fn new(building_class: Option<String>, clear_height: Option<serde_utils::PyValue<Length>>, dock_doors: Option<isize>, drive_in_doors: Option<isize>, occupancy_pct: Option<f64>, parking_spaces: Option<isize>, parking_ratio: Option<serde_utils::PyValue<UnitRate>>, tenancy: Option<String>, tenant_count: Option<isize>, parking_types: Option<Vec<String>>, has_sprinkler: Option<bool>, elevators: Option<isize>, submarket: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (market_classification=None, clear_height=None, dock_doors=None, drive_in_doors=None, occupancy_pct=None, parking_spaces=None, parking_ratio=None, tenancy=None, tenant_count=None, parking_types=None, has_sprinkler=None, elevators=None, submarket=None, extras=None, provenance=None))]
+    pub fn new(market_classification: Option<serde_utils::PyValue<Rating>>, clear_height: Option<serde_utils::PyValue<Length>>, dock_doors: Option<isize>, drive_in_doors: Option<isize>, occupancy_pct: Option<f64>, parking_spaces: Option<isize>, parking_ratio: Option<serde_utils::PyValue<UnitRate>>, tenancy: Option<String>, tenant_count: Option<isize>, parking_types: Option<Vec<String>>, has_sprinkler: Option<bool>, elevators: Option<isize>, submarket: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+        let market_classification = market_classification.map(|v| v.into_inner());
         let clear_height = clear_height.map(|v| v.into_inner());
         let parking_ratio = parking_ratio.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        CommercialDetails{building_class, clear_height, dock_doors, drive_in_doors, occupancy_pct, parking_spaces, parking_ratio, tenancy, tenant_count, parking_types, has_sprinkler, elevators, submarket, extras, provenance}
+        CommercialDetails{market_classification, clear_height, dock_doors, drive_in_doors, occupancy_pct, parking_spaces, parking_ratio, tenancy, tenant_count, parking_types, has_sprinkler, elevators, submarket, extras, provenance}
     }
 }
 
@@ -5187,6 +6328,7 @@ impl<'py> FromPyObject<'py> for Box<CommercialDetails> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Renovation {
@@ -5246,6 +6388,191 @@ impl<'py> FromPyObject<'py> for Box<Renovation> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct SiteFacts {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub lot_size: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub usable_land_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub usable_land_area_basis: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub land_use: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub land_use_category: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub zoning_code: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub flood_zone: Option<String>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub hazard_zones: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub view_types: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub site_influences: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub easements: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub restrictions: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub utilities: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub frontage: Option<Length>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub depth: Option<Length>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub topography: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_corner: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub entitlement_status: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub buildable_units: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub subdivision: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub lot_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub block: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub tract_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub phase_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub section_township_range: Option<String>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl SiteFacts {
+    #[new]
+    #[pyo3(signature = (lot_size=None, usable_land_area=None, usable_land_area_basis=None, land_use=None, land_use_category=None, zoning_code=None, flood_zone=None, hazard_zones=None, view_types=None, site_influences=None, easements=None, restrictions=None, utilities=None, frontage=None, depth=None, topography=None, is_corner=None, entitlement_status=None, buildable_units=None, subdivision=None, lot_number=None, block=None, tract_number=None, phase_number=None, section_township_range=None))]
+    pub fn new(lot_size: Option<serde_utils::PyValue<Area>>, usable_land_area: Option<serde_utils::PyValue<Area>>, usable_land_area_basis: Option<String>, land_use: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, land_use_category: Option<String>, zoning_code: Option<String>, flood_zone: Option<String>, hazard_zones: Option<Vec<String>>, view_types: Option<Vec<String>>, site_influences: Option<Vec<String>>, easements: Option<Vec<String>>, restrictions: Option<Vec<String>>, utilities: Option<Vec<String>>, frontage: Option<serde_utils::PyValue<Length>>, depth: Option<serde_utils::PyValue<Length>>, topography: Option<String>, is_corner: Option<bool>, entitlement_status: Option<String>, buildable_units: Option<isize>, subdivision: Option<String>, lot_number: Option<String>, block: Option<String>, tract_number: Option<String>, phase_number: Option<String>, section_township_range: Option<String>) -> Self {
+        let lot_size = lot_size.map(|v| v.into_inner());
+        let usable_land_area = usable_land_area.map(|v| v.into_inner());
+        let land_use = land_use.map(|v| v.into_inner());
+        let frontage = frontage.map(|v| v.into_inner());
+        let depth = depth.map(|v| v.into_inner());
+        SiteFacts{lot_size, usable_land_area, usable_land_area_basis, land_use, land_use_category, zoning_code, flood_zone, hazard_zones, view_types, site_influences, easements, restrictions, utilities, frontage, depth, topography, is_corner, entitlement_status, buildable_units, subdivision, lot_number, block, tract_number, phase_number, section_township_range}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SiteFacts>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SiteFacts> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SiteFacts>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SiteFacts",
+        ))
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", serde(untagged))]
+pub enum SiteFactsOrSubtype {    Site(Site),     SiteState(SiteState)}
+
+impl From<Site>   for SiteFactsOrSubtype { fn from(x: Site)   -> Self { Self::Site(x) } }
+impl From<SiteState>   for SiteFactsOrSubtype { fn from(x: SiteState)   -> Self { Self::SiteState(x) } }
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for SiteFactsOrSubtype {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Site>() {
+            return Ok(SiteFactsOrSubtype::Site(val));
+        }        if let Ok(val) = ob.extract::<SiteState>() {
+            return Ok(SiteFactsOrSubtype::SiteState(val));
+        }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SiteFactsOrSubtype",
+        ))
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for SiteFactsOrSubtype {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        match self {
+            SiteFactsOrSubtype::Site(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            SiteFactsOrSubtype::SiteState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+        }
+    }
+}
+
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SiteFactsOrSubtype>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SiteFactsOrSubtype> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SiteFactsOrSubtype>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SiteFactsOrSubtype",
+        ))
+    }
+}
+
+
+#[cfg(feature = "stubgen")]
+::pyo3_stub_gen::impl_stub_type!(SiteFactsOrSubtype = Site | SiteState);
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Site {
@@ -5257,7 +6584,7 @@ pub struct Site {
     #[cfg_attr(feature = "serde", serde(default))]
     pub usable_land_area_basis: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub land_use: Option<CodeableConcept>,
+    pub land_use: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub land_use_category: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -5324,19 +6651,22 @@ pub struct Site {
     pub phase_number: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub section_township_range: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Site {
     #[new]
-    #[pyo3(signature = (property, id, lot_size=None, usable_land_area=None, usable_land_area_basis=None, land_use=None, land_use_category=None, zoning_code=None, flood_zone=None, hazard_zones=None, view_types=None, site_influences=None, easements=None, restrictions=None, utilities=None, frontage=None, depth=None, topography=None, is_corner=None, entitlement_status=None, buildable_units=None, subdivision=None, lot_number=None, block=None, tract_number=None, phase_number=None, section_township_range=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, lot_size: Option<serde_utils::PyValue<Area>>, usable_land_area: Option<serde_utils::PyValue<Area>>, usable_land_area_basis: Option<String>, land_use: Option<serde_utils::PyValue<CodeableConcept>>, land_use_category: Option<String>, zoning_code: Option<String>, flood_zone: Option<String>, hazard_zones: Option<Vec<String>>, view_types: Option<Vec<String>>, site_influences: Option<Vec<String>>, easements: Option<Vec<String>>, restrictions: Option<Vec<String>>, utilities: Option<Vec<String>>, frontage: Option<serde_utils::PyValue<Length>>, depth: Option<serde_utils::PyValue<Length>>, topography: Option<String>, is_corner: Option<bool>, entitlement_status: Option<String>, buildable_units: Option<isize>, subdivision: Option<String>, lot_number: Option<String>, block: Option<String>, tract_number: Option<String>, phase_number: Option<String>, section_township_range: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, lot_size=None, usable_land_area=None, usable_land_area_basis=None, land_use=None, land_use_category=None, zoning_code=None, flood_zone=None, hazard_zones=None, view_types=None, site_influences=None, easements=None, restrictions=None, utilities=None, frontage=None, depth=None, topography=None, is_corner=None, entitlement_status=None, buildable_units=None, subdivision=None, lot_number=None, block=None, tract_number=None, phase_number=None, section_township_range=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, lot_size: Option<serde_utils::PyValue<Area>>, usable_land_area: Option<serde_utils::PyValue<Area>>, usable_land_area_basis: Option<String>, land_use: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, land_use_category: Option<String>, zoning_code: Option<String>, flood_zone: Option<String>, hazard_zones: Option<Vec<String>>, view_types: Option<Vec<String>>, site_influences: Option<Vec<String>>, easements: Option<Vec<String>>, restrictions: Option<Vec<String>>, utilities: Option<Vec<String>>, frontage: Option<serde_utils::PyValue<Length>>, depth: Option<serde_utils::PyValue<Length>>, topography: Option<String>, is_corner: Option<bool>, entitlement_status: Option<String>, buildable_units: Option<isize>, subdivision: Option<String>, lot_number: Option<String>, block: Option<String>, tract_number: Option<String>, phase_number: Option<String>, section_township_range: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let lot_size = lot_size.map(|v| v.into_inner());
         let usable_land_area = usable_land_area.map(|v| v.into_inner());
         let land_use = land_use.map(|v| v.into_inner());
@@ -5344,7 +6674,8 @@ impl Site {
         let depth = depth.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Site{property, id, lot_size, usable_land_area, usable_land_area_basis, land_use, land_use_category, zoning_code, flood_zone, hazard_zones, view_types, site_influences, easements, restrictions, utilities, frontage, depth, topography, is_corner, entitlement_status, buildable_units, subdivision, lot_number, block, tract_number, phase_number, section_township_range, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Site{property, id, lot_size, usable_land_area, usable_land_area_basis, land_use, land_use_category, zoning_code, flood_zone, hazard_zones, view_types, site_influences, easements, restrictions, utilities, frontage, depth, topography, is_corner, entitlement_status, buildable_units, subdivision, lot_number, block, tract_number, phase_number, section_township_range, extras, provenance, verifications}
     }
 }
 
@@ -5420,6 +6751,132 @@ impl serde_utils::InlinedPair for Site {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct SpaceFacts {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub floor_number: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub space_use: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub rentable_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub usable_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub bedrooms: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub bathrooms: Option<f64>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub occupancy: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_adu: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_active: Option<bool>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl SpaceFacts {
+    #[new]
+    #[pyo3(signature = (floor_number=None, space_use=None, rentable_area=None, usable_area=None, bedrooms=None, bathrooms=None, occupancy=None, is_adu=None, is_active=None))]
+    pub fn new(floor_number: Option<isize>, space_use: Option<String>, rentable_area: Option<serde_utils::PyValue<Area>>, usable_area: Option<serde_utils::PyValue<Area>>, bedrooms: Option<isize>, bathrooms: Option<f64>, occupancy: Option<String>, is_adu: Option<bool>, is_active: Option<bool>) -> Self {
+        let rentable_area = rentable_area.map(|v| v.into_inner());
+        let usable_area = usable_area.map(|v| v.into_inner());
+        SpaceFacts{floor_number, space_use, rentable_area, usable_area, bedrooms, bathrooms, occupancy, is_adu, is_active}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SpaceFacts>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SpaceFacts> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SpaceFacts>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SpaceFacts",
+        ))
+    }
+}
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature="serde", serde(untagged))]
+pub enum SpaceFactsOrSubtype {    Space(Space),     SpaceState(SpaceState)}
+
+impl From<Space>   for SpaceFactsOrSubtype { fn from(x: Space)   -> Self { Self::Space(x) } }
+impl From<SpaceState>   for SpaceFactsOrSubtype { fn from(x: SpaceState)   -> Self { Self::SpaceState(x) } }
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for SpaceFactsOrSubtype {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<Space>() {
+            return Ok(SpaceFactsOrSubtype::Space(val));
+        }        if let Ok(val) = ob.extract::<SpaceState>() {
+            return Ok(SpaceFactsOrSubtype::SpaceState(val));
+        }Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SpaceFactsOrSubtype",
+        ))
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for SpaceFactsOrSubtype {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        match self {
+            SpaceFactsOrSubtype::Space(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+            SpaceFactsOrSubtype::SpaceState(val) => val.into_pyobject(py).map(move |b| b.into_any()),
+        }
+    }
+}
+
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SpaceFactsOrSubtype>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SpaceFactsOrSubtype> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SpaceFactsOrSubtype>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SpaceFactsOrSubtype",
+        ))
+    }
+}
+
+
+#[cfg(feature = "stubgen")]
+::pyo3_stub_gen::impl_stub_type!(SpaceFactsOrSubtype = Space | SpaceState);
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Space {
@@ -5445,24 +6902,28 @@ pub struct Space {
     pub is_adu: Option<bool>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub is_active: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Space {
     #[new]
-    #[pyo3(signature = (property, space_identifier, id, structure=None, floor_number=None, space_use=None, rentable_area=None, usable_area=None, bedrooms=None, bathrooms=None, occupancy=None, is_adu=None, is_active=None, extras=None, provenance=None))]
-    pub fn new(property: String, space_identifier: String, id: String, structure: Option<String>, floor_number: Option<isize>, space_use: Option<String>, rentable_area: Option<serde_utils::PyValue<Area>>, usable_area: Option<serde_utils::PyValue<Area>>, bedrooms: Option<isize>, bathrooms: Option<f64>, occupancy: Option<String>, is_adu: Option<bool>, is_active: Option<bool>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, space_identifier, id, structure=None, floor_number=None, space_use=None, rentable_area=None, usable_area=None, bedrooms=None, bathrooms=None, occupancy=None, is_adu=None, is_active=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, space_identifier: String, id: String, structure: Option<String>, floor_number: Option<isize>, space_use: Option<String>, rentable_area: Option<serde_utils::PyValue<Area>>, usable_area: Option<serde_utils::PyValue<Area>>, bedrooms: Option<isize>, bathrooms: Option<f64>, occupancy: Option<String>, is_adu: Option<bool>, is_active: Option<bool>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let rentable_area = rentable_area.map(|v| v.into_inner());
         let usable_area = usable_area.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Space{property, space_identifier, id, structure, floor_number, space_use, rentable_area, usable_area, bedrooms, bathrooms, occupancy, is_adu, is_active, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Space{property, space_identifier, id, structure, floor_number, space_use, rentable_area, usable_area, bedrooms, bathrooms, occupancy, is_adu, is_active, extras, provenance, verifications}
     }
 }
 
@@ -5538,35 +6999,777 @@ impl serde_utils::InlinedPair for Space {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
-pub struct PropertyAssociation {
-    pub property: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+pub struct PropertyState {
+    pub subject: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub name: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub fee: Option<Money>,
+    pub property_use_class: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub fee_period: Option<RentPeriod>,
+    pub property_use_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_use_subtype: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_use_system: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub estate_type: Option<EstateType>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub location: Option<GeoPoint>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub building_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl PropertyState {
+    #[new]
+    #[pyo3(signature = (subject, id, name=None, property_use_class=None, property_use_type=None, property_use_subtype=None, property_use_system=None, estate_type=None, location=None, building_count=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(subject: String, id: String, name: Option<String>, property_use_class: Option<String>, property_use_type: Option<String>, property_use_subtype: Option<String>, property_use_system: Option<String>, estate_type: Option<EstateType>, location: Option<serde_utils::PyValue<GeoPoint>>, building_count: Option<isize>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let location = location.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        PropertyState{subject, id, name, property_use_class, property_use_type, property_use_subtype, property_use_system, estate_type, location, building_count, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<PropertyState>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<PropertyState> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<PropertyState>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid PropertyState",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for PropertyState {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a PropertyState from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct SiteState {
+    pub subject: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub lot_size: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub usable_land_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub usable_land_area_basis: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub land_use: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub land_use_category: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub zoning_code: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub flood_zone: Option<String>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub hazard_zones: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub view_types: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub site_influences: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub easements: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub restrictions: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub utilities: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub frontage: Option<Length>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub depth: Option<Length>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub topography: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_corner: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub entitlement_status: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub buildable_units: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub subdivision: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub lot_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub block: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub tract_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub phase_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub section_township_range: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl SiteState {
+    #[new]
+    #[pyo3(signature = (subject, id, lot_size=None, usable_land_area=None, usable_land_area_basis=None, land_use=None, land_use_category=None, zoning_code=None, flood_zone=None, hazard_zones=None, view_types=None, site_influences=None, easements=None, restrictions=None, utilities=None, frontage=None, depth=None, topography=None, is_corner=None, entitlement_status=None, buildable_units=None, subdivision=None, lot_number=None, block=None, tract_number=None, phase_number=None, section_township_range=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(subject: String, id: String, lot_size: Option<serde_utils::PyValue<Area>>, usable_land_area: Option<serde_utils::PyValue<Area>>, usable_land_area_basis: Option<String>, land_use: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, land_use_category: Option<String>, zoning_code: Option<String>, flood_zone: Option<String>, hazard_zones: Option<Vec<String>>, view_types: Option<Vec<String>>, site_influences: Option<Vec<String>>, easements: Option<Vec<String>>, restrictions: Option<Vec<String>>, utilities: Option<Vec<String>>, frontage: Option<serde_utils::PyValue<Length>>, depth: Option<serde_utils::PyValue<Length>>, topography: Option<String>, is_corner: Option<bool>, entitlement_status: Option<String>, buildable_units: Option<isize>, subdivision: Option<String>, lot_number: Option<String>, block: Option<String>, tract_number: Option<String>, phase_number: Option<String>, section_township_range: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let lot_size = lot_size.map(|v| v.into_inner());
+        let usable_land_area = usable_land_area.map(|v| v.into_inner());
+        let land_use = land_use.map(|v| v.into_inner());
+        let frontage = frontage.map(|v| v.into_inner());
+        let depth = depth.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        SiteState{subject, id, lot_size, usable_land_area, usable_land_area_basis, land_use, land_use_category, zoning_code, flood_zone, hazard_zones, view_types, site_influences, easements, restrictions, utilities, frontage, depth, topography, is_corner, entitlement_status, buildable_units, subdivision, lot_number, block, tract_number, phase_number, section_township_range, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SiteState>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SiteState> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SiteState>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SiteState",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for SiteState {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a SiteState from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct StructureState {
+    pub subject: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub kind: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub name: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub structure_number: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub living_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub gross_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub rentable_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub ground_floor_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub basement_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub basement_finished_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub garage_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub areas: Option<Vec<AreaMeasure>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub year_built: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub year_built_estimated: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub effective_year_built: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub stories: Option<f64>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub unit_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub construction_method: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub construction_status: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub construction_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub exterior_wall_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub roof_material_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub roof_style_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub foundation_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub foundation_material: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub condition_ratings: Option<Vec<Rating>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub quality_ratings: Option<Vec<Rating>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub heating_types: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub heating_fuel_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub cooling_types: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub sewer_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub water_type: Option<String>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_primitive_list_or_single_value_optional",
+        serialize_with = "serde_utils::serialize_primitive_list_or_single_value_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub features: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub residential: Option<ResidentialDetails>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub commercial: Option<CommercialDetails>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub renovations: Option<Vec<Renovation>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl StructureState {
+    #[new]
+    #[pyo3(signature = (subject, id, kind=None, name=None, structure_number=None, living_area=None, gross_area=None, rentable_area=None, ground_floor_area=None, basement_area=None, basement_finished_area=None, garage_area=None, areas=None, year_built=None, year_built_estimated=None, effective_year_built=None, stories=None, unit_count=None, construction_method=None, construction_status=None, construction_type=None, exterior_wall_type=None, roof_material_type=None, roof_style_type=None, foundation_type=None, foundation_material=None, condition_ratings=None, quality_ratings=None, heating_types=None, heating_fuel_type=None, cooling_types=None, sewer_type=None, water_type=None, features=None, residential=None, commercial=None, renovations=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(subject: String, id: String, kind: Option<String>, name: Option<String>, structure_number: Option<String>, living_area: Option<serde_utils::PyValue<Area>>, gross_area: Option<serde_utils::PyValue<Area>>, rentable_area: Option<serde_utils::PyValue<Area>>, ground_floor_area: Option<serde_utils::PyValue<Area>>, basement_area: Option<serde_utils::PyValue<Area>>, basement_finished_area: Option<serde_utils::PyValue<Area>>, garage_area: Option<serde_utils::PyValue<Area>>, areas: Option<serde_utils::PyValue<Vec<AreaMeasure>>>, year_built: Option<isize>, year_built_estimated: Option<bool>, effective_year_built: Option<isize>, stories: Option<f64>, unit_count: Option<isize>, construction_method: Option<String>, construction_status: Option<String>, construction_type: Option<String>, exterior_wall_type: Option<String>, roof_material_type: Option<String>, roof_style_type: Option<String>, foundation_type: Option<String>, foundation_material: Option<String>, condition_ratings: Option<serde_utils::PyValue<Vec<Rating>>>, quality_ratings: Option<serde_utils::PyValue<Vec<Rating>>>, heating_types: Option<Vec<String>>, heating_fuel_type: Option<String>, cooling_types: Option<Vec<String>>, sewer_type: Option<String>, water_type: Option<String>, features: Option<Vec<String>>, residential: Option<serde_utils::PyValue<ResidentialDetails>>, commercial: Option<serde_utils::PyValue<CommercialDetails>>, renovations: Option<serde_utils::PyValue<Vec<Renovation>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let living_area = living_area.map(|v| v.into_inner());
+        let gross_area = gross_area.map(|v| v.into_inner());
+        let rentable_area = rentable_area.map(|v| v.into_inner());
+        let ground_floor_area = ground_floor_area.map(|v| v.into_inner());
+        let basement_area = basement_area.map(|v| v.into_inner());
+        let basement_finished_area = basement_finished_area.map(|v| v.into_inner());
+        let garage_area = garage_area.map(|v| v.into_inner());
+        let areas = areas.map(|v| v.into_inner());
+        let condition_ratings = condition_ratings.map(|v| v.into_inner());
+        let quality_ratings = quality_ratings.map(|v| v.into_inner());
+        let residential = residential.map(|v| v.into_inner());
+        let commercial = commercial.map(|v| v.into_inner());
+        let renovations = renovations.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        StructureState{subject, id, kind, name, structure_number, living_area, gross_area, rentable_area, ground_floor_area, basement_area, basement_finished_area, garage_area, areas, year_built, year_built_estimated, effective_year_built, stories, unit_count, construction_method, construction_status, construction_type, exterior_wall_type, roof_material_type, roof_style_type, foundation_type, foundation_material, condition_ratings, quality_ratings, heating_types, heating_fuel_type, cooling_types, sewer_type, water_type, features, residential, commercial, renovations, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<StructureState>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<StructureState> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<StructureState>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid StructureState",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for StructureState {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a StructureState from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct SpaceState {
+    pub subject: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub floor_number: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub space_use: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub rentable_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub usable_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub bedrooms: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub bathrooms: Option<f64>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub occupancy: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_adu: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub is_active: Option<bool>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl SpaceState {
+    #[new]
+    #[pyo3(signature = (subject, id, floor_number=None, space_use=None, rentable_area=None, usable_area=None, bedrooms=None, bathrooms=None, occupancy=None, is_adu=None, is_active=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(subject: String, id: String, floor_number: Option<isize>, space_use: Option<String>, rentable_area: Option<serde_utils::PyValue<Area>>, usable_area: Option<serde_utils::PyValue<Area>>, bedrooms: Option<isize>, bathrooms: Option<f64>, occupancy: Option<String>, is_adu: Option<bool>, is_active: Option<bool>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let rentable_area = rentable_area.map(|v| v.into_inner());
+        let usable_area = usable_area.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        SpaceState{subject, id, floor_number, space_use, rentable_area, usable_area, bedrooms, bathrooms, occupancy, is_adu, is_active, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<SpaceState>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<SpaceState> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<SpaceState>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid SpaceState",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for SpaceState {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a SpaceState from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct PropertyStateSnapshot {
+    pub property: String,
+    pub as_of_date: NaiveDate,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub basis: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_state: Option<PropertyState>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub site_states: Option<Vec<SiteState>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub structure_states: Option<Vec<StructureState>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub space_states: Option<Vec<SpaceState>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl PropertyStateSnapshot {
+    #[new]
+    #[pyo3(signature = (property, as_of_date, id, basis=None, property_state=None, site_states=None, structure_states=None, space_states=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, as_of_date: NaiveDate, id: String, basis: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, property_state: Option<serde_utils::PyValue<PropertyState>>, site_states: Option<serde_utils::PyValue<Vec<SiteState>>>, structure_states: Option<serde_utils::PyValue<Vec<StructureState>>>, space_states: Option<serde_utils::PyValue<Vec<SpaceState>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let basis = basis.map(|v| v.into_inner());
+        let property_state = property_state.map(|v| v.into_inner());
+        let site_states = site_states.map(|v| v.into_inner());
+        let structure_states = structure_states.map(|v| v.into_inner());
+        let space_states = space_states.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        PropertyStateSnapshot{property, as_of_date, id, basis, property_state, site_states, structure_states, space_states, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<PropertyStateSnapshot>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<PropertyStateSnapshot> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<PropertyStateSnapshot>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid PropertyStateSnapshot",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for PropertyStateSnapshot {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a PropertyStateSnapshot from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct PropertyAssociation {
+    pub property: String,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub fee: Option<Money>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub fee_period: Option<RentPeriod>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl PropertyAssociation {
     #[new]
-    #[pyo3(signature = (property, id, party=None, name=None, fee=None, fee_period=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, party: Option<String>, name: Option<String>, fee: Option<serde_utils::PyValue<Money>>, fee_period: Option<RentPeriod>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, party, id, fee=None, fee_period=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, party: String, id: String, fee: Option<serde_utils::PyValue<Money>>, fee_period: Option<RentPeriod>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let fee = fee.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        PropertyAssociation{property, id, party, name, fee, fee_period, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        PropertyAssociation{property, party, id, fee, fee_period, extras, provenance, verifications}
     }
 }
 
@@ -5642,6 +7845,7 @@ impl serde_utils::InlinedPair for PropertyAssociation {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Assessment {
@@ -5670,19 +7874,22 @@ pub struct Assessment {
     pub appraised_total_value: Option<Money>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub exemptions: Option<Vec<TaxExemption>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Assessment {
     #[new]
-    #[pyo3(signature = (parcel, jurisdiction, tax_year, id, roll_type=None, assessed_land_value=None, assessed_improvement_value=None, assessed_total_value=None, market_land_value=None, market_improvement_value=None, market_total_value=None, appraised_land_value=None, appraised_improvement_value=None, appraised_total_value=None, exemptions=None, extras=None, provenance=None))]
-    pub fn new(parcel: String, jurisdiction: String, tax_year: isize, id: String, roll_type: Option<String>, assessed_land_value: Option<serde_utils::PyValue<Money>>, assessed_improvement_value: Option<serde_utils::PyValue<Money>>, assessed_total_value: Option<serde_utils::PyValue<Money>>, market_land_value: Option<serde_utils::PyValue<Money>>, market_improvement_value: Option<serde_utils::PyValue<Money>>, market_total_value: Option<serde_utils::PyValue<Money>>, appraised_land_value: Option<serde_utils::PyValue<Money>>, appraised_improvement_value: Option<serde_utils::PyValue<Money>>, appraised_total_value: Option<serde_utils::PyValue<Money>>, exemptions: Option<serde_utils::PyValue<Vec<TaxExemption>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (parcel, jurisdiction, tax_year, id, roll_type=None, assessed_land_value=None, assessed_improvement_value=None, assessed_total_value=None, market_land_value=None, market_improvement_value=None, market_total_value=None, appraised_land_value=None, appraised_improvement_value=None, appraised_total_value=None, exemptions=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(parcel: String, jurisdiction: String, tax_year: isize, id: String, roll_type: Option<String>, assessed_land_value: Option<serde_utils::PyValue<Money>>, assessed_improvement_value: Option<serde_utils::PyValue<Money>>, assessed_total_value: Option<serde_utils::PyValue<Money>>, market_land_value: Option<serde_utils::PyValue<Money>>, market_improvement_value: Option<serde_utils::PyValue<Money>>, market_total_value: Option<serde_utils::PyValue<Money>>, appraised_land_value: Option<serde_utils::PyValue<Money>>, appraised_improvement_value: Option<serde_utils::PyValue<Money>>, appraised_total_value: Option<serde_utils::PyValue<Money>>, exemptions: Option<serde_utils::PyValue<Vec<TaxExemption>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let assessed_land_value = assessed_land_value.map(|v| v.into_inner());
         let assessed_improvement_value = assessed_improvement_value.map(|v| v.into_inner());
         let assessed_total_value = assessed_total_value.map(|v| v.into_inner());
@@ -5695,7 +7902,8 @@ impl Assessment {
         let exemptions = exemptions.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Assessment{parcel, jurisdiction, tax_year, id, roll_type, assessed_land_value, assessed_improvement_value, assessed_total_value, market_land_value, market_improvement_value, market_total_value, appraised_land_value, appraised_improvement_value, appraised_total_value, exemptions, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Assessment{parcel, jurisdiction, tax_year, id, roll_type, assessed_land_value, assessed_improvement_value, assessed_total_value, market_land_value, market_improvement_value, market_total_value, appraised_land_value, appraised_improvement_value, appraised_total_value, exemptions, extras, provenance, verifications}
     }
 }
 
@@ -5771,6 +7979,7 @@ impl serde_utils::InlinedPair for Assessment {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct TaxExemption {
@@ -5820,6 +8029,7 @@ impl<'py> FromPyObject<'py> for Box<TaxExemption> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct TaxBill {
@@ -5844,19 +8054,22 @@ pub struct TaxBill {
     pub installments: Option<Vec<TaxInstallment>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub line_items: Option<Vec<TaxLineItem>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl TaxBill {
     #[new]
-    #[pyo3(signature = (parcel, jurisdiction, tax_year, id, bill_number=None, amount_billed=None, amount_paid=None, is_delinquent=None, delinquent_year=None, delinquent_amount=None, rate_code_area=None, installments=None, line_items=None, extras=None, provenance=None))]
-    pub fn new(parcel: String, jurisdiction: String, tax_year: isize, id: String, bill_number: Option<String>, amount_billed: Option<serde_utils::PyValue<Money>>, amount_paid: Option<serde_utils::PyValue<Money>>, is_delinquent: Option<bool>, delinquent_year: Option<isize>, delinquent_amount: Option<serde_utils::PyValue<Money>>, rate_code_area: Option<String>, installments: Option<serde_utils::PyValue<Vec<TaxInstallment>>>, line_items: Option<serde_utils::PyValue<Vec<TaxLineItem>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (parcel, jurisdiction, tax_year, id, bill_number=None, amount_billed=None, amount_paid=None, is_delinquent=None, delinquent_year=None, delinquent_amount=None, rate_code_area=None, installments=None, line_items=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(parcel: String, jurisdiction: String, tax_year: isize, id: String, bill_number: Option<String>, amount_billed: Option<serde_utils::PyValue<Money>>, amount_paid: Option<serde_utils::PyValue<Money>>, is_delinquent: Option<bool>, delinquent_year: Option<isize>, delinquent_amount: Option<serde_utils::PyValue<Money>>, rate_code_area: Option<String>, installments: Option<serde_utils::PyValue<Vec<TaxInstallment>>>, line_items: Option<serde_utils::PyValue<Vec<TaxLineItem>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let amount_billed = amount_billed.map(|v| v.into_inner());
         let amount_paid = amount_paid.map(|v| v.into_inner());
         let delinquent_amount = delinquent_amount.map(|v| v.into_inner());
@@ -5864,7 +8077,8 @@ impl TaxBill {
         let line_items = line_items.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        TaxBill{parcel, jurisdiction, tax_year, id, bill_number, amount_billed, amount_paid, is_delinquent, delinquent_year, delinquent_amount, rate_code_area, installments, line_items, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        TaxBill{parcel, jurisdiction, tax_year, id, bill_number, amount_billed, amount_paid, is_delinquent, delinquent_year, delinquent_amount, rate_code_area, installments, line_items, extras, provenance, verifications}
     }
 }
 
@@ -5940,6 +8154,7 @@ impl serde_utils::InlinedPair for TaxBill {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct TaxInstallment {
@@ -5999,11 +8214,13 @@ impl<'py> FromPyObject<'py> for Box<TaxInstallment> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct TaxLineItem {
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
     #[cfg_attr(feature = "serde", serde(default))]
-    pub authority: Option<String>,
+    pub jurisdiction: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub rate: Option<f64>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6016,11 +8233,11 @@ pub struct TaxLineItem {
 #[pymethods]
 impl TaxLineItem {
     #[new]
-    #[pyo3(signature = (authority=None, rate=None, amount=None, extras=None))]
-    pub fn new(authority: Option<String>, rate: Option<f64>, amount: Option<serde_utils::PyValue<Money>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (jurisdiction=None, rate=None, amount=None, extras=None))]
+    pub fn new(jurisdiction: Option<String>, rate: Option<f64>, amount: Option<serde_utils::PyValue<Money>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let amount = amount.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
-        TaxLineItem{authority, rate, amount, extras}
+        TaxLineItem{jurisdiction, rate, amount, extras}
     }
 }
 
@@ -6051,6 +8268,7 @@ impl<'py> FromPyObject<'py> for Box<TaxLineItem> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Transfer {
@@ -6067,7 +8285,9 @@ pub struct Transfer {
     #[cfg_attr(feature = "serde", serde(default))]
     pub price_disclosure: Option<PriceDisclosure>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub price_code: Option<CodeableConcept>,
+    pub price_code: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub interest_conveyed: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub partial_interest_pct: Option<f64>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6087,35 +8307,42 @@ pub struct Transfer {
     #[cfg_attr(feature = "serde", serde(default))]
     pub instrument_date: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub document_type: Option<CodeableConcept>,
+    pub document_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub recording_authority: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub registry_reference: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub related_instruments: Option<Vec<InstrumentReference>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Transfer {
     #[new]
-    #[pyo3(signature = (property, transfer_kind, id, parcel=None, effective_on=None, consideration=None, transfer_tax=None, price_disclosure=None, price_code=None, partial_interest_pct=None, is_inter_family=None, is_distressed=None, parties=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, extras=None, provenance=None))]
-    pub fn new(property: String, transfer_kind: String, id: String, parcel: Option<String>, effective_on: Option<NaiveDate>, consideration: Option<serde_utils::PyValue<Money>>, transfer_tax: Option<serde_utils::PyValue<Money>>, price_disclosure: Option<PriceDisclosure>, price_code: Option<serde_utils::PyValue<CodeableConcept>>, partial_interest_pct: Option<f64>, is_inter_family: Option<bool>, is_distressed: Option<bool>, parties: Option<serde_utils::PyValue<Vec<TransferParty>>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConcept>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, transfer_kind, id, parcel=None, effective_on=None, consideration=None, transfer_tax=None, price_disclosure=None, price_code=None, interest_conveyed=None, partial_interest_pct=None, is_inter_family=None, is_distressed=None, parties=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, artifacts=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, transfer_kind: String, id: String, parcel: Option<String>, effective_on: Option<NaiveDate>, consideration: Option<serde_utils::PyValue<Money>>, transfer_tax: Option<serde_utils::PyValue<Money>>, price_disclosure: Option<PriceDisclosure>, price_code: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, interest_conveyed: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, partial_interest_pct: Option<f64>, is_inter_family: Option<bool>, is_distressed: Option<bool>, parties: Option<serde_utils::PyValue<Vec<TransferParty>>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, artifacts: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let consideration = consideration.map(|v| v.into_inner());
         let transfer_tax = transfer_tax.map(|v| v.into_inner());
         let price_code = price_code.map(|v| v.into_inner());
+        let interest_conveyed = interest_conveyed.map(|v| v.into_inner());
         let parties = parties.map(|v| v.into_inner());
         let document_type = document_type.map(|v| v.into_inner());
         let related_instruments = related_instruments.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Transfer{property, transfer_kind, id, parcel, effective_on, consideration, transfer_tax, price_disclosure, price_code, partial_interest_pct, is_inter_family, is_distressed, parties, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Transfer{property, transfer_kind, id, parcel, effective_on, consideration, transfer_tax, price_disclosure, price_code, interest_conveyed, partial_interest_pct, is_inter_family, is_distressed, parties, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, artifacts, extras, provenance, verifications}
     }
 }
 
@@ -6191,13 +8418,13 @@ impl serde_utils::InlinedPair for Transfer {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct TransferParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6208,10 +8435,10 @@ pub struct TransferParty {
 #[pymethods]
 impl TransferParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        TransferParty{role, name, party, sequence, extras}
+        TransferParty{role, party, sequence, extras}
     }
 }
 
@@ -6242,10 +8469,13 @@ impl<'py> FromPyObject<'py> for Box<TransferParty> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct SaleEvent {
     pub property: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_state: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub transfer: Option<String>,
     pub sale_date: NaiveDate,
@@ -6254,7 +8484,7 @@ pub struct SaleEvent {
     #[cfg_attr(feature = "serde", serde(default))]
     pub price_disclosure: Option<PriceDisclosure>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub price_code: Option<CodeableConcept>,
+    pub price_code: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sale_type: Option<SaleTypeEnum>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6279,19 +8509,24 @@ pub struct SaleEvent {
     pub supporting_operating_statement: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub parties: Option<Vec<SaleEventParty>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub remarks: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl SaleEvent {
     #[new]
-    #[pyo3(signature = (property, sale_date, id, transfer=None, sale_price=None, price_disclosure=None, price_code=None, sale_type=None, price_per_area=None, price_per_unit=None, financing=None, concessions=None, cap_rate=None, noi_at_sale=None, opex_at_sale=None, occupancy_at_sale_pct=None, unit_count_at_sale=None, supporting_operating_statement=None, parties=None, extras=None, provenance=None))]
-    pub fn new(property: String, sale_date: NaiveDate, id: String, transfer: Option<String>, sale_price: Option<serde_utils::PyValue<Money>>, price_disclosure: Option<PriceDisclosure>, price_code: Option<serde_utils::PyValue<CodeableConcept>>, sale_type: Option<SaleTypeEnum>, price_per_area: Option<serde_utils::PyValue<UnitRate>>, price_per_unit: Option<serde_utils::PyValue<Money>>, financing: Option<String>, concessions: Option<serde_utils::PyValue<Money>>, cap_rate: Option<f64>, noi_at_sale: Option<serde_utils::PyValue<Money>>, opex_at_sale: Option<serde_utils::PyValue<Money>>, occupancy_at_sale_pct: Option<f64>, unit_count_at_sale: Option<isize>, supporting_operating_statement: Option<String>, parties: Option<serde_utils::PyValue<Vec<SaleEventParty>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, sale_date, id, property_state=None, transfer=None, sale_price=None, price_disclosure=None, price_code=None, sale_type=None, price_per_area=None, price_per_unit=None, financing=None, concessions=None, cap_rate=None, noi_at_sale=None, opex_at_sale=None, occupancy_at_sale_pct=None, unit_count_at_sale=None, supporting_operating_statement=None, parties=None, remarks=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, sale_date: NaiveDate, id: String, property_state: Option<String>, transfer: Option<String>, sale_price: Option<serde_utils::PyValue<Money>>, price_disclosure: Option<PriceDisclosure>, price_code: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, sale_type: Option<SaleTypeEnum>, price_per_area: Option<serde_utils::PyValue<UnitRate>>, price_per_unit: Option<serde_utils::PyValue<Money>>, financing: Option<String>, concessions: Option<serde_utils::PyValue<Money>>, cap_rate: Option<f64>, noi_at_sale: Option<serde_utils::PyValue<Money>>, opex_at_sale: Option<serde_utils::PyValue<Money>>, occupancy_at_sale_pct: Option<f64>, unit_count_at_sale: Option<isize>, supporting_operating_statement: Option<String>, parties: Option<serde_utils::PyValue<Vec<SaleEventParty>>>, remarks: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let sale_price = sale_price.map(|v| v.into_inner());
         let price_code = price_code.map(|v| v.into_inner());
         let price_per_area = price_per_area.map(|v| v.into_inner());
@@ -6302,7 +8537,8 @@ impl SaleEvent {
         let parties = parties.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        SaleEvent{property, sale_date, id, transfer, sale_price, price_disclosure, price_code, sale_type, price_per_area, price_per_unit, financing, concessions, cap_rate, noi_at_sale, opex_at_sale, occupancy_at_sale_pct, unit_count_at_sale, supporting_operating_statement, parties, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        SaleEvent{property, sale_date, id, property_state, transfer, sale_price, price_disclosure, price_code, sale_type, price_per_area, price_per_unit, financing, concessions, cap_rate, noi_at_sale, opex_at_sale, occupancy_at_sale_pct, unit_count_at_sale, supporting_operating_statement, parties, remarks, extras, provenance, verifications}
     }
 }
 
@@ -6378,13 +8614,13 @@ impl serde_utils::InlinedPair for SaleEvent {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct SaleEventParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6395,10 +8631,10 @@ pub struct SaleEventParty {
 #[pymethods]
 impl SaleEventParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        SaleEventParty{role, name, party, sequence, extras}
+        SaleEventParty{role, party, sequence, extras}
     }
 }
 
@@ -6429,57 +8665,48 @@ impl<'py> FromPyObject<'py> for Box<SaleEventParty> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Listing {
     pub property: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_state: Option<String>,
     pub kind: ListingKind,
     #[cfg_attr(feature = "serde", serde(default))]
     pub listing_type: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub status: Option<ListingStatus>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub original_list_price: Option<Money>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub list_price: Option<Money>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub list_rent: Option<Money>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub list_rent_period: Option<RentPeriod>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub listed_on: Option<NaiveDate>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub closed_on: Option<NaiveDate>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub close_price: Option<Money>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub mls_number: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub events: Option<Vec<ListingEvent>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub participants: Option<Vec<ListingParticipant>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub remarks: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Listing {
     #[new]
-    #[pyo3(signature = (property, kind, id, listing_type=None, status=None, original_list_price=None, list_price=None, list_rent=None, list_rent_period=None, listed_on=None, closed_on=None, close_price=None, mls_number=None, events=None, participants=None, extras=None, provenance=None))]
-    pub fn new(property: String, kind: ListingKind, id: String, listing_type: Option<String>, status: Option<ListingStatus>, original_list_price: Option<serde_utils::PyValue<Money>>, list_price: Option<serde_utils::PyValue<Money>>, list_rent: Option<serde_utils::PyValue<Money>>, list_rent_period: Option<RentPeriod>, listed_on: Option<NaiveDate>, closed_on: Option<NaiveDate>, close_price: Option<serde_utils::PyValue<Money>>, mls_number: Option<String>, events: Option<serde_utils::PyValue<Vec<ListingEvent>>>, participants: Option<serde_utils::PyValue<Vec<ListingParticipant>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
-        let original_list_price = original_list_price.map(|v| v.into_inner());
-        let list_price = list_price.map(|v| v.into_inner());
-        let list_rent = list_rent.map(|v| v.into_inner());
-        let close_price = close_price.map(|v| v.into_inner());
+    #[pyo3(signature = (property, kind, id, property_state=None, listing_type=None, mls_number=None, events=None, participants=None, artifacts=None, remarks=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, kind: ListingKind, id: String, property_state: Option<String>, listing_type: Option<String>, mls_number: Option<String>, events: Option<serde_utils::PyValue<Vec<ListingEvent>>>, participants: Option<serde_utils::PyValue<Vec<ListingParticipant>>>, artifacts: Option<Vec<String>>, remarks: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let events = events.map(|v| v.into_inner());
         let participants = participants.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Listing{property, kind, id, listing_type, status, original_list_price, list_price, list_rent, list_rent_period, listed_on, closed_on, close_price, mls_number, events, participants, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Listing{property, kind, id, property_state, listing_type, mls_number, events, participants, artifacts, remarks, extras, provenance, verifications}
     }
 }
 
@@ -6555,6 +8782,7 @@ impl serde_utils::InlinedPair for Listing {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ListingEvent {
@@ -6563,7 +8791,11 @@ pub struct ListingEvent {
     #[cfg_attr(feature = "serde", serde(default))]
     pub status: Option<ListingStatus>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub list_price: Option<Money>,
+    pub asking_price: Option<Money>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub rent_period: Option<RentPeriod>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub close_price: Option<Money>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6574,12 +8806,13 @@ pub struct ListingEvent {
 #[pymethods]
 impl ListingEvent {
     #[new]
-    #[pyo3(signature = (occurred_on, event_kind, status=None, list_price=None, extras=None, provenance=None))]
-    pub fn new(occurred_on: NaiveDate, event_kind: String, status: Option<ListingStatus>, list_price: Option<serde_utils::PyValue<Money>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
-        let list_price = list_price.map(|v| v.into_inner());
+    #[pyo3(signature = (occurred_on, event_kind, status=None, asking_price=None, rent_period=None, close_price=None, extras=None, provenance=None))]
+    pub fn new(occurred_on: NaiveDate, event_kind: String, status: Option<ListingStatus>, asking_price: Option<serde_utils::PyValue<Money>>, rent_period: Option<RentPeriod>, close_price: Option<serde_utils::PyValue<Money>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+        let asking_price = asking_price.map(|v| v.into_inner());
+        let close_price = close_price.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        ListingEvent{occurred_on, event_kind, status, list_price, extras, provenance}
+        ListingEvent{occurred_on, event_kind, status, asking_price, rent_period, close_price, extras, provenance}
     }
 }
 
@@ -6610,13 +8843,13 @@ impl<'py> FromPyObject<'py> for Box<ListingEvent> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ListingParticipant {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6627,10 +8860,10 @@ pub struct ListingParticipant {
 #[pymethods]
 impl ListingParticipant {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        ListingParticipant{role, name, party, sequence, extras}
+        ListingParticipant{role, party, sequence, extras}
     }
 }
 
@@ -6661,10 +8894,13 @@ impl<'py> FromPyObject<'py> for Box<ListingParticipant> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LeaseEvent {
     pub property: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_state: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub space: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6696,26 +8932,29 @@ pub struct LeaseEvent {
     #[cfg_attr(feature = "serde", serde(default))]
     pub expense_structure: Option<ExpenseStructure>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub lessee_industry: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
     pub parties: Option<Vec<LeaseEventParty>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub escalations: Option<Vec<LeaseEscalation>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub concessions: Option<Vec<LeaseConcession>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub remarks: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl LeaseEvent {
     #[new]
-    #[pyo3(signature = (property, id, space=None, lease_type=None, execution_date=None, commencement_date=None, expiration_date=None, term_months=None, leased_area=None, rent=None, rent_period=None, starting_rent_per_area=None, effective_rent_per_area=None, net_effective_rent_per_area=None, free_rent_months=None, ti_allowance_per_area=None, expense_structure=None, lessee_industry=None, parties=None, escalations=None, concessions=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, space: Option<String>, lease_type: Option<LeaseTypeEnum>, execution_date: Option<NaiveDate>, commencement_date: Option<NaiveDate>, expiration_date: Option<NaiveDate>, term_months: Option<isize>, leased_area: Option<serde_utils::PyValue<Area>>, rent: Option<serde_utils::PyValue<Money>>, rent_period: Option<RentPeriod>, starting_rent_per_area: Option<serde_utils::PyValue<UnitRate>>, effective_rent_per_area: Option<serde_utils::PyValue<UnitRate>>, net_effective_rent_per_area: Option<serde_utils::PyValue<UnitRate>>, free_rent_months: Option<f64>, ti_allowance_per_area: Option<serde_utils::PyValue<UnitRate>>, expense_structure: Option<serde_utils::PyValue<ExpenseStructure>>, lessee_industry: Option<String>, parties: Option<serde_utils::PyValue<Vec<LeaseEventParty>>>, escalations: Option<serde_utils::PyValue<Vec<LeaseEscalation>>>, concessions: Option<serde_utils::PyValue<Vec<LeaseConcession>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, property_state=None, space=None, lease_type=None, execution_date=None, commencement_date=None, expiration_date=None, term_months=None, leased_area=None, rent=None, rent_period=None, starting_rent_per_area=None, effective_rent_per_area=None, net_effective_rent_per_area=None, free_rent_months=None, ti_allowance_per_area=None, expense_structure=None, parties=None, escalations=None, concessions=None, remarks=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, property_state: Option<String>, space: Option<String>, lease_type: Option<LeaseTypeEnum>, execution_date: Option<NaiveDate>, commencement_date: Option<NaiveDate>, expiration_date: Option<NaiveDate>, term_months: Option<isize>, leased_area: Option<serde_utils::PyValue<Area>>, rent: Option<serde_utils::PyValue<Money>>, rent_period: Option<RentPeriod>, starting_rent_per_area: Option<serde_utils::PyValue<UnitRate>>, effective_rent_per_area: Option<serde_utils::PyValue<UnitRate>>, net_effective_rent_per_area: Option<serde_utils::PyValue<UnitRate>>, free_rent_months: Option<f64>, ti_allowance_per_area: Option<serde_utils::PyValue<UnitRate>>, expense_structure: Option<serde_utils::PyValue<ExpenseStructure>>, parties: Option<serde_utils::PyValue<Vec<LeaseEventParty>>>, escalations: Option<serde_utils::PyValue<Vec<LeaseEscalation>>>, concessions: Option<serde_utils::PyValue<Vec<LeaseConcession>>>, remarks: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let leased_area = leased_area.map(|v| v.into_inner());
         let rent = rent.map(|v| v.into_inner());
         let starting_rent_per_area = starting_rent_per_area.map(|v| v.into_inner());
@@ -6728,7 +8967,8 @@ impl LeaseEvent {
         let concessions = concessions.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        LeaseEvent{property, id, space, lease_type, execution_date, commencement_date, expiration_date, term_months, leased_area, rent, rent_period, starting_rent_per_area, effective_rent_per_area, net_effective_rent_per_area, free_rent_months, ti_allowance_per_area, expense_structure, lessee_industry, parties, escalations, concessions, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        LeaseEvent{property, id, property_state, space, lease_type, execution_date, commencement_date, expiration_date, term_months, leased_area, rent, rent_period, starting_rent_per_area, effective_rent_per_area, net_effective_rent_per_area, free_rent_months, ti_allowance_per_area, expense_structure, parties, escalations, concessions, remarks, extras, provenance, verifications}
     }
 }
 
@@ -6804,13 +9044,13 @@ impl serde_utils::InlinedPair for LeaseEvent {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LeaseEventParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -6821,10 +9061,10 @@ pub struct LeaseEventParty {
 #[pymethods]
 impl LeaseEventParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        LeaseEventParty{role, name, party, sequence, extras}
+        LeaseEventParty{role, party, sequence, extras}
     }
 }
 
@@ -6855,6 +9095,7 @@ impl<'py> FromPyObject<'py> for Box<LeaseEventParty> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ExpenseStructure {
@@ -6910,6 +9151,7 @@ impl<'py> FromPyObject<'py> for Box<ExpenseStructure> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LeaseEscalation {
@@ -6973,6 +9215,7 @@ impl<'py> FromPyObject<'py> for Box<LeaseEscalation> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct RentStep {
@@ -7018,6 +9261,7 @@ impl<'py> FromPyObject<'py> for Box<RentStep> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LeaseConcession {
@@ -7079,6 +9323,7 @@ impl<'py> FromPyObject<'py> for Box<LeaseConcession> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct UnitRentObservation {
@@ -7104,24 +9349,28 @@ pub struct UnitRentObservation {
     pub observed_on: NaiveDate,
     #[cfg_attr(feature = "serde", serde(default))]
     pub concessions_note: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl UnitRentObservation {
     #[new]
-    #[pyo3(signature = (property, unit_type, rate, observed_on, id, unit_area=None, bedrooms=None, bathrooms=None, unit_count=None, units_available=None, rate_period=None, rate_basis=None, rate_type=None, concessions_note=None, extras=None, provenance=None))]
-    pub fn new(property: String, unit_type: String, rate: serde_utils::PyValue<Money>, observed_on: NaiveDate, id: String, unit_area: Option<serde_utils::PyValue<Area>>, bedrooms: Option<isize>, bathrooms: Option<f64>, unit_count: Option<isize>, units_available: Option<isize>, rate_period: Option<RentPeriod>, rate_basis: Option<RateBasis>, rate_type: Option<RateType>, concessions_note: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, unit_type, rate, observed_on, id, unit_area=None, bedrooms=None, bathrooms=None, unit_count=None, units_available=None, rate_period=None, rate_basis=None, rate_type=None, concessions_note=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, unit_type: String, rate: serde_utils::PyValue<Money>, observed_on: NaiveDate, id: String, unit_area: Option<serde_utils::PyValue<Area>>, bedrooms: Option<isize>, bathrooms: Option<f64>, unit_count: Option<isize>, units_available: Option<isize>, rate_period: Option<RentPeriod>, rate_basis: Option<RateBasis>, rate_type: Option<RateType>, concessions_note: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let rate = rate.into_inner();
         let unit_area = unit_area.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        UnitRentObservation{property, unit_type, rate, observed_on, id, unit_area, bedrooms, bathrooms, unit_count, units_available, rate_period, rate_basis, rate_type, concessions_note, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        UnitRentObservation{property, unit_type, rate, observed_on, id, unit_area, bedrooms, bathrooms, unit_count, units_available, rate_period, rate_basis, rate_type, concessions_note, extras, provenance, verifications}
     }
 }
 
@@ -7197,6 +9446,7 @@ impl serde_utils::InlinedPair for UnitRentObservation {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Loan {
@@ -7209,10 +9459,6 @@ pub struct Loan {
     pub is_purchase_money: Option<bool>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub loan_amount: Option<Money>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub lender_name: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub lender_type: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub loan_type: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -7236,10 +9482,6 @@ pub struct Loan {
     #[cfg_attr(feature = "serde", serde(default))]
     pub lien_position: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub status: Option<LoanStatus>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub satisfied_on: Option<NaiveDate>,
-    #[cfg_attr(feature = "serde", serde(default))]
     pub parties: Option<Vec<LoanParty>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub events: Option<Vec<LoanEvent>>,
@@ -7254,26 +9496,31 @@ pub struct Loan {
     #[cfg_attr(feature = "serde", serde(default))]
     pub instrument_date: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub document_type: Option<CodeableConcept>,
+    pub document_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub recording_authority: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub registry_reference: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub related_instruments: Option<Vec<InstrumentReference>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Loan {
     #[new]
-    #[pyo3(signature = (property, id, parcel=None, transfer=None, is_purchase_money=None, loan_amount=None, lender_name=None, lender_type=None, loan_type=None, purpose=None, is_heloc=None, is_construction=None, is_seller_carryback=None, is_assumable=None, interest_rate=None, is_variable_rate=None, term_months=None, due_date=None, lien_position=None, status=None, satisfied_on=None, parties=None, events=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, parcel: Option<String>, transfer: Option<String>, is_purchase_money: Option<bool>, loan_amount: Option<serde_utils::PyValue<Money>>, lender_name: Option<String>, lender_type: Option<String>, loan_type: Option<String>, purpose: Option<String>, is_heloc: Option<bool>, is_construction: Option<bool>, is_seller_carryback: Option<bool>, is_assumable: Option<bool>, interest_rate: Option<f64>, is_variable_rate: Option<bool>, term_months: Option<isize>, due_date: Option<NaiveDate>, lien_position: Option<isize>, status: Option<LoanStatus>, satisfied_on: Option<NaiveDate>, parties: Option<serde_utils::PyValue<Vec<LoanParty>>>, events: Option<serde_utils::PyValue<Vec<LoanEvent>>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConcept>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, parcel=None, transfer=None, is_purchase_money=None, loan_amount=None, loan_type=None, purpose=None, is_heloc=None, is_construction=None, is_seller_carryback=None, is_assumable=None, interest_rate=None, is_variable_rate=None, term_months=None, due_date=None, lien_position=None, parties=None, events=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, artifacts=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, parcel: Option<String>, transfer: Option<String>, is_purchase_money: Option<bool>, loan_amount: Option<serde_utils::PyValue<Money>>, loan_type: Option<String>, purpose: Option<String>, is_heloc: Option<bool>, is_construction: Option<bool>, is_seller_carryback: Option<bool>, is_assumable: Option<bool>, interest_rate: Option<f64>, is_variable_rate: Option<bool>, term_months: Option<isize>, due_date: Option<NaiveDate>, lien_position: Option<isize>, parties: Option<serde_utils::PyValue<Vec<LoanParty>>>, events: Option<serde_utils::PyValue<Vec<LoanEvent>>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, artifacts: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let loan_amount = loan_amount.map(|v| v.into_inner());
         let parties = parties.map(|v| v.into_inner());
         let events = events.map(|v| v.into_inner());
@@ -7281,7 +9528,8 @@ impl Loan {
         let related_instruments = related_instruments.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Loan{property, id, parcel, transfer, is_purchase_money, loan_amount, lender_name, lender_type, loan_type, purpose, is_heloc, is_construction, is_seller_carryback, is_assumable, interest_rate, is_variable_rate, term_months, due_date, lien_position, status, satisfied_on, parties, events, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Loan{property, id, parcel, transfer, is_purchase_money, loan_amount, loan_type, purpose, is_heloc, is_construction, is_seller_carryback, is_assumable, interest_rate, is_variable_rate, term_months, due_date, lien_position, parties, events, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, artifacts, extras, provenance, verifications}
     }
 }
 
@@ -7357,13 +9605,13 @@ impl serde_utils::InlinedPair for Loan {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LoanParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -7374,10 +9622,10 @@ pub struct LoanParty {
 #[pymethods]
 impl LoanParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        LoanParty{role, name, party, sequence, extras}
+        LoanParty{role, party, sequence, extras}
     }
 }
 
@@ -7408,6 +9656,7 @@ impl<'py> FromPyObject<'py> for Box<LoanParty> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LoanEvent {
@@ -7416,8 +9665,7 @@ pub struct LoanEvent {
     pub occurred_on: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub amount: Option<Money>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub to_name: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
     #[cfg_attr(feature = "serde", serde(default))]
     pub to_party: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -7435,27 +9683,29 @@ pub struct LoanEvent {
     #[cfg_attr(feature = "serde", serde(default))]
     pub instrument_date: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub document_type: Option<CodeableConcept>,
+    pub document_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub recording_authority: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub registry_reference: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub related_instruments: Option<Vec<InstrumentReference>>
+    pub related_instruments: Option<Vec<InstrumentReference>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl LoanEvent {
     #[new]
-    #[pyo3(signature = (event_kind, occurred_on=None, amount=None, to_name=None, to_party=None, extras=None, provenance=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None))]
-    pub fn new(event_kind: LoanEventKind, occurred_on: Option<NaiveDate>, amount: Option<serde_utils::PyValue<Money>>, to_name: Option<String>, to_party: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConcept>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>) -> Self {
+    #[pyo3(signature = (event_kind, occurred_on=None, amount=None, to_party=None, extras=None, provenance=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, artifacts=None))]
+    pub fn new(event_kind: LoanEventKind, occurred_on: Option<NaiveDate>, amount: Option<serde_utils::PyValue<Money>>, to_party: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, artifacts: Option<Vec<String>>) -> Self {
         let amount = amount.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
         let document_type = document_type.map(|v| v.into_inner());
         let related_instruments = related_instruments.map(|v| v.into_inner());
-        LoanEvent{event_kind, occurred_on, amount, to_name, to_party, extras, provenance, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments}
+        LoanEvent{event_kind, occurred_on, amount, to_party, extras, provenance, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, artifacts}
     }
 }
 
@@ -7486,6 +9736,7 @@ impl<'py> FromPyObject<'py> for Box<LoanEvent> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Lien {
@@ -7508,33 +9759,39 @@ pub struct Lien {
     #[cfg_attr(feature = "serde", serde(default))]
     pub instrument_date: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub document_type: Option<CodeableConcept>,
+    pub document_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub recording_authority: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub registry_reference: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub related_instruments: Option<Vec<InstrumentReference>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Lien {
     #[new]
-    #[pyo3(signature = (property, kind, id, amount=None, released_on=None, parties=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, extras=None, provenance=None))]
-    pub fn new(property: String, kind: LienKind, id: String, amount: Option<serde_utils::PyValue<Money>>, released_on: Option<NaiveDate>, parties: Option<serde_utils::PyValue<Vec<LienParty>>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConcept>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, kind, id, amount=None, released_on=None, parties=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, artifacts=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, kind: LienKind, id: String, amount: Option<serde_utils::PyValue<Money>>, released_on: Option<NaiveDate>, parties: Option<serde_utils::PyValue<Vec<LienParty>>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, artifacts: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let amount = amount.map(|v| v.into_inner());
         let parties = parties.map(|v| v.into_inner());
         let document_type = document_type.map(|v| v.into_inner());
         let related_instruments = related_instruments.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Lien{property, kind, id, amount, released_on, parties, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Lien{property, kind, id, amount, released_on, parties, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, artifacts, extras, provenance, verifications}
     }
 }
 
@@ -7610,13 +9867,13 @@ impl serde_utils::InlinedPair for Lien {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct LienParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -7627,10 +9884,10 @@ pub struct LienParty {
 #[pymethods]
 impl LienParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        LienParty{role, name, party, sequence, extras}
+        LienParty{role, party, sequence, extras}
     }
 }
 
@@ -7661,6 +9918,7 @@ impl<'py> FromPyObject<'py> for Box<LienParty> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ForeclosureCase {
@@ -7689,19 +9947,22 @@ pub struct ForeclosureCase {
     pub filings: Option<Vec<ForeclosureFiling>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub parties: Option<Vec<ForeclosureCaseParty>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl ForeclosureCase {
     #[new]
-    #[pyo3(signature = (property, id, loan=None, case_number=None, opened_on=None, resolved_on=None, resolution=None, past_due_amount=None, unpaid_balance=None, original_loan_amount=None, auction_min_bid=None, auction_location=None, filings=None, parties=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, loan: Option<String>, case_number: Option<String>, opened_on: Option<NaiveDate>, resolved_on: Option<NaiveDate>, resolution: Option<String>, past_due_amount: Option<serde_utils::PyValue<Money>>, unpaid_balance: Option<serde_utils::PyValue<Money>>, original_loan_amount: Option<serde_utils::PyValue<Money>>, auction_min_bid: Option<serde_utils::PyValue<Money>>, auction_location: Option<String>, filings: Option<serde_utils::PyValue<Vec<ForeclosureFiling>>>, parties: Option<serde_utils::PyValue<Vec<ForeclosureCaseParty>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, loan=None, case_number=None, opened_on=None, resolved_on=None, resolution=None, past_due_amount=None, unpaid_balance=None, original_loan_amount=None, auction_min_bid=None, auction_location=None, filings=None, parties=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, loan: Option<String>, case_number: Option<String>, opened_on: Option<NaiveDate>, resolved_on: Option<NaiveDate>, resolution: Option<String>, past_due_amount: Option<serde_utils::PyValue<Money>>, unpaid_balance: Option<serde_utils::PyValue<Money>>, original_loan_amount: Option<serde_utils::PyValue<Money>>, auction_min_bid: Option<serde_utils::PyValue<Money>>, auction_location: Option<String>, filings: Option<serde_utils::PyValue<Vec<ForeclosureFiling>>>, parties: Option<serde_utils::PyValue<Vec<ForeclosureCaseParty>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let past_due_amount = past_due_amount.map(|v| v.into_inner());
         let unpaid_balance = unpaid_balance.map(|v| v.into_inner());
         let original_loan_amount = original_loan_amount.map(|v| v.into_inner());
@@ -7710,7 +9971,8 @@ impl ForeclosureCase {
         let parties = parties.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        ForeclosureCase{property, id, loan, case_number, opened_on, resolved_on, resolution, past_due_amount, unpaid_balance, original_loan_amount, auction_min_bid, auction_location, filings, parties, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        ForeclosureCase{property, id, loan, case_number, opened_on, resolved_on, resolution, past_due_amount, unpaid_balance, original_loan_amount, auction_min_bid, auction_location, filings, parties, extras, provenance, verifications}
     }
 }
 
@@ -7786,6 +10048,7 @@ impl serde_utils::InlinedPair for ForeclosureCase {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ForeclosureFiling {
@@ -7809,26 +10072,28 @@ pub struct ForeclosureFiling {
     #[cfg_attr(feature = "serde", serde(default))]
     pub instrument_date: Option<NaiveDate>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub document_type: Option<CodeableConcept>,
+    pub document_type: Option<CodeableConceptOrSubtype>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub recording_authority: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub registry_reference: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub related_instruments: Option<Vec<InstrumentReference>>
+    pub related_instruments: Option<Vec<InstrumentReference>>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl ForeclosureFiling {
     #[new]
-    #[pyo3(signature = (status, auction_on=None, auction_at_time=None, extras=None, provenance=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None))]
-    pub fn new(status: String, auction_on: Option<NaiveDate>, auction_at_time: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConcept>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>) -> Self {
+    #[pyo3(signature = (status, auction_on=None, auction_at_time=None, extras=None, provenance=None, document_number=None, recording_book=None, recording_page=None, recorded_on=None, instrument_date=None, document_type=None, recording_authority=None, registry_reference=None, related_instruments=None, artifacts=None))]
+    pub fn new(status: String, auction_on: Option<NaiveDate>, auction_at_time: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, document_number: Option<String>, recording_book: Option<String>, recording_page: Option<String>, recorded_on: Option<NaiveDate>, instrument_date: Option<NaiveDate>, document_type: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, recording_authority: Option<String>, registry_reference: Option<String>, related_instruments: Option<serde_utils::PyValue<Vec<InstrumentReference>>>, artifacts: Option<Vec<String>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
         let document_type = document_type.map(|v| v.into_inner());
         let related_instruments = related_instruments.map(|v| v.into_inner());
-        ForeclosureFiling{status, auction_on, auction_at_time, extras, provenance, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments}
+        ForeclosureFiling{status, auction_on, auction_at_time, extras, provenance, document_number, recording_book, recording_page, recorded_on, instrument_date, document_type, recording_authority, registry_reference, related_instruments, artifacts}
     }
 }
 
@@ -7859,13 +10124,13 @@ impl<'py> FromPyObject<'py> for Box<ForeclosureFiling> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ForeclosureCaseParty {
     pub role: String,
-    pub name: String,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub party: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub sequence: Option<isize>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -7876,10 +10141,10 @@ pub struct ForeclosureCaseParty {
 #[pymethods]
 impl ForeclosureCaseParty {
     #[new]
-    #[pyo3(signature = (role, name, party=None, sequence=None, extras=None))]
-    pub fn new(role: String, name: String, party: Option<String>, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (role, party, sequence=None, extras=None))]
+    pub fn new(role: String, party: String, sequence: Option<isize>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let extras = extras.map(|v| v.into_inner());
-        ForeclosureCaseParty{role, name, party, sequence, extras}
+        ForeclosureCaseParty{role, party, sequence, extras}
     }
 }
 
@@ -7910,6 +10175,7 @@ impl<'py> FromPyObject<'py> for Box<ForeclosureCaseParty> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Permit {
@@ -7938,30 +10204,33 @@ pub struct Permit {
     pub job_value: Option<Money>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub fees: Option<Money>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub contractor_name: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub contractor_license: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
     #[cfg_attr(feature = "serde", serde(default))]
     pub contractor_party: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Permit {
     #[new]
-    #[pyo3(signature = (property, id, structure=None, permitting_jurisdiction=None, permit_number=None, kind=None, status=None, description=None, applied_on=None, issued_on=None, finaled_on=None, expires_on=None, job_value=None, fees=None, contractor_name=None, contractor_license=None, contractor_party=None, extras=None, provenance=None))]
-    pub fn new(property: String, id: String, structure: Option<String>, permitting_jurisdiction: Option<String>, permit_number: Option<String>, kind: Option<String>, status: Option<String>, description: Option<String>, applied_on: Option<NaiveDate>, issued_on: Option<NaiveDate>, finaled_on: Option<NaiveDate>, expires_on: Option<NaiveDate>, job_value: Option<serde_utils::PyValue<Money>>, fees: Option<serde_utils::PyValue<Money>>, contractor_name: Option<String>, contractor_license: Option<String>, contractor_party: Option<String>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, id, structure=None, permitting_jurisdiction=None, permit_number=None, kind=None, status=None, description=None, applied_on=None, issued_on=None, finaled_on=None, expires_on=None, job_value=None, fees=None, contractor_party=None, artifacts=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, id: String, structure: Option<String>, permitting_jurisdiction: Option<String>, permit_number: Option<String>, kind: Option<String>, status: Option<String>, description: Option<String>, applied_on: Option<NaiveDate>, issued_on: Option<NaiveDate>, finaled_on: Option<NaiveDate>, expires_on: Option<NaiveDate>, job_value: Option<serde_utils::PyValue<Money>>, fees: Option<serde_utils::PyValue<Money>>, contractor_party: Option<String>, artifacts: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let job_value = job_value.map(|v| v.into_inner());
         let fees = fees.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Permit{property, id, structure, permitting_jurisdiction, permit_number, kind, status, description, applied_on, issued_on, finaled_on, expires_on, job_value, fees, contractor_name, contractor_license, contractor_party, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Permit{property, id, structure, permitting_jurisdiction, permit_number, kind, status, description, applied_on, issued_on, finaled_on, expires_on, job_value, fees, contractor_party, artifacts, extras, provenance, verifications}
     }
 }
 
@@ -8037,6 +10306,7 @@ impl serde_utils::InlinedPair for Permit {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct OperatingStatement {
@@ -8074,19 +10344,22 @@ pub struct OperatingStatement {
     pub ground_lease_included_in_opex: Option<bool>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub line_items: Option<Vec<StatementLineItem>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl OperatingStatement {
     #[new]
-    #[pyo3(signature = (property, statement_year, id, period_start=None, period_end=None, statement_basis=None, pgi=None, vacancy_loss=None, vacancy_pct=None, egi=None, opex_total=None, noi=None, capex=None, reimbursements=None, reserves=None, reserves_included_in_opex=None, ground_lease_expense=None, ground_lease_included_in_opex=None, line_items=None, extras=None, provenance=None))]
-    pub fn new(property: String, statement_year: isize, id: String, period_start: Option<NaiveDate>, period_end: Option<NaiveDate>, statement_basis: Option<StatementBasis>, pgi: Option<serde_utils::PyValue<Money>>, vacancy_loss: Option<serde_utils::PyValue<Money>>, vacancy_pct: Option<f64>, egi: Option<serde_utils::PyValue<Money>>, opex_total: Option<serde_utils::PyValue<Money>>, noi: Option<serde_utils::PyValue<Money>>, capex: Option<serde_utils::PyValue<Money>>, reimbursements: Option<serde_utils::PyValue<Money>>, reserves: Option<serde_utils::PyValue<Money>>, reserves_included_in_opex: Option<bool>, ground_lease_expense: Option<serde_utils::PyValue<Money>>, ground_lease_included_in_opex: Option<bool>, line_items: Option<serde_utils::PyValue<Vec<StatementLineItem>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, statement_year, id, period_start=None, period_end=None, statement_basis=None, pgi=None, vacancy_loss=None, vacancy_pct=None, egi=None, opex_total=None, noi=None, capex=None, reimbursements=None, reserves=None, reserves_included_in_opex=None, ground_lease_expense=None, ground_lease_included_in_opex=None, line_items=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, statement_year: isize, id: String, period_start: Option<NaiveDate>, period_end: Option<NaiveDate>, statement_basis: Option<StatementBasis>, pgi: Option<serde_utils::PyValue<Money>>, vacancy_loss: Option<serde_utils::PyValue<Money>>, vacancy_pct: Option<f64>, egi: Option<serde_utils::PyValue<Money>>, opex_total: Option<serde_utils::PyValue<Money>>, noi: Option<serde_utils::PyValue<Money>>, capex: Option<serde_utils::PyValue<Money>>, reimbursements: Option<serde_utils::PyValue<Money>>, reserves: Option<serde_utils::PyValue<Money>>, reserves_included_in_opex: Option<bool>, ground_lease_expense: Option<serde_utils::PyValue<Money>>, ground_lease_included_in_opex: Option<bool>, line_items: Option<serde_utils::PyValue<Vec<StatementLineItem>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let pgi = pgi.map(|v| v.into_inner());
         let vacancy_loss = vacancy_loss.map(|v| v.into_inner());
         let egi = egi.map(|v| v.into_inner());
@@ -8099,7 +10372,8 @@ impl OperatingStatement {
         let line_items = line_items.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        OperatingStatement{property, statement_year, id, period_start, period_end, statement_basis, pgi, vacancy_loss, vacancy_pct, egi, opex_total, noi, capex, reimbursements, reserves, reserves_included_in_opex, ground_lease_expense, ground_lease_included_in_opex, line_items, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        OperatingStatement{property, statement_year, id, period_start, period_end, statement_basis, pgi, vacancy_loss, vacancy_pct, egi, opex_total, noi, capex, reimbursements, reserves, reserves_included_in_opex, ground_lease_expense, ground_lease_included_in_opex, line_items, extras, provenance, verifications}
     }
 }
 
@@ -8175,6 +10449,7 @@ impl serde_utils::InlinedPair for OperatingStatement {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct StatementLineItem {
@@ -8224,10 +10499,196 @@ impl<'py> FromPyObject<'py> for Box<StatementLineItem> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct RentRoll {
+    pub property: String,
+    pub as_of_date: NaiveDate,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub unit_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub occupied_unit_count: Option<isize>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub occupancy_pct: Option<f64>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub total_contract_rent: Option<Money>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub total_market_rent: Option<Money>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub rent_period: Option<RentPeriod>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub lines: Option<Vec<RentRollLine>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
+    pub id: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl RentRoll {
+    #[new]
+    #[pyo3(signature = (property, as_of_date, id, unit_count=None, occupied_unit_count=None, occupancy_pct=None, total_contract_rent=None, total_market_rent=None, rent_period=None, lines=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, as_of_date: NaiveDate, id: String, unit_count: Option<isize>, occupied_unit_count: Option<isize>, occupancy_pct: Option<f64>, total_contract_rent: Option<serde_utils::PyValue<Money>>, total_market_rent: Option<serde_utils::PyValue<Money>>, rent_period: Option<RentPeriod>, lines: Option<serde_utils::PyValue<Vec<RentRollLine>>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
+        let total_contract_rent = total_contract_rent.map(|v| v.into_inner());
+        let total_market_rent = total_market_rent.map(|v| v.into_inner());
+        let lines = lines.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        let provenance = provenance.map(|v| v.into_inner());
+        let verifications = verifications.map(|v| v.into_inner());
+        RentRoll{property, as_of_date, id, unit_count, occupied_unit_count, occupancy_pct, total_contract_rent, total_market_rent, rent_period, lines, extras, provenance, verifications}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<RentRoll>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<RentRoll> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<RentRoll>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid RentRoll",
+        ))
+    }
+}
+
+
+#[cfg(feature = "serde")]
+impl serde_utils::InlinedPair for RentRoll {
+    type Key   = String;
+    type Value = Value;
+    type Error = String;
+
+    fn extract_key(&self) -> &Self::Key {
+        return &self.id;
+    }
+
+    fn from_pair_mapping(k: Self::Key, v: Value) -> Result<Self,Self::Error> {
+        let mut map = match v {
+            Value::Map(m) => m,
+            _ => return Err("ClassDefinition must be a mapping".into()),
+        };
+        let key_value = serde_value::to_value(k.clone())
+            .map_err(|e| format!("unable to serialize key: {}", e))?;
+        map.insert(Value::String("id".into()), key_value);
+        let de          = Value::Map(map).into_deserializer();
+        match serde_path_to_error::deserialize(de) {
+            Ok(ok)  => Ok(ok),
+            Err(e)  => Err(format!("at `{}`: {}", e.path(), e.inner())),
+        }
+    }
+
+
+    fn from_pair_simple(_k: Self::Key, _v: Value) -> Result<Self,Self::Error> {
+        Err("Cannot create a RentRoll from a primitive value!".into())
+    }
+
+
+    fn compact_value(&self) -> Option<Value> {
+        let value = match serde_value::to_value(self) {
+            Ok(v) => v,
+            Err(_) => return None,
+        };
+        match value {
+            Value::Map(mut map) => {
+                map.remove(&Value::String("id".into()));
+                Some(Value::Map(map))
+            }
+            _ => None,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
+#[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
+#[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
+pub struct RentRollLine {
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub space: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub tenant: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub lease: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub occupancy_status: Option<CodeableConceptOrSubtype>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub reported_area: Option<Area>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub contract_rent: Option<Money>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub market_rent: Option<Money>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub extras: Option<Any>
+}
+#[cfg(feature = "pyo3")]
+#[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
+#[pymethods]
+impl RentRollLine {
+    #[new]
+    #[pyo3(signature = (space=None, tenant=None, lease=None, occupancy_status=None, reported_area=None, contract_rent=None, market_rent=None, extras=None))]
+    pub fn new(space: Option<String>, tenant: Option<String>, lease: Option<String>, occupancy_status: Option<serde_utils::PyValue<CodeableConceptOrSubtype>>, reported_area: Option<serde_utils::PyValue<Area>>, contract_rent: Option<serde_utils::PyValue<Money>>, market_rent: Option<serde_utils::PyValue<Money>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+        let occupancy_status = occupancy_status.map(|v| v.into_inner());
+        let reported_area = reported_area.map(|v| v.into_inner());
+        let contract_rent = contract_rent.map(|v| v.into_inner());
+        let market_rent = market_rent.map(|v| v.into_inner());
+        let extras = extras.map(|v| v.into_inner());
+        RentRollLine{space, tenant, lease, occupancy_status, reported_area, contract_rent, market_rent, extras}
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for Box<RentRollLine>
+{
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        (*self).into_pyobject(py).map(move |x| x.into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for Box<RentRollLine> {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(val) = ob.extract::<RentRollLine>() {
+            return Ok(Box::new(val));
+        }
+        Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+            "invalid RentRollLine",
+        ))
+    }
+}
+
+
+
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct Valuation {
     pub property: String,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_state: Option<String>,
     pub kind: ValuationKind,
     #[cfg_attr(feature = "serde", serde(default))]
     pub valuation_method: Option<String>,
@@ -8258,26 +10719,30 @@ pub struct Valuation {
     pub value_premise: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub interest: Option<String>,
-    #[cfg_attr(feature = "serde", serde(default))]
-    pub performed_by: Option<String>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string_optional"))]
     #[cfg_attr(feature = "serde", serde(default))]
     pub performed_by_party: Option<String>,
     pub as_of_date: NaiveDate,
     #[cfg_attr(feature = "serde", serde(default))]
     pub report_date: Option<NaiveDate>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(deserialize_with = "serde_utils::deserialize_nonblank_trimmed_string"))]
     pub id: String,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub provenance: Option<Provenance>
+    pub provenance: Option<Provenance>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub verifications: Option<Vec<VerificationAttribution>>
 }
 #[cfg(feature = "pyo3")]
 #[cfg_attr(feature = "stubgen", gen_stub_pymethods)]
 #[pymethods]
 impl Valuation {
     #[new]
-    #[pyo3(signature = (property, kind, value, as_of_date, id, valuation_method=None, value_type=None, value_low=None, value_high=None, value_per_area=None, land_value=None, confidence_score=None, forecast_standard_deviation=None, exposure_days=None, indicated_value_sales_comparison=None, indicated_value_cost=None, indicated_value_income=None, value_premise=None, interest=None, performed_by=None, performed_by_party=None, report_date=None, extras=None, provenance=None))]
-    pub fn new(property: String, kind: ValuationKind, value: serde_utils::PyValue<Money>, as_of_date: NaiveDate, id: String, valuation_method: Option<String>, value_type: Option<String>, value_low: Option<serde_utils::PyValue<Money>>, value_high: Option<serde_utils::PyValue<Money>>, value_per_area: Option<serde_utils::PyValue<UnitRate>>, land_value: Option<serde_utils::PyValue<Money>>, confidence_score: Option<isize>, forecast_standard_deviation: Option<f64>, exposure_days: Option<isize>, indicated_value_sales_comparison: Option<serde_utils::PyValue<Money>>, indicated_value_cost: Option<serde_utils::PyValue<Money>>, indicated_value_income: Option<serde_utils::PyValue<Money>>, value_premise: Option<String>, interest: Option<String>, performed_by: Option<String>, performed_by_party: Option<String>, report_date: Option<NaiveDate>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>) -> Self {
+    #[pyo3(signature = (property, kind, value, as_of_date, id, property_state=None, valuation_method=None, value_type=None, value_low=None, value_high=None, value_per_area=None, land_value=None, confidence_score=None, forecast_standard_deviation=None, exposure_days=None, indicated_value_sales_comparison=None, indicated_value_cost=None, indicated_value_income=None, value_premise=None, interest=None, performed_by_party=None, report_date=None, artifacts=None, extras=None, provenance=None, verifications=None))]
+    pub fn new(property: String, kind: ValuationKind, value: serde_utils::PyValue<Money>, as_of_date: NaiveDate, id: String, property_state: Option<String>, valuation_method: Option<String>, value_type: Option<String>, value_low: Option<serde_utils::PyValue<Money>>, value_high: Option<serde_utils::PyValue<Money>>, value_per_area: Option<serde_utils::PyValue<UnitRate>>, land_value: Option<serde_utils::PyValue<Money>>, confidence_score: Option<isize>, forecast_standard_deviation: Option<f64>, exposure_days: Option<isize>, indicated_value_sales_comparison: Option<serde_utils::PyValue<Money>>, indicated_value_cost: Option<serde_utils::PyValue<Money>>, indicated_value_income: Option<serde_utils::PyValue<Money>>, value_premise: Option<String>, interest: Option<String>, performed_by_party: Option<String>, report_date: Option<NaiveDate>, artifacts: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>, provenance: Option<serde_utils::PyValue<Provenance>>, verifications: Option<serde_utils::PyValue<Vec<VerificationAttribution>>>) -> Self {
         let value = value.into_inner();
         let value_low = value_low.map(|v| v.into_inner());
         let value_high = value_high.map(|v| v.into_inner());
@@ -8288,7 +10753,8 @@ impl Valuation {
         let indicated_value_income = indicated_value_income.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
-        Valuation{property, kind, value, as_of_date, id, valuation_method, value_type, value_low, value_high, value_per_area, land_value, confidence_score, forecast_standard_deviation, exposure_days, indicated_value_sales_comparison, indicated_value_cost, indicated_value_income, value_premise, interest, performed_by, performed_by_party, report_date, extras, provenance}
+        let verifications = verifications.map(|v| v.into_inner());
+        Valuation{property, kind, value, as_of_date, id, property_state, valuation_method, value_type, value_low, value_high, value_per_area, land_value, confidence_score, forecast_standard_deviation, exposure_days, indicated_value_sales_comparison, indicated_value_cost, indicated_value_income, value_premise, interest, performed_by_party, report_date, artifacts, extras, provenance, verifications}
     }
 }
 
@@ -8364,6 +10830,7 @@ impl serde_utils::InlinedPair for Valuation {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct PropertyProfile {
@@ -8378,8 +10845,20 @@ pub struct PropertyProfile {
         serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
     ))]
     #[cfg_attr(feature = "serde", serde(default))]
+    pub artifacts: Option<Vec<SourceArtifact>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub addresses: Option<Vec<Address>>,
     pub property: Property,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_addresses: Option<Vec<PropertyAddress>>,
     #[cfg_attr(feature = "serde", serde(
         deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
         serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
@@ -8424,6 +10903,12 @@ pub struct PropertyProfile {
     ))]
     #[cfg_attr(feature = "serde", serde(default))]
     pub spaces: Option<Vec<Space>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub property_state_snapshots: Option<Vec<PropertyStateSnapshot>>,
     #[cfg_attr(feature = "serde", serde(
         deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
         serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
@@ -8477,6 +10962,12 @@ pub struct PropertyProfile {
         serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
     ))]
     #[cfg_attr(feature = "serde", serde(default))]
+    pub rent_rolls: Option<Vec<RentRoll>>,
+    #[cfg_attr(feature = "serde", serde(
+        deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
+        serialize_with = "serde_utils::serialize_inlined_dict_list_optional"
+    ))]
+    #[cfg_attr(feature = "serde", serde(default))]
     pub loans: Option<Vec<Loan>>,
     #[cfg_attr(feature = "serde", serde(
         deserialize_with = "serde_utils::deserialize_inlined_dict_list_optional",
@@ -8524,11 +11015,13 @@ pub struct PropertyProfile {
 #[pymethods]
 impl PropertyProfile {
     #[new]
-    #[pyo3(signature = (property, parties=None, addresses=None, identifiers=None, jurisdictions=None, parcels=None, property_parcels=None, parcel_lineage=None, site=None, structures=None, spaces=None, associations=None, assessments=None, tax_bills=None, transfers=None, sales=None, listings=None, leases=None, unit_rents=None, loans=None, liens=None, foreclosure_cases=None, permits=None, ownership=None, operating_statements=None, valuations=None, provenance=None, extras=None))]
-    pub fn new(property: serde_utils::PyValue<Property>, parties: Option<serde_utils::PyValue<Vec<Party>>>, addresses: Option<serde_utils::PyValue<Vec<Address>>>, identifiers: Option<serde_utils::PyValue<Vec<PropertyIdentifier>>>, jurisdictions: Option<serde_utils::PyValue<Vec<Jurisdiction>>>, parcels: Option<serde_utils::PyValue<Vec<Parcel>>>, property_parcels: Option<serde_utils::PyValue<Vec<PropertyParcel>>>, parcel_lineage: Option<serde_utils::PyValue<Vec<ParcelLineage>>>, site: Option<serde_utils::PyValue<Site>>, structures: Option<serde_utils::PyValue<Vec<Structure>>>, spaces: Option<serde_utils::PyValue<Vec<Space>>>, associations: Option<serde_utils::PyValue<Vec<PropertyAssociation>>>, assessments: Option<serde_utils::PyValue<Vec<Assessment>>>, tax_bills: Option<serde_utils::PyValue<Vec<TaxBill>>>, transfers: Option<serde_utils::PyValue<Vec<Transfer>>>, sales: Option<serde_utils::PyValue<Vec<SaleEvent>>>, listings: Option<serde_utils::PyValue<Vec<Listing>>>, leases: Option<serde_utils::PyValue<Vec<LeaseEvent>>>, unit_rents: Option<serde_utils::PyValue<Vec<UnitRentObservation>>>, loans: Option<serde_utils::PyValue<Vec<Loan>>>, liens: Option<serde_utils::PyValue<Vec<Lien>>>, foreclosure_cases: Option<serde_utils::PyValue<Vec<ForeclosureCase>>>, permits: Option<serde_utils::PyValue<Vec<Permit>>>, ownership: Option<serde_utils::PyValue<Vec<OwnershipPeriod>>>, operating_statements: Option<serde_utils::PyValue<Vec<OperatingStatement>>>, valuations: Option<serde_utils::PyValue<Vec<Valuation>>>, provenance: Option<serde_utils::PyValue<Provenance>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (property, parties=None, artifacts=None, addresses=None, property_addresses=None, identifiers=None, jurisdictions=None, parcels=None, property_parcels=None, parcel_lineage=None, site=None, structures=None, spaces=None, property_state_snapshots=None, associations=None, assessments=None, tax_bills=None, transfers=None, sales=None, listings=None, leases=None, unit_rents=None, rent_rolls=None, loans=None, liens=None, foreclosure_cases=None, permits=None, ownership=None, operating_statements=None, valuations=None, provenance=None, extras=None))]
+    pub fn new(property: serde_utils::PyValue<Property>, parties: Option<serde_utils::PyValue<Vec<Party>>>, artifacts: Option<serde_utils::PyValue<Vec<SourceArtifact>>>, addresses: Option<serde_utils::PyValue<Vec<Address>>>, property_addresses: Option<serde_utils::PyValue<Vec<PropertyAddress>>>, identifiers: Option<serde_utils::PyValue<Vec<PropertyIdentifier>>>, jurisdictions: Option<serde_utils::PyValue<Vec<Jurisdiction>>>, parcels: Option<serde_utils::PyValue<Vec<Parcel>>>, property_parcels: Option<serde_utils::PyValue<Vec<PropertyParcel>>>, parcel_lineage: Option<serde_utils::PyValue<Vec<ParcelLineage>>>, site: Option<serde_utils::PyValue<Site>>, structures: Option<serde_utils::PyValue<Vec<Structure>>>, spaces: Option<serde_utils::PyValue<Vec<Space>>>, property_state_snapshots: Option<serde_utils::PyValue<Vec<PropertyStateSnapshot>>>, associations: Option<serde_utils::PyValue<Vec<PropertyAssociation>>>, assessments: Option<serde_utils::PyValue<Vec<Assessment>>>, tax_bills: Option<serde_utils::PyValue<Vec<TaxBill>>>, transfers: Option<serde_utils::PyValue<Vec<Transfer>>>, sales: Option<serde_utils::PyValue<Vec<SaleEvent>>>, listings: Option<serde_utils::PyValue<Vec<Listing>>>, leases: Option<serde_utils::PyValue<Vec<LeaseEvent>>>, unit_rents: Option<serde_utils::PyValue<Vec<UnitRentObservation>>>, rent_rolls: Option<serde_utils::PyValue<Vec<RentRoll>>>, loans: Option<serde_utils::PyValue<Vec<Loan>>>, liens: Option<serde_utils::PyValue<Vec<Lien>>>, foreclosure_cases: Option<serde_utils::PyValue<Vec<ForeclosureCase>>>, permits: Option<serde_utils::PyValue<Vec<Permit>>>, ownership: Option<serde_utils::PyValue<Vec<OwnershipPeriod>>>, operating_statements: Option<serde_utils::PyValue<Vec<OperatingStatement>>>, valuations: Option<serde_utils::PyValue<Vec<Valuation>>>, provenance: Option<serde_utils::PyValue<Provenance>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let property = property.into_inner();
         let parties = parties.map(|v| v.into_inner());
+        let artifacts = artifacts.map(|v| v.into_inner());
         let addresses = addresses.map(|v| v.into_inner());
+        let property_addresses = property_addresses.map(|v| v.into_inner());
         let identifiers = identifiers.map(|v| v.into_inner());
         let jurisdictions = jurisdictions.map(|v| v.into_inner());
         let parcels = parcels.map(|v| v.into_inner());
@@ -8537,6 +11030,7 @@ impl PropertyProfile {
         let site = site.map(|v| v.into_inner());
         let structures = structures.map(|v| v.into_inner());
         let spaces = spaces.map(|v| v.into_inner());
+        let property_state_snapshots = property_state_snapshots.map(|v| v.into_inner());
         let associations = associations.map(|v| v.into_inner());
         let assessments = assessments.map(|v| v.into_inner());
         let tax_bills = tax_bills.map(|v| v.into_inner());
@@ -8545,6 +11039,7 @@ impl PropertyProfile {
         let listings = listings.map(|v| v.into_inner());
         let leases = leases.map(|v| v.into_inner());
         let unit_rents = unit_rents.map(|v| v.into_inner());
+        let rent_rolls = rent_rolls.map(|v| v.into_inner());
         let loans = loans.map(|v| v.into_inner());
         let liens = liens.map(|v| v.into_inner());
         let foreclosure_cases = foreclosure_cases.map(|v| v.into_inner());
@@ -8554,7 +11049,7 @@ impl PropertyProfile {
         let valuations = valuations.map(|v| v.into_inner());
         let provenance = provenance.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
-        PropertyProfile{property, parties, addresses, identifiers, jurisdictions, parcels, property_parcels, parcel_lineage, site, structures, spaces, associations, assessments, tax_bills, transfers, sales, listings, leases, unit_rents, loans, liens, foreclosure_cases, permits, ownership, operating_statements, valuations, provenance, extras}
+        PropertyProfile{property, parties, artifacts, addresses, property_addresses, identifiers, jurisdictions, parcels, property_parcels, parcel_lineage, site, structures, spaces, property_state_snapshots, associations, assessments, tax_bills, transfers, sales, listings, leases, unit_rents, rent_rolls, loans, liens, foreclosure_cases, permits, ownership, operating_statements, valuations, provenance, extras}
     }
 }
 
@@ -8585,6 +11080,7 @@ impl<'py> FromPyObject<'py> for Box<PropertyProfile> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct AssessorObservation {
@@ -8601,6 +11097,8 @@ pub struct AssessorObservation {
     pub error: Option<String>,
     pub provenance: Provenance,
     #[cfg_attr(feature = "serde", serde(default))]
+    pub artifact_refs: Option<Vec<String>>,
+    #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>
 }
 #[cfg(feature = "pyo3")]
@@ -8608,12 +11106,12 @@ pub struct AssessorObservation {
 #[pymethods]
 impl AssessorObservation {
     #[new]
-    #[pyo3(signature = (status, provenance, query_address=None, query_parcel_number=None, assessor_url=None, profile=None, error=None, extras=None))]
-    pub fn new(status: AssessorStatus, provenance: serde_utils::PyValue<Provenance>, query_address: Option<String>, query_parcel_number: Option<String>, assessor_url: Option<uri>, profile: Option<serde_utils::PyValue<PropertyProfile>>, error: Option<String>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (status, provenance, query_address=None, query_parcel_number=None, assessor_url=None, profile=None, error=None, artifact_refs=None, extras=None))]
+    pub fn new(status: AssessorStatus, provenance: serde_utils::PyValue<Provenance>, query_address: Option<String>, query_parcel_number: Option<String>, assessor_url: Option<uri>, profile: Option<serde_utils::PyValue<PropertyProfile>>, error: Option<String>, artifact_refs: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let provenance = provenance.into_inner();
         let profile = profile.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
-        AssessorObservation{status, provenance, query_address, query_parcel_number, assessor_url, profile, error, extras}
+        AssessorObservation{status, provenance, query_address, query_parcel_number, assessor_url, profile, error, artifact_refs, extras}
     }
 }
 
@@ -8644,6 +11142,7 @@ impl<'py> FromPyObject<'py> for Box<AssessorObservation> {
 
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ExtractionObservation {
@@ -8657,12 +11156,14 @@ pub struct ExtractionObservation {
     #[cfg_attr(feature = "serde", serde(default))]
     pub source_url: Option<uri>,
     #[cfg_attr(feature = "serde", serde(default))]
-    pub extracted_at: Option<NaiveDateTime>,
+    pub extracted_at: Option<DateTime<FixedOffset>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub model: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub profile: Option<PropertyProfile>,
     pub provenance: Provenance,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub artifact_refs: Option<Vec<String>>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub extras: Option<Any>
 }
@@ -8671,12 +11172,12 @@ pub struct ExtractionObservation {
 #[pymethods]
 impl ExtractionObservation {
     #[new]
-    #[pyo3(signature = (status, provenance, category=None, source_category=None, error=None, source_url=None, extracted_at=None, model=None, profile=None, extras=None))]
-    pub fn new(status: ExtractionStatus, provenance: serde_utils::PyValue<Provenance>, category: Option<ExtractionCategory>, source_category: Option<String>, error: Option<String>, source_url: Option<uri>, extracted_at: Option<NaiveDateTime>, model: Option<String>, profile: Option<serde_utils::PyValue<PropertyProfile>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (status, provenance, category=None, source_category=None, error=None, source_url=None, extracted_at=None, model=None, profile=None, artifact_refs=None, extras=None))]
+    pub fn new(status: ExtractionStatus, provenance: serde_utils::PyValue<Provenance>, category: Option<ExtractionCategory>, source_category: Option<String>, error: Option<String>, source_url: Option<uri>, extracted_at: Option<DateTime<FixedOffset>>, model: Option<String>, profile: Option<serde_utils::PyValue<PropertyProfile>>, artifact_refs: Option<Vec<String>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let provenance = provenance.into_inner();
         let profile = profile.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
-        ExtractionObservation{status, provenance, category, source_category, error, source_url, extracted_at, model, profile, extras}
+        ExtractionObservation{status, provenance, category, source_category, error, source_url, extracted_at, model, profile, artifact_refs, extras}
     }
 }
 

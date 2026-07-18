@@ -1,0 +1,100 @@
+{
+  "property": {
+    "id": "property-section-coverage"
+  },
+  "parties": [
+    {
+      "id": "party-association",
+      "kind": "organization",
+      "name": "Example Property Association"
+    }
+  ],
+  "jurisdictions": [
+    {
+      "id": "jurisdiction-registry",
+      "country": "CA",
+      "name": "Example Land Registry",
+      "kind": "land_registry"
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel-predecessor",
+      "jurisdiction": "jurisdiction-registry",
+      "parcel_number": "PREDECESSOR-1"
+    },
+    {
+      "id": "parcel-successor",
+      "jurisdiction": "jurisdiction-registry",
+      "parcel_number": "SUCCESSOR-1"
+    }
+  ],
+  "parcel_lineage": [
+    {
+      "id": "parcel-lineage-1",
+      "predecessor_parcel": "parcel-predecessor",
+      "successor_parcel": "parcel-successor",
+      "kind": "renumber",
+      "effective_on": "2025-01-01"
+    }
+  ],
+  "associations": [
+    {
+      "id": "association-1",
+      "property": "property-section-coverage",
+      "party": "party-association",
+      "fee": {
+        "amount": "150.00",
+        "currency": "CAD"
+      },
+      "fee_period": "monthly"
+    }
+  ],
+  "listings": [
+    {
+      "id": "listing-1",
+      "property": "property-section-coverage",
+      "kind": "for_lease",
+      "events": [
+        {
+          "occurred_on": "2026-01-01",
+          "event_kind": "listed",
+          "status": "active",
+          "asking_price": {
+            "amount": "3200.00",
+            "currency": "CAD"
+          },
+          "rent_period": "monthly"
+        }
+      ]
+    }
+  ],
+  "unit_rents": [
+    {
+      "id": "unit-rent-1",
+      "property": "property-section-coverage",
+      "unit_type": "standard_unit",
+      "rate": {
+        "amount": "2100.00",
+        "currency": "CAD"
+      },
+      "rate_period": "monthly",
+      "rate_basis": "per_unit",
+      "rate_type": "asking",
+      "observed_on": "2026-01-01"
+    }
+  ],
+  "permits": [
+    {
+      "id": "permit-1",
+      "property": "property-section-coverage",
+      "permitting_jurisdiction": "jurisdiction-registry",
+      "permit_number": "PERMIT-1",
+      "kind": "renovation",
+      "status": "issued",
+      "applied_on": "2025-12-01",
+      "issued_on": "2026-01-15",
+      "expires_on": "2027-01-15"
+    }
+  ]
+}

@@ -1,6 +1,3 @@
-// ISO 8601 date string (shim: gen-typescript emits the LinkML type name verbatim)
-type date = string;
-
 export type EntityId = string;
 export type JurisdictionId = string;
 export type AddressId = string;
@@ -10,10 +7,17 @@ export type PropertyParcelId = string;
 export type ParcelLineageId = string;
 export type PropertyIdentifierId = string;
 export type PartyId = string;
+export type SourceArtifactId = string;
+export type PropertyAddressId = string;
 export type OwnershipPeriodId = string;
 export type StructureId = string;
 export type SiteId = string;
 export type SpaceId = string;
+export type PropertyStateId = string;
+export type SiteStateId = string;
+export type StructureStateId = string;
+export type SpaceStateId = string;
+export type PropertyStateSnapshotId = string;
 export type PropertyAssociationId = string;
 export type AssessmentId = string;
 export type TaxBillId = string;
@@ -27,10 +31,11 @@ export type LienId = string;
 export type ForeclosureCaseId = string;
 export type PermitId = string;
 export type OperatingStatementId = string;
+export type RentRollId = string;
 export type ValuationId = string;
 
 export enum AreaUnit {
-    
+
     sqft = "sqft",
     sqm = "sqm",
     acre = "acre",
@@ -38,13 +43,13 @@ export enum AreaUnit {
 };
 
 export enum LengthUnit {
-    
+
     ft = "ft",
     m = "m",
 };
 
 export enum CaptureMethod {
-    
+
     api = "api",
     scrape = "scrape",
     llm_extraction = "llm_extraction",
@@ -53,7 +58,7 @@ export enum CaptureMethod {
 };
 
 export enum VerificationStatus {
-    
+
     unverified = "unverified",
     pending_review = "pending_review",
     verified = "verified",
@@ -62,30 +67,13 @@ export enum VerificationStatus {
 };
 
 export enum PartyKind {
-    
+
     person = "person",
     organization = "organization",
 };
 
-export enum OrganizationKind {
-    
-    llc = "llc",
-    corporation = "corporation",
-    partnership = "partnership",
-    trust = "trust",
-    estate = "estate",
-    government = "government",
-    nonprofit = "nonprofit",
-    reit = "reit",
-    fund = "fund",
-    lender = "lender",
-    brokerage = "brokerage",
-    hoa = "hoa",
-    other = "other",
-};
-
 export enum SaleTypeEnum {
-    
+
     arms_length = "arms_length",
     /** Real-estate-owned / bank sale */
     reo = "reo",
@@ -102,7 +90,7 @@ export enum SaleTypeEnum {
 * Reliability of a recorded price
 */
 export enum PriceDisclosure {
-    
+
     full = "full",
     partial = "partial",
     estimated = "estimated",
@@ -112,7 +100,7 @@ export enum PriceDisclosure {
 };
 
 export enum LeaseTypeEnum {
-    
+
     gross = "gross",
     modified_gross = "modified_gross",
     triple_net = "triple_net",
@@ -126,7 +114,7 @@ export enum LeaseTypeEnum {
 };
 
 export enum RentPeriod {
-    
+
     daily = "daily",
     monthly = "monthly",
     annual = "annual",
@@ -135,7 +123,7 @@ export enum RentPeriod {
 };
 
 export enum RateBasis {
-    
+
     per_unit = "per_unit",
     per_bed = "per_bed",
     per_area = "per_area",
@@ -148,20 +136,21 @@ export enum RateBasis {
 };
 
 export enum RateType {
-    
+
     asking = "asking",
+    market = "market",
     effective = "effective",
     contract = "contract",
 };
 
 export enum ListingKind {
-    
+
     for_sale = "for_sale",
     for_lease = "for_lease",
 };
 
 export enum ListingStatus {
-    
+
     active = "active",
     pending = "pending",
     sold = "sold",
@@ -173,7 +162,7 @@ export enum ListingStatus {
 };
 
 export enum ValuationKind {
-    
+
     avm = "avm",
     appraisal = "appraisal",
     bpo = "bpo",
@@ -181,18 +170,8 @@ export enum ValuationKind {
     internal = "internal",
 };
 
-export enum LoanStatus {
-    
-    active = "active",
-    satisfied = "satisfied",
-    assigned = "assigned",
-    foreclosure = "foreclosure",
-    released = "released",
-    unknown = "unknown",
-};
-
 export enum LoanEventKind {
-    
+
     origination = "origination",
     assignment = "assignment",
     modification = "modification",
@@ -204,7 +183,7 @@ export enum LoanEventKind {
 };
 
 export enum LienKind {
-    
+
     tax = "tax",
     judgment = "judgment",
     hoa = "hoa",
@@ -214,25 +193,35 @@ export enum LienKind {
 };
 
 export enum ParcelLineageKind {
-    
+
     split = "split",
     merge = "merge",
     renumber = "renumber",
 };
 
 export enum EstateType {
-    
+
     fee_simple = "fee_simple",
+    leased_fee = "leased_fee",
     leasehold = "leasehold",
     life_estate = "life_estate",
     cooperative_shares = "cooperative_shares",
+    other = "other",
+};
+
+export enum RatingScope {
+
+    overall = "overall",
+    exterior = "exterior",
+    interior = "interior",
+    component = "component",
     other = "other",
 };
 /**
 * What an operating statement represents.
 */
 export enum StatementBasis {
-    
+
     actual = "actual",
     budget = "budget",
     pro_forma = "pro_forma",
@@ -242,7 +231,7 @@ export enum StatementBasis {
 };
 
 export enum GeocodeAccuracy {
-    
+
     rooftop = "rooftop",
     parcel = "parcel",
     street = "street",
@@ -255,7 +244,7 @@ export enum GeocodeAccuracy {
 * Outcome of an extraction attempt over already-fetched content. Fetch-level failures (timeout, api_error) belong to the envelope that did the fetching, e.g. AssessorStatus.
 */
 export enum ExtractionStatus {
-    
+
     success = "success",
     /** Content was retrieved but extraction failed */
     parse_error = "parse_error",
@@ -268,7 +257,7 @@ export enum ExtractionStatus {
 * What kind of property content an extraction produced. This is a content axis only — where the content came from (public record, vendor, scrape) is Provenance's job. Precedence: when the primary extracted content is a transaction, listing, or lease, use that value even if the page is also a record of property facts. `other` means successfully classified but outside this taxonomy; put the producer's raw label in source_category.
 */
 export enum ExtractionCategory {
-    
+
     sales_transaction = "sales_transaction",
     sale_listing = "sale_listing",
     lease_listing = "lease_listing",
@@ -281,7 +270,7 @@ export enum ExtractionCategory {
 * Outcome of an assessor or public-records lookup.
 */
 export enum AssessorStatus {
-    
+
     success = "success",
     not_found = "not_found",
     timeout = "timeout",
@@ -313,7 +302,7 @@ export interface Money {
  * Area measurement with explicit unit.
  */
 export interface Area {
-    value: string,
+    value: number,
     unit: AreaUnit,
 }
 
@@ -322,7 +311,7 @@ export interface Area {
  * Linear measurement with explicit unit.
  */
 export interface Length {
-    value: string,
+    value: number,
     unit: LengthUnit,
 }
 
@@ -350,11 +339,31 @@ export interface CodeableConcept {
 
 
 /**
+ * An open-vocabulary classification qualified by the system that defines its code. Codes from different systems are not assumed equivalent.
+ */
+export interface Classification extends CodeableConcept {
+    system: string,
+    code: string,
+}
+
+
+/**
+ * A rating qualified by the system that defines its code. PHDS does not assume codes from different systems are ordinally or semantically equal.
+ */
+export interface Rating extends CodeableConcept {
+    system: string,
+    code: string,
+    description?: string,
+    scope?: RatingScope,
+}
+
+
+/**
  * WGS84 coordinate.
  */
 export interface GeoPoint {
-    latitude: string,
-    longitude: string,
+    latitude: number,
+    longitude: number,
 }
 
 
@@ -376,6 +385,7 @@ export interface Provenance {
     source_url?: string,
     retrieved_at?: string,
     method?: CaptureMethod,
+    /** Fraction from 0 through 1; 0.8 means 80 percent confidence. */
     confidence?: number,
     verification?: VerificationStatus,
 }
@@ -383,9 +393,11 @@ export interface Provenance {
 
 
 export interface Entity {
+    /** Canonical identifier; nonblank with no leading or trailing whitespace */
     id: string,
     extras?: Any,
     provenance?: Provenance,
+    verifications?: VerificationAttribution[],
 }
 
 
@@ -411,25 +423,25 @@ export interface RecordedInstrument {
     recording_book?: string,
     recording_page?: string,
     /** Date accepted, recorded, or registered by the authority */
-    recorded_on?: date,
+    recorded_on?: string,
     /** Date executed/signed as dated on the instrument */
-    instrument_date?: date,
+    instrument_date?: string,
     document_type?: CodeableConcept,
     /** Authority maintaining the record (optional — parcel context is inference, not identity) */
     recording_authority?: JurisdictionId,
     /** Alternate authority-issued reference: title, dealing, folio, or notarial-act number */
     registry_reference?: string,
     related_instruments?: InstrumentReference[],
+    artifacts?: SourceArtifactId[],
 }
 
 
 /**
- * A participant in an event, as recorded on the instrument. `name` is the immutable recorded fact; `party` is optional resolution to a canonical Party. Multi-party is the norm (couples on deeds, co-borrowers).
+ * A contextual role-bearing relationship from an event or record to a canonical Party. Exact source wording belongs in provenance or source artifacts, not in a second actor-name field. Multi-party is the norm (couples on deeds, co-borrowers).
  */
 export interface TransactionParty {
     role: string,
-    name: string,
-    party?: PartyId,
+    party: PartyId,
     sequence?: number,
     extras?: Any,
 }
@@ -453,7 +465,7 @@ export interface Jurisdiction extends Entity {
 
 export interface Address extends Entity {
     country: string,
-    /** Fallback when components don't parse */
+    /** Fallback when components do not parse */
     unformatted_address?: string,
     street_number?: string,
     street_pre_direction?: string,
@@ -470,31 +482,37 @@ export interface Address extends Entity {
     postal_code_suffix?: string,
     /** county/district name */
     admin_area?: string,
-    /** authority code (US: county FIPS) */
+    /** authority code */
     admin_area_code?: string,
-    /** App-computed dedup key */
-    address_hash: string,
+    /** Producer-computed matching key; comparable only under the same scheme */
+    address_hash?: string,
+    /** Producer-namespaced normalization and hashing scheme */
+    address_hash_scheme?: string,
     location?: GeoPoint,
     location_accuracy?: GeocodeAccuracy,
 }
 
 
-/**
- * The immutable anchor. Parcel numbers/APNs/vendor IDs are labels about a property, never its key.
- */
-export interface Property extends Entity {
+
+export interface PropertyFacts {
     name?: string,
-    /** PUCS class when property_use_system = pucs_1_0 */
+    /** PUCS class when property_use_system identifies PUCS */
     property_use_class?: string,
     property_use_type?: string,
     property_use_subtype?: string,
-    /** 'pucs_1_0' | local system; REQUIRED when use fields are set (no default) */
+    /** Required when use fields are set; no default */
     property_use_system?: string,
     estate_type?: EstateType,
-    situs_address?: AddressId,
     location?: GeoPoint,
-    /** Vendor summary when structures are not enumerated */
+    /** Producer summary when structures are not enumerated */
     building_count?: number,
+}
+
+
+/**
+ * Stable property identity; mutable descriptive fields come from PropertyFacts.
+ */
+export interface Property extends Entity, PropertyFacts {
 }
 
 
@@ -514,7 +532,7 @@ export interface Parcel extends Entity {
     /** GeoJSON MultiPolygon (optional) */
     boundary?: Geometry,
     /** Set by lineage events */
-    retired_on?: date,
+    retired_on?: string,
 }
 
 
@@ -525,8 +543,8 @@ export interface PropertyParcel extends Entity {
     property: PropertyId,
     parcel: ParcelId,
     is_primary?: boolean,
-    started_on?: date,
-    ended_on?: date,
+    started_on?: string,
+    ended_on?: string,
 }
 
 
@@ -535,7 +553,7 @@ export interface ParcelLineage extends Entity {
     predecessor_parcel: ParcelId,
     successor_parcel: ParcelId,
     kind: ParcelLineageKind,
-    effective_on?: date,
+    effective_on?: string,
 }
 
 
@@ -551,33 +569,81 @@ export interface PropertyIdentifier extends Entity {
 
 
 /**
- * One model for every actor — owners, buyers, borrowers, lenders, brokers, trustees, claimants, contractors, HOAs.
+ * One canonical model for every actor — owners, buyers, tenants and lessees, borrowers, lenders, brokers, trustees, claimants, contractors, associations, and valuation performers.
  */
 export interface Party extends Entity {
     kind: PartyKind,
-    organization_kind?: OrganizationKind,
-    /** Display name as recorded */
+    /** Optional system-qualified legal form for an organization under an identified jurisdictional or producer vocabulary. This is not an industry classification or a contextual role such as lender, broker, tenant, or association. */
+    legal_form?: Classification,
+    /** Canonical display name for this Party in the profile; nonblank with no leading or trailing whitespace. Source-specific wording is attributed through provenance or SourceArtifact. */
     name: string,
+    /** Producer-derived matching key for the canonical display name. Its normalization algorithm is producer-defined; it is not authoritative display text or a separate identity. */
     normalized_name?: string,
+    /** Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems. */
     name_first?: string,
+    /** Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems. */
     name_middle?: string,
+    /** Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems. */
     name_last?: string,
-    /** Agents / brokers / appraisers */
-    license_number?: string,
+    /** System-qualified actor classifications from an open vocabulary; use producer-namespaced system and code values */
+    classifications?: Classification[],
     addresses?: PartyAddress[],
     contacts?: PartyContact[],
 }
 
 
 /**
- * mailing | physical | registered_agent | previous | other
+ * Verification performed by one canonical party.
  */
-export interface PartyAddress {
+export interface VerificationAttribution {
+    verifier: PartyId,
+    verified_at: string,
+    note?: string,
+    extras?: Any,
+}
+
+
+/**
+ * Source material that supports or preserves an assertion. Semantic validation requires at least one nonblank uri or storage_reference.
+ */
+export interface SourceArtifact extends Entity {
+    uri?: string,
+    /** Producer-defined object or document storage reference */
+    storage_reference?: string,
+    /** MIME media type */
+    media_type?: string,
+    kind?: CodeableConcept,
+    title?: string,
+    original_filename?: string,
+    content_hash?: string,
+    /** Producer-namespaced content hashing scheme */
+    hash_scheme?: string,
+    page_count?: number,
+    captured_on?: string,
+}
+
+
+
+export interface AddressAssociation {
     address: AddressId,
-    kind?: string,
+    /** situs | entrance | alias | address_range | former | mailing | other (open vocabulary) */
+    role?: CodeableConcept,
     is_primary?: boolean,
+    valid_from?: string,
+    valid_to?: string,
+}
+
+
+
+export interface PartyAddress extends AddressAssociation {
     extras?: Any,
     provenance?: Provenance,
+}
+
+
+
+export interface PropertyAddress extends Entity, AddressAssociation {
+    property: PropertyId,
 }
 
 
@@ -599,8 +665,8 @@ export interface PartyContact {
  */
 export interface OwnershipPeriod extends Entity {
     property: PropertyId,
-    started_on?: date,
-    ended_on?: date,
+    started_on?: string,
+    ended_on?: string,
     /** joint_tenants | tenants_in_common | community_property | ... (open) */
     vesting_type?: string,
     /** Owner's mailing address during THIS period */
@@ -614,7 +680,8 @@ export interface OwnershipPeriod extends Entity {
 
 export interface OwnershipInterest {
     party: PartyId,
-    interest_pct?: string,
+    /** 0–100 percentage points; 75 means 75 percent. */
+    interest_pct?: number,
     /** owner | trustee | gp | lp */
     role?: string,
     is_owner_occupied?: boolean,
@@ -623,16 +690,15 @@ export interface OwnershipInterest {
 
 
 
-export interface Structure extends Entity {
-    property: PropertyId,
+export interface StructureFacts {
     /** building | barn | silo | shed | outbuilding | ... (open) */
     kind?: string,
     name?: string,
     structure_number?: string,
-    /** Finished above-grade living area per UAD 3.6 definition */
+    /** Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance. */
     living_area?: Area,
     gross_area?: Area,
-    /** BOMA definitions */
+    /** Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method. */
     rentable_area?: Area,
     ground_floor_area?: Area,
     basement_area?: Area,
@@ -643,7 +709,7 @@ export interface Structure extends Entity {
     year_built?: number,
     year_built_estimated?: boolean,
     effective_year_built?: number,
-    stories?: string,
+    stories?: number,
     unit_count?: number,
     /** site_built | manufactured | modular | container | 3d_printed | ... */
     construction_method?: string,
@@ -655,20 +721,26 @@ export interface Structure extends Entity {
     roof_style_type?: string,
     foundation_type?: string,
     foundation_material?: string,
-    condition_rating?: string,
-    quality_rating?: string,
-    /** 'uad_3_6' (C1–C6/Q1–Q6) | 'local' | ... */
-    rating_system?: string,
+    /** Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair. */
+    condition_ratings?: Rating[],
+    /** Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair. */
+    quality_ratings?: Rating[],
     heating_types?: string[],
     heating_fuel_type?: string,
     cooling_types?: string[],
     sewer_type?: string,
     water_type?: string,
-    /** Open vocab seeded from UAD AmenityBase */
+    /** Open vocabulary for physical features and amenities */
     features?: string[],
     residential?: ResidentialDetails,
     commercial?: CommercialDetails,
     renovations?: Renovation[],
+}
+
+
+
+export interface Structure extends Entity, StructureFacts {
+    property: PropertyId,
 }
 
 
@@ -681,7 +753,7 @@ export interface AreaMeasure {
 
 
 /**
- * International core; the UAD 3.6 profile constrains enums for US appraisal use. A CURRENT-STATE snapshot dated by provenance.retrieved_at (see CommercialDetails note).
+ * Internationally neutral residential facts. When nested in Structure, these fields describe observation-derived current state. When nested in StructureState, they are asserted historical facts governed by PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval metadata, not the effective date. Events reference a separately bundled PropertyStateSnapshot rather than containing the snapshot. Optional standards profiles may constrain values for a specific use case.
  */
 export interface ResidentialDetails {
     bedrooms_total?: number,
@@ -715,21 +787,22 @@ export interface ResidentialDetails {
 
 
 /**
- * BOMA/OSCRE-cited semantics. Like all detail records, this is a CURRENT-STATE snapshot whose as-of date is provenance.retrieved_at; time-varying fields (occupancy_pct, tenant_count, condition) are not individually dated. Historical/per-period figures belong on dated records: OperatingStatement, UnitRentObservation, or as-of-event snapshots on SaleEvent.
+ * Internationally neutral commercial facts. When nested in Structure, these fields describe observation-derived current state. When nested in StructureState, they are asserted historical facts governed by PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval metadata, not the effective date. Historical/per-period financial figures belong on dated records such as OperatingStatement and UnitRentObservation. Events reference a separately bundled PropertyStateSnapshot rather than containing the snapshot. Optional standards profiles may constrain values for a specific use case.
  */
 export interface CommercialDetails {
-    /** A | B | C */
-    building_class?: string,
+    /** Competitive market positioning under the named rating system; distinct from physical condition and construction quality. */
+    market_classification?: Rating,
     clear_height?: Length,
     dock_doors?: number,
     drive_in_doors?: number,
-    occupancy_pct?: string,
+    /** 0–100 percentage points; 95 means 95 percent. */
+    occupancy_pct?: number,
     parking_spaces?: number,
     /** e.g. spaces per 1000 sqft — denominator explicit */
     parking_ratio?: UnitRate,
     /** single_tenant | multi_tenant */
     tenancy?: string,
-    /** Distinct legal tenants (not suites or leases); current-state, dated by provenance */
+    /** Distinct legal tenants (not suites or leases); timing follows the containing Structure or StructureState context */
     tenant_count?: number,
     /** surface | structured | underground | covered | ... */
     parking_types?: string[],
@@ -750,33 +823,24 @@ export interface Renovation {
     kind?: string,
     description?: string,
     completed_year?: number,
-    completed_on?: date,
+    completed_on?: string,
     cost?: Money,
     extras?: Any,
     provenance?: Provenance,
 }
 
 
-/**
- * 1:1 with property.
- */
-export interface Site extends Entity {
-    property: PropertyId,
+
+export interface SiteFacts {
     lot_size?: Area,
-    /** Usable portion of the lot; see usable_land_area_basis */
     usable_land_area?: Area,
-    /** surveyed | buildable | net_of_constraints | ... (what "usable" means here) */
     usable_land_area_basis?: string,
-    /** County code + label, system-tagged */
     land_use?: CodeableConcept,
-    /** Standardized (PUCS land classes) */
     land_use_category?: string,
     zoning_code?: string,
     flood_zone?: string,
     hazard_zones?: string[],
-    /** UAD ViewBase-seeded */
     view_types?: string[],
-    /** UAD SiteInfluenceBase-seeded */
     site_influences?: string[],
     easements?: string[],
     restrictions?: string[],
@@ -785,7 +849,6 @@ export interface Site extends Entity {
     depth?: Length,
     topography?: string,
     is_corner?: boolean,
-    /** raw | entitled | permitted | ... (open; construction/dev) */
     entitlement_status?: string,
     buildable_units?: number,
     subdivision?: string,
@@ -793,24 +856,24 @@ export interface Site extends Entity {
     block?: string,
     tract_number?: string,
     phase_number?: string,
-    /** US PLSS (US-specific, optional) */
     section_township_range?: string,
 }
 
 
-/**
- * Leasable suites/units (CRE, multifamily).
- */
-export interface Space extends Entity {
+
+export interface Site extends Entity, SiteFacts {
     property: PropertyId,
-    structure?: StructureId,
-    space_identifier: string,
+}
+
+
+
+export interface SpaceFacts {
     floor_number?: number,
     space_use?: string,
     rentable_area?: Area,
     usable_area?: Area,
     bedrooms?: number,
-    bathrooms?: string,
+    bathrooms?: number,
     /** owner_occupied | tenant | vacant */
     occupancy?: string,
     is_adu?: boolean,
@@ -819,13 +882,61 @@ export interface Space extends Entity {
 
 
 /**
- * HOA / property association — minimal v1 footprint.
+ * Leasable suites/units (CRE, multifamily).
+ */
+export interface Space extends Entity, SpaceFacts {
+    property: PropertyId,
+    structure?: StructureId,
+    space_identifier: string,
+}
+
+
+
+export interface PropertyState extends Entity, PropertyFacts {
+    subject: PropertyId,
+}
+
+
+
+export interface SiteState extends Entity, SiteFacts {
+    subject: SiteId,
+}
+
+
+
+export interface StructureState extends Entity, StructureFacts {
+    subject: StructureId,
+}
+
+
+
+export interface SpaceState extends Entity, SpaceFacts {
+    subject: SpaceId,
+}
+
+
+/**
+ * Sparse asserted physical state effective on as_of_date.
+ */
+export interface PropertyStateSnapshot extends Entity {
+    property: PropertyId,
+    as_of_date: string,
+    /** at_sale | at_listing | at_lease | inspection | reported | inferred (open vocabulary) */
+    basis?: CodeableConcept,
+    property_state?: PropertyState,
+    site_states?: SiteState[],
+    structure_states?: StructureState[],
+    space_states?: SpaceState[],
+}
+
+
+/**
+ * HOA or property-association relationship; identity and classification live on the canonical Party.
  */
 export interface PropertyAssociation extends Entity {
     property: PropertyId,
-    /** The association as an organization */
-    party?: PartyId,
-    name?: string,
+    /** The canonical association organization */
+    party: PartyId,
     fee?: Money,
     fee_period?: RentPeriod,
 }
@@ -884,9 +995,9 @@ export interface TaxBill extends Entity {
 
 export interface TaxInstallment {
     installment_number?: number,
-    due_on?: date,
+    due_on?: string,
     amount?: Money,
-    paid_on?: date,
+    paid_on?: string,
     amount_paid?: Money,
     is_delinquent?: boolean,
     extras?: Any,
@@ -895,10 +1006,10 @@ export interface TaxInstallment {
 
 
 export interface TaxLineItem {
-    /** Taxing authority name or code */
-    authority?: string,
-    /** Mill rate / levy */
-    rate?: string,
+    /** Optional canonical taxing jurisdiction responsible for this line item */
+    jurisdiction?: JurisdictionId,
+    /** Source-defined tax rate or levy value; not governed by the _pct percentage-points convention. */
+    rate?: number,
     amount?: Money,
     extras?: Any,
 }
@@ -913,14 +1024,17 @@ export interface Transfer extends Entity, RecordedInstrument {
     /** warranty_deed | quitclaim | foreclosure | tax_deed | ... (open) */
     transfer_kind: string,
     /** Legal/economic effectiveness — may differ from instrument_date and recorded_on */
-    effective_on?: date,
+    effective_on?: string,
     /** Often $0 / nominal */
     consideration?: Money,
     /** Doc stamps; price-inference basis in many places */
     transfer_tax?: Money,
     price_disclosure?: PriceDisclosure,
     price_code?: CodeableConcept,
-    partial_interest_pct?: string,
+    /** The legal or beneficial interest conveyed by this transfer. */
+    interest_conveyed?: CodeableConcept,
+    /** 0–100 percentage points; 25 means 25 percent. */
+    partial_interest_pct?: number,
     is_inter_family?: boolean,
     is_distressed?: boolean,
     parties?: TransferParty[],
@@ -939,8 +1053,9 @@ export interface TransferParty extends TransactionParty {
  */
 export interface SaleEvent extends Entity {
     property: PropertyId,
+    property_state?: PropertyStateSnapshotId,
     transfer?: TransferId,
-    sale_date: date,
+    sale_date: string,
     sale_price?: Money,
     price_disclosure?: PriceDisclosure,
     price_code?: CodeableConcept,
@@ -950,14 +1065,18 @@ export interface SaleEvent extends Entity {
     /** cash | conventional | seller | assumption | other (coarse; loans carry detail) */
     financing?: string,
     concessions?: Money,
-    cap_rate?: string,
+    /** Capitalization rate in percentage points; 5.75 means 5.75 percent. */
+    cap_rate?: number,
     noi_at_sale?: Money,
     opex_at_sale?: Money,
-    occupancy_at_sale_pct?: string,
+    /** 0–100 percentage points; 90 means 90 percent. */
+    occupancy_at_sale_pct?: number,
     unit_count_at_sale?: number,
     /** Traceability: the statement noi_at_sale derives from, when known */
     supporting_operating_statement?: OperatingStatementId,
     parties?: SaleEventParty[],
+    /** Source- or vendor-authored narrative interpreted through provenance. */
+    remarks?: string,
 }
 
 
@@ -969,34 +1088,34 @@ export interface SaleEventParty extends TransactionParty {
 
 
 /**
- * Listing header. Lifecycle lives in events[]; header status/list_price are denormalized conveniences reconstructible from events.
+ * Listing identity and non-lifecycle facts. Process events by occurred_on ascending; array order breaks same-date ties. Carry status, asking_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.
  */
 export interface Listing extends Entity {
     property: PropertyId,
+    property_state?: PropertyStateSnapshotId,
     kind: ListingKind,
     /** mls | fsbo | auction | pocket */
     listing_type?: string,
-    status?: ListingStatus,
-    original_list_price?: Money,
-    list_price?: Money,
-    list_rent?: Money,
-    list_rent_period?: RentPeriod,
-    listed_on?: date,
-    closed_on?: date,
-    close_price?: Money,
     mls_number?: string,
     events?: ListingEvent[],
     participants?: ListingParticipant[],
+    artifacts?: SourceArtifactId[],
+    /** Source- or vendor-authored narrative interpreted through provenance. */
+    remarks?: string,
 }
 
 
-
+/**
+ * A dated listing assertion. asking_price is a sale price or periodic rent; rent_period states the period when asking_price is rent. close_price is asserted on a closed event.
+ */
 export interface ListingEvent {
-    occurred_on: date,
+    occurred_on: string,
     /** listed | price_change | status_change | relisted | closed */
     event_kind: string,
     status?: ListingStatus,
-    list_price?: Money,
+    asking_price?: Money,
+    rent_period?: RentPeriod,
+    close_price?: Money,
     extras?: Any,
     provenance?: Provenance,
 }
@@ -1014,11 +1133,12 @@ export interface ListingParticipant extends TransactionParty {
  */
 export interface LeaseEvent extends Entity {
     property: PropertyId,
+    property_state?: PropertyStateSnapshotId,
     space?: SpaceId,
     lease_type?: LeaseTypeEnum,
-    execution_date?: date,
-    commencement_date?: date,
-    expiration_date?: date,
+    execution_date?: string,
+    commencement_date?: string,
+    expiration_date?: string,
     term_months?: number,
     leased_area?: Area,
     rent?: Money,
@@ -1026,13 +1146,14 @@ export interface LeaseEvent extends Entity {
     starting_rent_per_area?: UnitRate,
     effective_rent_per_area?: UnitRate,
     net_effective_rent_per_area?: UnitRate,
-    free_rent_months?: string,
+    free_rent_months?: number,
     ti_allowance_per_area?: UnitRate,
     expense_structure?: ExpenseStructure,
-    lessee_industry?: string,
     parties?: LeaseEventParty[],
     escalations?: LeaseEscalation[],
     concessions?: LeaseConcession[],
+    /** Source- or vendor-authored narrative interpreted through provenance. */
+    remarks?: string,
 }
 
 
@@ -1061,21 +1182,24 @@ export interface ExpenseStructure {
 export interface LeaseEscalation {
     /** fixed_amount | fixed_percent | cpi | step_schedule | fmv | none */
     escalation_type: string,
-    escalation_value?: string,
+    /** For escalation_type=fixed_percent, a value from 0-100 percentage points; 3 means 3 percent. For escalation_type=fixed_amount, the increment in the currency of the parent LeaseEvent.rent and the period specified by LeaseEvent.rent_period. */
+    escalation_value?: number,
     frequency_months?: number,
     cpi_index?: string,
-    cpi_floor?: string,
-    cpi_cap?: string,
+    /** CPI escalation floor in percentage points; 2 means 2 percent. */
+    cpi_floor?: number,
+    /** CPI escalation cap in percentage points; 5 means 5 percent. */
+    cpi_cap?: number,
     steps?: RentStep[],
-    effective_from?: date,
-    effective_until?: date,
+    effective_from?: string,
+    effective_until?: string,
     extras?: Any,
 }
 
 
 
 export interface RentStep {
-    from_date: date,
+    from_date: string,
     amount: Money,
 }
 
@@ -1085,8 +1209,9 @@ export interface LeaseConcession {
     /** free_rent | ti_allowance | moving_allowance | ... */
     concession_type: string,
     concession_value?: Money,
-    abatement_months?: string,
-    abatement_percent?: string,
+    abatement_months?: number,
+    /** 0–100 percentage points; 10 means 10 percent. */
+    abatement_percent?: number,
     ti_cap_total?: Money,
     conditions?: Any,
     notes?: string,
@@ -1103,7 +1228,7 @@ export interface UnitRentObservation extends Entity {
     unit_type: string,
     unit_area?: Area,
     bedrooms?: number,
-    bathrooms?: string,
+    bathrooms?: number,
     /** Units of this type */
     unit_count?: number,
     units_available?: number,
@@ -1111,13 +1236,13 @@ export interface UnitRentObservation extends Entity {
     rate_period?: RentPeriod,
     rate_basis?: RateBasis,
     rate_type?: RateType,
-    observed_on: date,
+    observed_on: string,
     concessions_note?: string,
 }
 
 
 /**
- * Recorded debt. lender_name is the immutable ORIGINATING lender; assignments and status changes are dated loan events. status is a derived projection of events.
+ * Recorded debt. Originating lender identity and classification live on the canonical Party referenced by a LoanParty. Assignments, modifications, satisfactions, and other lifecycle assertions are dated events; consumers derive current status and satisfaction dates.
  */
 export interface Loan extends Entity, RecordedInstrument {
     property: PropertyId,
@@ -1126,9 +1251,6 @@ export interface Loan extends Entity, RecordedInstrument {
     transfer?: TransferId,
     is_purchase_money?: boolean,
     loan_amount?: Money,
-    lender_name?: string,
-    /** bank | credit_union | private | seller | ... */
-    lender_type?: string,
     /** conventional | fha | va | ... (open) */
     loan_type?: string,
     /** purchase | refinance | construction | heloc | ... */
@@ -1137,13 +1259,12 @@ export interface Loan extends Entity, RecordedInstrument {
     is_construction?: boolean,
     is_seller_carryback?: boolean,
     is_assumable?: boolean,
-    interest_rate?: string,
+    /** Nominal interest rate in percentage points; 6.5 means 6.5 percent. */
+    interest_rate?: number,
     is_variable_rate?: boolean,
     term_months?: number,
-    due_date?: date,
+    due_date?: string,
     lien_position?: number,
-    status?: LoanStatus,
-    satisfied_on?: date,
     parties?: LoanParty[],
     events?: LoanEvent[],
 }
@@ -1161,10 +1282,9 @@ export interface LoanParty extends TransactionParty {
  */
 export interface LoanEvent extends RecordedInstrument {
     event_kind: LoanEventKind,
-    occurred_on?: date,
+    occurred_on?: string,
     amount?: Money,
-    /** Assignee lender name (assignments) */
-    to_name?: string,
+    /** Canonical assignee for assignment-like events */
     to_party?: PartyId,
     extras?: Any,
     provenance?: Provenance,
@@ -1178,7 +1298,7 @@ export interface Lien extends Entity, RecordedInstrument {
     property: PropertyId,
     kind: LienKind,
     amount?: Money,
-    released_on?: date,
+    released_on?: string,
     parties?: LienParty[],
 }
 
@@ -1198,8 +1318,8 @@ export interface ForeclosureCase extends Entity {
     /** The defaulted loan, when known */
     loan?: LoanId,
     case_number?: string,
-    opened_on?: date,
-    resolved_on?: date,
+    opened_on?: string,
+    resolved_on?: string,
     /** sold_at_auction | cured | dismissed | reo */
     resolution?: string,
     past_due_amount?: Money,
@@ -1218,7 +1338,7 @@ export interface ForeclosureCase extends Entity {
 export interface ForeclosureFiling extends RecordedInstrument {
     /** nod | lis_pendens | notice_of_sale | auction_scheduled | postponement | ... (open; US-seeded) */
     status: string,
-    auction_on?: date,
+    auction_on?: string,
     /** Time-of-day as published */
     auction_at_time?: string,
     extras?: Any,
@@ -1227,7 +1347,7 @@ export interface ForeclosureFiling extends RecordedInstrument {
 
 
 /**
- * role = lender | trustee | borrower
+ * Open contextual role. Mortgage and deed-of-trust proceedings commonly use lender | trustee | borrower; lien foreclosures may instead use claimant | debtor.
  */
 export interface ForeclosureCaseParty extends TransactionParty {
 }
@@ -1246,15 +1366,15 @@ export interface Permit extends Entity {
     /** issued | finaled | expired | ... (open) */
     status?: string,
     description?: string,
-    applied_on?: date,
-    issued_on?: date,
-    finaled_on?: date,
-    expires_on?: date,
+    applied_on?: string,
+    issued_on?: string,
+    finaled_on?: string,
+    expires_on?: string,
     job_value?: Money,
     fees?: Money,
-    contractor_name?: string,
-    contractor_license?: string,
+    /** Canonical contractor Party reference; credential records are outside core v0.2 */
     contractor_party?: PartyId,
+    artifacts?: SourceArtifactId[],
 }
 
 
@@ -1266,13 +1386,14 @@ export interface OperatingStatement extends Entity {
     /** The calendar year the statement is for (the year containing period_end for fiscal/trailing periods). */
     statement_year: number,
     /** For fiscal-year, trailing-12, or partial periods. period_start and period_end must be provided together; omit both for calendar-year statements. */
-    period_start?: date,
-    period_end?: date,
+    period_start?: string,
+    period_end?: string,
     statement_basis?: StatementBasis,
     /** Potential gross income */
     pgi?: Money,
     vacancy_loss?: Money,
-    vacancy_pct?: string,
+    /** 0–100 percentage points; 5 means 5 percent. */
+    vacancy_pct?: number,
     /** Effective gross income */
     egi?: Money,
     opex_total?: Money,
@@ -1301,10 +1422,43 @@ export interface StatementLineItem {
 
 
 /**
+ * Dated rent and occupancy observation applicable to any property use. Header totals are authoritative reported values; lines are supporting detail and are not required to sum to the totals. All Money values on one rent roll MUST use one currency (validator-enforced). For its as_of_date, this record governs reported occupancy and rent facts; current-state fields such as Space.occupancy and CommercialDetails.occupancy_pct do not override it. A line preserves dated rent-roll assertions and does not by itself create a canonical Space, Party, or LeaseEvent.
+ */
+export interface RentRoll extends Entity {
+    property: PropertyId,
+    as_of_date: string,
+    unit_count?: number,
+    occupied_unit_count?: number,
+    /** Occupancy in 0–100 percentage points; 95 means 95 percent. */
+    occupancy_pct?: number,
+    total_contract_rent?: Money,
+    total_market_rent?: Money,
+    rent_period?: RentPeriod,
+    lines?: RentRollLine[],
+}
+
+
+/**
+ * Supporting rent-roll detail. space resolves to canonical Space. tenant is the canonical legal lessee Party when present, and lease resolves to canonical LeaseEvent when known. When both tenant and lease are present, tenant must match a party with role: lessee declared by that lease, if the lease declares any lessee. References remain optional for aggregate, vacant, unleased, or unresolved lines; the line does not duplicate canonical space identity, tenant names, or lease dates. When a source tenant cannot be resolved to a canonical Party, omit tenant and preserve the source evidence through the RentRoll provenance and profile-level SourceArtifact records; do not mint a placeholder Party or copy the source name into extras.
+ */
+export interface RentRollLine {
+    space?: SpaceId,
+    tenant?: PartyId,
+    lease?: LeaseEventId,
+    occupancy_status?: CodeableConcept,
+    reported_area?: Area,
+    contract_rent?: Money,
+    market_rent?: Money,
+    extras?: Any,
+}
+
+
+/**
  * Opinions of value — AVM/appraisal/BPO. Never tax-roll values (those are assessments). Append-only.
  */
 export interface Valuation extends Entity {
     property: PropertyId,
+    property_state?: PropertyStateSnapshotId,
     kind: ValuationKind,
     /** desktop | exterior | hybrid | traditional */
     valuation_method?: string,
@@ -1316,32 +1470,36 @@ export interface Valuation extends Entity {
     value_per_area?: UnitRate,
     /** Cost-approach site value */
     land_value?: Money,
+    /** Source-defined confidence score; not governed by the _pct percentage-points convention. */
     confidence_score?: number,
-    /** AVM FSD */
-    forecast_standard_deviation?: string,
+    /** Source-defined AVM forecast standard deviation; not governed by the _pct percentage-points convention. */
+    forecast_standard_deviation?: number,
     exposure_days?: number,
     indicated_value_sales_comparison?: Money,
     indicated_value_cost?: Money,
     indicated_value_income?: Money,
     /** as_is | as_completed | as_stabilized */
     value_premise?: string,
-    /** fee_simple | leased_fee | leasehold */
+    /** Interest valued for this opinion; independent of Property.estate_type and Transfer.interest_conveyed. */
     interest?: string,
-    performed_by?: string,
+    /** Canonical person or organization that performed the valuation */
     performed_by_party?: PartyId,
-    as_of_date: date,
-    report_date?: date,
+    as_of_date: string,
+    report_date?: string,
+    artifacts?: SourceArtifactId[],
 }
 
 
 /**
- * The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any event (required for lossless round-trip). Conformance requires passing the entities → profile → entities round-trip test.
+ * The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any record, including tenants, lenders, contractors, associations, and valuation performers (required for lossless round-trip). Conformance requires passing the entities → profile → entities round-trip test.
  */
 export interface PropertyProfile {
     parties?: Party[],
+    artifacts?: SourceArtifact[],
     /** Address bundle referenced by property/parties/ownership */
     addresses?: Address[],
     property: Property,
+    property_addresses?: PropertyAddress[],
     identifiers?: PropertyIdentifier[],
     jurisdictions?: Jurisdiction[],
     parcels?: Parcel[],
@@ -1350,6 +1508,7 @@ export interface PropertyProfile {
     site?: Site,
     structures?: Structure[],
     spaces?: Space[],
+    property_state_snapshots?: PropertyStateSnapshot[],
     associations?: PropertyAssociation[],
     assessments?: Assessment[],
     tax_bills?: TaxBill[],
@@ -1358,6 +1517,7 @@ export interface PropertyProfile {
     listings?: Listing[],
     leases?: LeaseEvent[],
     unit_rents?: UnitRentObservation[],
+    rent_rolls?: RentRoll[],
     loans?: Loan[],
     liens?: Lien[],
     foreclosure_cases?: ForeclosureCase[],
@@ -1381,6 +1541,8 @@ export interface AssessorObservation {
     profile?: PropertyProfile,
     error?: string,
     provenance: Provenance,
+    /** References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent. */
+    artifact_refs?: SourceArtifactId[],
     extras?: Any,
 }
 
@@ -1401,7 +1563,7 @@ export interface ExtractionObservation {
     model?: string,
     profile?: PropertyProfile,
     provenance: Provenance,
+    /** References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent. */
+    artifact_refs?: SourceArtifactId[],
     extras?: Any,
 }
-
-

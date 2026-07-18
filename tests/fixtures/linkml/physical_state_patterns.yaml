@@ -1,0 +1,48 @@
+id: https://example.org/phds/tests/physical-state-patterns
+name: physical_state_patterns
+prefixes:
+  linkml: https://w3id.org/linkml/
+  test: https://example.org/phds/tests/
+default_prefix: test
+default_range: string
+imports:
+  - linkml:types
+
+classes:
+  Entity:
+    abstract: true
+    attributes:
+      id: {identifier: true, range: string}
+
+  StructureFacts:
+    mixin: true
+    attributes:
+      year_built: {range: integer}
+      condition: {}
+
+  Structure:
+    is_a: Entity
+    mixins: [StructureFacts]
+    attributes:
+      property: {range: Property, inlined: false, required: true}
+
+  StructureState:
+    is_a: Entity
+    mixins: [StructureFacts]
+    attributes:
+      subject: {range: Structure, inlined: false, required: true}
+
+  Property:
+    is_a: Entity
+
+  Snapshot:
+    is_a: Entity
+    attributes:
+      structure_states: {range: StructureState, multivalued: true, inlined: true, inlined_as_list: true}
+
+  Container:
+    tree_root: true
+    attributes:
+      property: {range: Property, inlined: true, required: true}
+      structures: {range: Structure, multivalued: true, inlined: true, inlined_as_list: true}
+      snapshots: {range: Snapshot, multivalued: true, inlined: true, inlined_as_list: true}

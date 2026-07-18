@@ -1,0 +1,16 @@
+{
+  "property": {
+    "id": "shared-entity-id"
+  },
+  "structures": [
+    {
+      "id": "shared-entity-id",
+      "property": "shared-entity-id",
+      "condition_ratings": [{
+        "system": "urn:phds:standard:uad:3.6:condition",
+        "code": "C3",
+        "scope": "overall"
+      }]
+    }
+  ]
+}

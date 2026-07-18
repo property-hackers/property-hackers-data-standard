@@ -1,0 +1,30 @@
+{
+  "property": {"id": "property-money-test"},
+  "jurisdictions": [
+    {
+      "id": "jurisdiction-money-test",
+      "country": "ZZ",
+      "name": "Example Assessing Authority",
+      "kind": "assessing_authority"
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel-money-test",
+      "jurisdiction": "jurisdiction-money-test",
+      "parcel_number": "example-parcel"
+    }
+  ],
+  "assessments": [
+    {
+      "id": "assessment-money-test",
+      "parcel": "parcel-money-test",
+      "jurisdiction": "jurisdiction-money-test",
+      "tax_year": 2026,
+      "assessed_total_value": {
+        "amount": "١٢٣.٤٥",
+        "currency": "USD"
+      }
+    }
+  ]
+}

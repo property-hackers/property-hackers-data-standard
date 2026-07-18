@@ -1,0 +1,36 @@
+{
+  "property": {"id": "property-boma-international-1"},
+  "structures": [
+    {
+      "id": "structure-boma-international-1",
+      "property": "property-boma-international-1",
+      "commercial": {
+        "market_classification": {
+          "system": "urn:phds:standard:boma:office:international",
+          "code": "investment",
+          "display": "Investment"
+        }
+      }
+    }
+  ],
+  "property_state_snapshots": [
+    {
+      "id": "snapshot-boma-international-1",
+      "property": "property-boma-international-1",
+      "as_of_date": "2026-07-18",
+      "structure_states": [
+        {
+          "id": "structure-state-boma-international-1",
+          "subject": "structure-boma-international-1",
+          "commercial": {
+            "market_classification": {
+              "system": "urn:phds:standard:boma:office:international",
+              "code": "institutional",
+              "display": "Institutional"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

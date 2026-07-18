@@ -1,106 +1,157 @@
 # PHDS: Property Hackers Data Standard
 
-An open data standard for real property. It covers parcels, structures,
-assessments, taxes, deeds and transfers, sales, listings, leases, loans, liens,
-foreclosures, permits, parties, and valuations in residential and commercial
-real estate.
+An open, internationally neutral data standard for real property of any use.
+It covers physical property, parties, public records, transactions, financing,
+operations, leasing, and valuation across residential, commercial, industrial,
+agricultural, and other property types.
 
-> Status: early draft (0.1), published as an RFC. Everything is open for discussion; issues and pull requests are welcome.
+> Status: early draft (0.2), published as an RFC. Everything is open for discussion; issues and pull requests are welcome.
 
-The schema itself: [`schema/entities.yaml`](schema/entities.yaml) (the entities), with [`schema/core.yaml`](schema/core.yaml) (value types and enums), [`schema/profiles.yaml`](schema/profiles.yaml) (the PropertyProfile interchange document), and [`schema/capture.yaml`](schema/capture.yaml) (capture envelopes; the generator entry point, since its import closure is the full standard).
+The [LinkML](https://linkml.io) source separates value types and provenance
+([`core.yaml`](schema/core.yaml)), canonical entities
+([`entities.yaml`](schema/entities.yaml)), the `PropertyProfile` interchange
+document ([`profiles.yaml`](schema/profiles.yaml)), and capture envelopes
+([`capture.yaml`](schema/capture.yaml)).
 
 ## Why
 
-Real property data has no usable open standard. MISMO, the mortgage industry's
-standard, is unfortunately closed: its full reference model sits behind
-membership. Meanwhile, AI-assisted software development means more hobbyist
-programmers and real estate professionals are building their own tools for
-property research, analysis, and valuation. The recurring problem is data
-consistency: every vendor, county system, and app shapes the same facts
-differently.
-
-PHDS provides schema definitions for database DDL, structured types, and JSON
-contracts with a consistent shape. It gives parsers a consistent target
-shape for real estate data and supports an ecosystem where data moves between
-tools because it has a common shape. PHDS is authored in
-[LinkML](https://linkml.io), which generates JSON Schema, Pydantic, and
-TypeScript types. PHDS also
-includes per-field crosswalks to RESO, UAD 3.6/MISMO, Appraisal Institute PUCS,
-BOMA, and OSCRE.
+Property systems repeatedly model the same facts in incompatible shapes. PHDS
+provides a common source for database design, generated types, validation, and
+JSON interchange without assuming a country, registry, vendor, property use,
+unit system, currency, or rating scale. It generates and tests JSON Schema,
+JSON-LD, Pydantic, TypeScript, and Rust contracts.
 
 ## What you can use it for
 
-- Generate types, structs, or table definitions for your own project from the
-  LinkML source or the generated JSON Schema, instead of designing a property
-  model from scratch.
-- Coerce LLM output into structured data: use the generated Pydantic models
-  with tools like [Instructor](https://github.com/instructor-ai/instructor),
-  or the JSON Schema directly with any structured-output API, to parse
-  listings, deeds, and assessor pages into consistent records.
-- Validate property payloads at system boundaries (the fixtures in `examples/`
-  show the expected shape).
-- Exchange data with other tools that speak PHDS without writing a custom
-  mapping for each pair.
+- Generate types and database designs from a shared property model.
+- Structure and validate extracted or AI-produced data.
+- Enforce structural and semantic rules at system boundaries.
+- Exchange property profiles without custom mappings for every integration.
 
 ## Design highlights
 
-- Normalized entities and a `PropertyProfile` document for one property.
-- Value types for `Money`, `Area`, `Length`, `UnitRate`, and `CodeableConcept`.
-  Units are explicit, and money values use decimal strings on the wire.
-- Events for listing history, loan assignments and satisfactions, foreclosure
-  cases and filings, and renovations.
-- Typed multi-party relationships for deeds, sales, loans, and liens.
-- `RecordedInstrument` for recorded or registered documents across recorder,
-  land registry, and notarial systems.
-- No country defaults. Units and currencies are explicit, and UAD 3.6 is a
-  profile rather than part of the core model.
-- Source and verification information on each record. `extras` preserves data
-  a producer cannot otherwise model.
+- A normalized canonical model plus a one-property `PropertyProfile`
+  interchange document.
+- Stable physical identities with sparse dated state; omitted historical facts
+  remain unknown rather than inheriting current values.
+- Multiple temporal property addresses with roles, primary status, validity
+  periods, and provenance.
+- System-qualified condition, quality, and market ratings without a mandatory
+  national or industry scale.
+- Dated rent rolls with authoritative reported totals and optional canonical
+  references to spaces, tenants, and leases.
+- Evidence artifacts, attributed remarks, and verification by canonical parties.
+- Explicit `Money`, `Area`, `Length`, `UnitRate`, and `CodeableConcept` value
+  types. Units are explicit, and money amounts use decimal strings on the wire.
+- No country defaults; optional standards remain outside the core import closure.
+- `extras` preserves producer-specific information under documented extension
+  conventions without changing canonical PHDS meaning.
+
+## Time and identity semantics
+
+Stable entities hold observation-derived current facts. Sparse state records
+under `PropertyStateSnapshot` hold historical assertions, with `as_of_date` as
+their effective date. Capture timestamps say when information was retrieved or
+extracted—not when it was true. See
+[Physical-state semantics](docs/semantics/physical-state.md).
+
+Each actor is one canonical `Party`; relationships carry typed references and
+roles rather than duplicate names or classifications. `Party.name` is the
+canonical display name, while normalized and parsed fields are producer-derived
+matching aids. Organization legal form uses a system-qualified
+`Classification`; business classifications use `Party.classifications`. For
+unresolved or redacted tenants, see
+[Rent-roll semantics](docs/semantics/rent-rolls.md).
+
+`*_pct` fields and `cap_rate` use 0–100 percentage points (`5.75` means 5.75%).
+`Provenance.confidence` uses a 0–1 fraction (`0.8` means 80%). Source-defined
+scores and rates document their own scales.
+
+## Profiles and extensions
+
+`PropertyProfile` is the neutral core interchange root. Optional constrained
+profiles under `schema/standards/` opt into external code sets without entering
+the core import closure.
+
+Producer-specific data belongs in `extras` using namespaced keys. See
+[Extension conventions](docs/extensions.md).
 
 ## Repository layout
 
-```
+```text
 schema/
-  core.yaml           value types, enums, provenance
-  entities.yaml       normalized canonical entities
-  profiles.yaml       the PropertyProfile interchange document
-  capture.yaml        capture envelopes (fetch/extraction outcomes; generator entry point)
-  generated/          JSON Schema, Pydantic, TypeScript, and Rust (regenerate with `just gen`)
-examples/             real-world-derived, pseudonymized fixtures that must validate
-counter_examples/     fixtures that must fail validation
-docs/crosswalks/      standards alignment, including UAD 3.6
+  core.yaml                 value types, enums, and provenance
+  entities.yaml             normalized canonical entities
+  profiles.yaml             PropertyProfile interchange document
+  capture.yaml              operational capture envelopes; core generator entry point
+  standards/                optional external-standards profiles; not imported by core
+  generated/                generated JSON Schema, JSON-LD, Pydantic, TypeScript, and Rust
+examples/                   valid illustrative core fixtures
+examples/standards/         valid optional-profile fixtures
+counter_examples/schema/    fixtures rejected by structural validation
+counter_examples/semantic/  structurally valid fixtures rejected by semantic validation
+counter_examples/standards/ fixtures rejected by optional standards profiles
+docs/semantics/             normative semantic guidance beyond structural schemas
+docs/crosswalks/            field and concept alignment with external standards
 ```
 
 ## Quickstart
 
 Requires Python 3.10+, [just](https://github.com/casey/just), and a Rust
-toolchain (`cargo`) for the Rust wire-format tests.
+toolchain with `cargo`.
 
 ```sh
-just venv       # create .venv and install the LinkML toolchain
-just gen        # regenerate JSON Schema / pydantic / TypeScript / Rust from the LinkML
-just validate   # examples must pass, counter_examples must fail
-just check      # gen + validate + generated-contract tests + Rust wire-format tests
+just venv             # create .venv and install the pinned LinkML toolchain
+just gen              # regenerate all core and optional-profile artifacts
+just check-generated  # fail if regeneration changes schema/generated
+just validate         # valid fixtures pass; negative fixtures fail as intended
+just test-generated   # source, semantic, round-trip, and generated-contract tests
+just test-rust        # core and standards-profile Rust wire-format tests
+just check            # generated-drift + semantic + round-trip + standards-profile + Rust checks
 ```
+
+`just check-generated` regenerates from an empty isolated tree and compares the
+result with `schema/generated`. It does not write to the checkout or use the Git
+index, so unrelated work cannot affect drift detection.
 
 ## Fixtures
 
-The `examples/` fixtures derive from real public-record data (two commercial
-properties, one single-family residence). Private individuals' names, street
-identifiers, coordinates, recording numbers, and hashes are pseudonymized.
-Corporate and institutional parties are retained as public record.
+Core fixtures are illustrative and may retain public corporate, institutional,
+jurisdiction, geographic, and source-system values. Natural-person names are
+synthetic or altered.
 
 ## Roadmap
 
-- SQL DDL generator (LinkML to Postgres)
-- Zod generation; Elixir (Ecto embedded schemas) and Ruby clients
-- Round-trip conformance harness (entities to profile to entities) in CI
+- SQL DDL generation for PostgreSQL
+- Zod generation and Elixir and Ruby clients
 - Registered namespace URIs (currently `example.org` placeholders)
+- A separate multi-property comparable-analysis extension
+- Typed, multi-authority Party credentials with issuer, jurisdiction, status,
+  and validity periods
+
+## Referenced standards and independence
+
+PHDS is internationally neutral. These materials inform mappings, optional
+profiles, and design research; none is a globally preferred classification:
+
+- [RESO Data Dictionary](https://www.reso.org/data-dictionary/)
+- [Fannie Mae condition and quality guidance](https://selling-guide.fanniemae.com/sel/b4-1.3-06/property-condition-and-quality-construction-improvements)
+- [Freddie Mac UAD and forms redesign](https://sf.freddiemac.com/faqs/uad-and-forms-redesign)
+- [MISMO](https://www.mismo.org/)
+- [Appraisal Institute Property Use Classification System](https://www.appraisalinstitute.org/insights-and-resources/resources/standards-of-professional-practice/professional-practice-samples-templates-and-documents/property-use-classification-system-pucs)
+- [BOMA building class definitions](https://boma.org/boma-standards/building-class-definitions)
+- [OSCRE Industry Data Model](https://www.oscre.org/Industry-Data-Model/Introducing-the-Data-Model)
+- [ASTM E2018 property condition assessment guidance](https://www.astm.org/news/press-releases/e2018-revision)
+- [RICS technical due diligence guidance](https://www.rics.org/profession-standards/rics-standards-and-guidance/sector-standards/real-estate-standards/technical-due-diligence-of-commercial-property)
+
+PHDS is independent and is not affiliated with or endorsed by any referenced
+organization. Names and trademarks belong to their owners. PHDS mappings do not
+redistribute standards, establish certification, or make an external standard
+normative for core. Consult each publisher for licensing, geographic scope, and
+authoritative versions.
 
 ## License
 
-MIT. See [LICENSE](LICENSE). Industry standards referenced (RESO, UAD/MISMO,
-PUCS, BOMA, OSCRE) remain the property of their respective organizations; PHDS
-maps to them but does not redistribute their artifacts.
+MIT. See [LICENSE](LICENSE).
 
 Feedback: please open a GitHub issue.

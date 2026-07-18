@@ -1,0 +1,11 @@
+{
+  "property": {"id": "property-boma-metro-bad-code"},
+  "structures": [{
+    "id": "structure-boma-metro-bad-code",
+    "property": "property-boma-metro-bad-code",
+    "commercial": {"market_classification": {
+      "system": "urn:phds:standard:boma:office:metro",
+      "code": "D"
+    }}
+  }]
+}

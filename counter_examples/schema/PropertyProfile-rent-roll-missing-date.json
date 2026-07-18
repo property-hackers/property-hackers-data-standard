@@ -1,0 +1,11 @@
+{
+  "property": {
+    "id": "property-1"
+  },
+  "rent_rolls": [
+    {
+      "id": "rent-roll-1",
+      "property": "property-1"
+    }
+  ]
+}

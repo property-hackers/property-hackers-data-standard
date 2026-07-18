@@ -3,13 +3,20 @@
     {
       "id": "party-bear-bear",
       "kind": "organization",
-      "organization_kind": "partnership",
+      "legal_form": {
+        "system": "urn:phds:example:legal-form",
+        "code": "partnership"
+      },
       "name": "Bear & Bear Associates Lp",
       "normalized_name": "bear & bear associates lp",
       "addresses": [
         {
           "address": "addr-mailing-mission",
-          "kind": "mailing",
+          "role": {
+            "system": "https://example.org/phds/address-role",
+            "code": "mailing",
+            "display": "Mailing"
+          },
           "is_primary": true
         }
       ]
@@ -30,6 +37,7 @@
       "admin_area": "Johnson",
       "admin_area_code": "20091",
       "address_hash": "example-com2-situs-hash",
+      "address_hash_scheme": "urn:phds:example-hash:pseudonymized-v1",
       "location": {
         "latitude": 39.011886133826,
         "longitude": -94.6633802264679
@@ -47,7 +55,8 @@
       "postal_code": "66202",
       "postal_code_suffix": "4031",
       "admin_area": "Johnson",
-      "address_hash": "example-com2-mailing-hash"
+      "address_hash": "example-com2-mailing-hash",
+      "address_hash_scheme": "urn:phds:example-hash:pseudonymized-v1"
     }
   ],
   "jurisdictions": [
@@ -58,6 +67,14 @@
       "name": "Johnson",
       "kind": "county",
       "authority_code": "20091"
+    },
+    {
+      "id": "juris-512-unified",
+      "country": "US",
+      "region": "KS",
+      "name": "512 UNIFIED",
+      "kind": "school_tax_district",
+      "authority_code": "512"
     }
   ],
   "property": {
@@ -65,18 +82,30 @@
     "property_use_class": "commercial",
     "property_use_type": "office",
     "property_use_system": "pucs_1_0",
-    "situs_address": "addr-situs-6701",
     "location": {
       "latitude": 39.011886133826,
       "longitude": -94.6633802264679
     },
     "building_count": 1,
     "extras": {
-      "vendor_property_type_detail": "Commercial Office",
-      "standardized_land_use_code": "3000",
-      "school_district": "Shawnee Mission Public Schools Unified School District"
+      "example_vendor.vendor_property_type_detail": "Commercial Office",
+      "example_vendor.standardized_land_use_code": "3000",
+      "example_vendor.school_district": "Shawnee Mission Public Schools Unified School District"
     }
   },
+  "property_addresses": [
+    {
+      "id": "property-address-situs",
+      "property": "prop-glenwood-plaza",
+      "address": "addr-situs-6701",
+      "role": {
+        "system": "https://example.org/phds/address-role",
+        "code": "situs",
+        "display": "Situs"
+      },
+      "is_primary": true
+    }
+  ],
   "identifiers": [
     {
       "id": "ident-taxid",
@@ -127,12 +156,12 @@
     "tract_number": "GLENWOOD PLAZA",
     "site_influences": [],
     "extras": {
-      "estimated_lot_size_sqft": 128699,
-      "lot_code": "M",
-      "site_influence_code": "172",
-      "district": "N",
-      "municipality": "Overland Park",
-      "assessors_map_reference": "F17"
+      "example_vendor.estimated_lot_size_sqft": 128699,
+      "example_vendor.lot_code": "M",
+      "example_vendor.site_influence_code": "172",
+      "example_vendor.district": "N",
+      "example_vendor.municipality": "Overland Park",
+      "example_vendor.assessors_map_reference": "F17"
     }
   },
   "structures": [
@@ -154,9 +183,18 @@
       "unit_count": 1,
       "construction_type": "Concrete Block",
       "exterior_wall_type": "Combination",
-      "condition_rating": "Average",
-      "quality_rating": "C+",
-      "rating_system": "local",
+      "condition_ratings": [{
+        "system": "urn:phds:example-rating:local",
+        "code": "average",
+        "display": "Average",
+        "scope": "overall"
+      }],
+      "quality_ratings": [{
+        "system": "urn:phds:example-rating:local",
+        "code": "C+",
+        "display": "C+",
+        "scope": "overall"
+      }],
       "heating_types": [
         "Yes"
       ],
@@ -170,16 +208,16 @@
       ],
       "commercial": {
         "extras": {
-          "vendor_building_class": "Exterior walls non-combustible material. Interior partitions and roof structure combustible materials. Floor concrete or wood frame.",
-          "vendor_building_class_code": "3"
+          "example_vendor.vendor_building_class": "Exterior walls non-combustible material. Interior partitions and roof structure combustible materials. Floor concrete or wood frame.",
+          "example_vendor.vendor_building_class_code": "3"
         }
       },
       "extras": {
-        "residential_unit_count": 1,
-        "story_code": "100",
-        "building_condition_code": "6",
-        "building_quality_code": "9",
-        "total_building_area_code": "R"
+        "example_vendor.residential_unit_count": 1,
+        "example_vendor.story_code": "100",
+        "example_vendor.building_condition_code": "6",
+        "example_vendor.building_quality_code": "9",
+        "example_vendor.total_building_area_code": "R"
       }
     }
   ],
@@ -229,9 +267,9 @@
       "rate_code_area": "660UW",
       "line_items": [
         {
-          "authority": "512 UNIFIED",
+          "jurisdiction": "juris-512-unified",
           "extras": {
-            "source": "schoolTaxDistrictCodes"
+            "example_vendor.source": "schoolTaxDistrictCodes"
           }
         }
       ]
@@ -258,10 +296,10 @@
     "verification": "unverified"
   },
   "extras": {
-    "vendor_record_id": "example-vendor-record-com2",
-    "vendor_date_modified": "2023-07-07T03:40:17.731Z",
-    "congressional_district": "09",
-    "census_tract": "050600"
+    "example_vendor.vendor_record_id": "example-vendor-record-com2",
+    "example_vendor.vendor_date_modified": "2023-07-07T03:40:17.731Z",
+    "example_vendor.congressional_district": "09",
+    "example_vendor.census_tract": "050600"
   },
   "operating_statements": [
     {
@@ -314,7 +352,7 @@
         }
       ],
       "extras": {
-        "note": "illustrative pro forma authored for this example; not from the public record"
+        "example_vendor.note": "illustrative pro forma authored for this example; not from the public record"
       },
       "period_start": "2022-01-01",
       "period_end": "2022-12-31",

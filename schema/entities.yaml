@@ -1,9 +1,9 @@
-# PHDS entities — the normalized canonical layer (mirrors notes/draft-ddl-sketch.sql rev 4).
+# PHDS entities — the normalized canonical layer.
 id: https://example.org/phds/entities
 name: phds_entities
 title: PHDS Entities
 license: MIT
-version: 0.1.0
+version: 0.2.0
 
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -21,9 +21,10 @@ classes:
   Entity:
     abstract: true
     attributes:
-      id: {identifier: true, range: string}
+      id: {identifier: true, range: string, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical identifier; nonblank with no leading or trailing whitespace}
       extras: {range: Any}
       provenance: {range: Provenance}
+      verifications: {range: VerificationAttribution, multivalued: true, inlined: true, inlined_as_list: true}
 
   InstrumentReference:
     description: >-
@@ -54,17 +55,18 @@ classes:
       recording_authority: {range: Jurisdiction, inlined: false, description: "Authority maintaining the record (optional — parcel context is inference, not identity)"}
       registry_reference: {description: "Alternate authority-issued reference: title, dealing, folio, or notarial-act number"}
       related_instruments: {range: InstrumentReference, multivalued: true, inlined: true, inlined_as_list: true}
+      artifacts: {range: SourceArtifact, multivalued: true, inlined: false}
 
   TransactionParty:
     abstract: true
     description: >-
-      A participant in an event, as recorded on the instrument. `name` is the
-      immutable recorded fact; `party` is optional resolution to a canonical
-      Party. Multi-party is the norm (couples on deeds, co-borrowers).
+      A contextual role-bearing relationship from an event or record to a
+      canonical Party. Exact source wording belongs in provenance or source
+      artifacts, not in a second actor-name field. Multi-party is the norm
+      (couples on deeds, co-borrowers).
     attributes:
       role: {required: true}
-      name: {required: true}
-      party: {range: Party, inlined: false}
+      party: {range: Party, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
       sequence: {range: integer, minimum_value: 1}
       extras: {range: Any}
 
@@ -84,7 +86,7 @@ classes:
     is_a: Entity
     attributes:
       country: {required: true, pattern: "^[A-Z]{2}(?![\\s\\S])"}
-      unformatted_address: {description: Fallback when components don't parse}
+      unformatted_address: {description: Fallback when components do not parse}
       street_number: {}
       street_pre_direction: {}
       street_name: {}
@@ -97,25 +99,29 @@ classes:
       region: {}
       postal_code: {}
       postal_code_suffix: {}
-      admin_area: {description: "county/district name"}
-      admin_area_code: {description: "authority code (US: county FIPS)"}
-      address_hash: {required: true, description: App-computed dedup key}
+      admin_area: {description: county/district name}
+      admin_area_code: {description: authority code}
+      address_hash: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Producer-computed matching key; comparable only under the same scheme}
+      address_hash_scheme: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Producer-namespaced normalization and hashing scheme}
       location: {range: GeoPoint}
       location_accuracy: {range: GeocodeAccuracy}
 
-  Property:
-    is_a: Entity
-    description: The immutable anchor. Parcel numbers/APNs/vendor IDs are labels about a property, never its key.
+  PropertyFacts:
+    mixin: true
     attributes:
       name: {}
-      property_use_class: {description: PUCS class when property_use_system = pucs_1_0}
+      property_use_class: {description: PUCS class when property_use_system identifies PUCS}
       property_use_type: {}
       property_use_subtype: {}
-      property_use_system: {description: "'pucs_1_0' | local system; REQUIRED when use fields are set (no default)"}
+      property_use_system: {description: Required when use fields are set; no default}
       estate_type: {range: EstateType}
-      situs_address: {range: Address, inlined: false}
       location: {range: GeoPoint}
-      building_count: {range: integer, description: Vendor summary when structures are not enumerated}
+      building_count: {range: integer, description: Producer summary when structures are not enumerated}
+
+  Property:
+    is_a: Entity
+    mixins: [PropertyFacts]
+    description: Stable property identity; mutable descriptive fields come from PropertyFacts.
 
   Parcel:
     unique_keys:
@@ -172,27 +178,70 @@ classes:
   # ==== parties =============================================================
   Party:
     is_a: Entity
-    description: One model for every actor — owners, buyers, borrowers, lenders, brokers, trustees, claimants, contractors, HOAs.
+    description: One canonical model for every actor — owners, buyers, tenants and lessees, borrowers, lenders, brokers, trustees, claimants, contractors, associations, and valuation performers.
     attributes:
       kind: {range: PartyKind, required: true}
-      organization_kind: {range: OrganizationKind}
-      name: {required: true, description: Display name as recorded}
-      normalized_name: {}
-      name_first: {}
-      name_middle: {}
-      name_last: {}
-      license_number: {description: Agents / brokers / appraisers}
+      legal_form:
+        range: Classification
+        description: >-
+          Optional system-qualified legal form for an organization under an
+          identified jurisdictional or producer vocabulary. This is not an
+          industry classification or a contextual role such as lender,
+          broker, tenant, or association.
+      name: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical display name for this Party in the profile; nonblank with no leading or trailing whitespace. Source-specific wording is attributed through provenance or SourceArtifact.}
+      normalized_name: {description: Producer-derived matching key for the canonical display name. Its normalization algorithm is producer-defined; it is not authoritative display text or a separate identity.}
+      name_first: {description: Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.}
+      name_middle: {description: Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.}
+      name_last: {description: Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.}
+      classifications: {range: Classification, multivalued: true, inlined: true, inlined_as_list: true, description: "System-qualified actor classifications from an open vocabulary; use producer-namespaced system and code values"}
       addresses: {range: PartyAddress, multivalued: true, inlined: true, inlined_as_list: true}
       contacts: {range: PartyContact, multivalued: true, inlined: true, inlined_as_list: true}
 
-  PartyAddress:
-    description: mailing | physical | registered_agent | previous | other
+  VerificationAttribution:
+    description: Verification performed by one canonical party.
     attributes:
-      address: {range: Address, inlined: false, required: true}
-      kind: {}
+      verifier: {range: Party, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      verified_at: {range: datetime, required: true}
+      note: {}
+      extras: {range: Any}
+
+  SourceArtifact:
+    is_a: Entity
+    description: >-
+      Source material that supports or preserves an assertion. Semantic
+      validation requires at least one nonblank uri or storage_reference.
+    attributes:
+      uri: {range: uri, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      storage_reference: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Producer-defined object or document storage reference}
+      media_type: {description: MIME media type}
+      kind: {range: CodeableConcept}
+      title: {}
+      original_filename: {}
+      content_hash: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      hash_scheme: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Producer-namespaced content hashing scheme}
+      page_count: {range: integer, minimum_value: 1}
+      captured_on: {range: datetime}
+
+  AddressAssociation:
+    mixin: true
+    attributes:
+      address: {range: Address, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      role: {range: CodeableConcept, description: "situs | entrance | alias | address_range | former | mailing | other (open vocabulary)"}
       is_primary: {range: boolean}
+      valid_from: {range: date}
+      valid_to: {range: date}
+
+  PartyAddress:
+    mixins: [AddressAssociation]
+    attributes:
       extras: {range: Any}
       provenance: {range: Provenance}
+
+  PropertyAddress:
+    is_a: Entity
+    mixins: [AddressAssociation]
+    attributes:
+      property: {range: Property, inlined: false, required: true}
 
   PartyContact:
     attributes:
@@ -212,33 +261,39 @@ classes:
       started_on: {range: date}
       ended_on: {range: date}
       vesting_type: {description: joint_tenants | tenants_in_common | community_property | ... (open)}
-      mailing_address: {range: Address, inlined: false, description: Owner's mailing address during THIS period}
+      mailing_address: {range: Address, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Owner's mailing address during THIS period}
       acquired_via_transfer: {range: Transfer, inlined: false}
       disposed_via_transfer: {range: Transfer, inlined: false}
       interests: {range: OwnershipInterest, multivalued: true, inlined: true, inlined_as_list: true}
 
   OwnershipInterest:
     attributes:
-      party: {range: Party, inlined: false, required: true}
-      interest_pct: {range: decimal, minimum_value: 0, maximum_value: 100}
+      party: {range: Party, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      interest_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 75 means 75 percent.}
       role: {description: owner | trustee | gp | lp}
       is_owner_occupied: {range: boolean}
       extras: {range: Any}
 
   # ==== physical ============================================================
-  Structure:
-    is_a: Entity
+  StructureFacts:
+    mixin: true
     attributes:
-      property: {range: Property, inlined: false, required: true}
       kind: {description: building | barn | silo | shed | outbuilding | ... (open)}
       name: {}
       structure_number: {}
       living_area:
         range: Area
-        description: Finished above-grade living area per UAD 3.6 definition
+        description: >-
+          Finished area intended for human habitation. The measurement method
+          and treatment of above-grade and below-grade space come from the
+          applicable profile or provenance.
         exact_mappings: [reso:LivingArea]
       gross_area: {range: Area}
-      rentable_area: {range: Area, description: BOMA definitions}
+      rentable_area:
+        range: Area
+        description: >-
+          Area of occupiable premises allocated to a tenant or available for
+          lease under the stated measurement method.
       ground_floor_area: {range: Area}
       basement_area: {range: Area}
       basement_finished_area: {range: Area}
@@ -262,18 +317,37 @@ classes:
       roof_style_type: {}
       foundation_type: {}
       foundation_material: {}
-      condition_rating: {}
-      quality_rating: {}
-      rating_system: {description: "'uad_3_6' (C1–C6/Q1–Q6) | 'local' | ..."}
+      condition_ratings:
+        range: Rating
+        multivalued: true
+        inlined: true
+        inlined_as_list: true
+        description: >-
+          Physical-condition ratings. Semantic validation permits at most one
+          rating for each system and scope pair.
+      quality_ratings:
+        range: Rating
+        multivalued: true
+        inlined: true
+        inlined_as_list: true
+        description: >-
+          Construction-quality ratings. Semantic validation permits at most
+          one rating for each system and scope pair.
       heating_types: {multivalued: true}
       heating_fuel_type: {}
       cooling_types: {multivalued: true}
       sewer_type: {}
       water_type: {}
-      features: {multivalued: true, description: Open vocab seeded from UAD AmenityBase}
+      features: {multivalued: true, description: Open vocabulary for physical features and amenities}
       residential: {range: ResidentialDetails, inlined: true}
       commercial: {range: CommercialDetails, inlined: true}
       renovations: {range: Renovation, multivalued: true, inlined: true, inlined_as_list: true}
+
+  Structure:
+    is_a: Entity
+    mixins: [StructureFacts]
+    attributes:
+      property: {range: Property, inlined: false, required: true}
 
   AreaMeasure:
     attributes:
@@ -283,9 +357,13 @@ classes:
 
   ResidentialDetails:
     description: >-
-      International core; the UAD 3.6 profile constrains enums for US
-      appraisal use. A CURRENT-STATE snapshot dated by
-      provenance.retrieved_at (see CommercialDetails note).
+      Internationally neutral residential facts. When nested in Structure,
+      these fields describe observation-derived current state. When nested in
+      StructureState, they are asserted historical facts governed by
+      PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval
+      metadata, not the effective date. Events reference a separately bundled
+      PropertyStateSnapshot rather than containing the snapshot. Optional
+      standards profiles may constrain values for a specific use case.
     attributes:
       bedrooms_total: {range: integer, minimum_value: 0, exact_mappings: [reso:BedroomsTotal]}
       bathrooms_full: {range: integer}
@@ -310,22 +388,29 @@ classes:
 
   CommercialDetails:
     description: >-
-      BOMA/OSCRE-cited semantics. Like all detail records, this is a
-      CURRENT-STATE snapshot whose as-of date is provenance.retrieved_at;
-      time-varying fields (occupancy_pct, tenant_count, condition) are not
-      individually dated. Historical/per-period figures belong on dated
-      records: OperatingStatement, UnitRentObservation, or as-of-event
-      snapshots on SaleEvent.
+      Internationally neutral commercial facts. When nested in Structure,
+      these fields describe observation-derived current state. When nested in
+      StructureState, they are asserted historical facts governed by
+      PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval
+      metadata, not the effective date. Historical/per-period financial
+      figures belong on dated records such as OperatingStatement and
+      UnitRentObservation. Events reference a separately bundled
+      PropertyStateSnapshot rather than containing the snapshot. Optional
+      standards profiles may constrain values for a specific use case.
     attributes:
-      building_class: {description: A | B | C}
+      market_classification:
+        range: Rating
+        description: >-
+          Competitive market positioning under the named rating system;
+          distinct from physical condition and construction quality.
       clear_height: {range: Length}
       dock_doors: {range: integer}
       drive_in_doors: {range: integer}
-      occupancy_pct: {range: decimal, minimum_value: 0, maximum_value: 100}
+      occupancy_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 95 means 95 percent.}
       parking_spaces: {range: integer}
       parking_ratio: {range: UnitRate, description: e.g. spaces per 1000 sqft — denominator explicit}
       tenancy: {description: single_tenant | multi_tenant}
-      tenant_count: {range: integer, description: "Distinct legal tenants (not suites or leases); current-state, dated by provenance"}
+      tenant_count: {range: integer, description: "Distinct legal tenants (not suites or leases); timing follows the containing Structure or StructureState context"}
       parking_types: {multivalued: true, description: surface | structured | underground | covered | ...}
       has_sprinkler: {range: boolean}
       elevators: {range: integer}
@@ -344,21 +429,19 @@ classes:
       extras: {range: Any}
       provenance: {range: Provenance}
 
-  Site:
-    is_a: Entity
-    description: 1:1 with property.
+  SiteFacts:
+    mixin: true
     attributes:
-      property: {range: Property, inlined: false, required: true}
       lot_size: {range: Area}
-      usable_land_area: {range: Area, description: Usable portion of the lot; see usable_land_area_basis}
-      usable_land_area_basis: {description: surveyed | buildable | net_of_constraints | ... (what "usable" means here)}
-      land_use: {range: CodeableConcept, description: "County code + label, system-tagged"}
-      land_use_category: {description: Standardized (PUCS land classes)}
+      usable_land_area: {range: Area}
+      usable_land_area_basis: {}
+      land_use: {range: CodeableConcept}
+      land_use_category: {}
       zoning_code: {}
       flood_zone: {}
       hazard_zones: {multivalued: true}
-      view_types: {multivalued: true, description: UAD ViewBase-seeded}
-      site_influences: {multivalued: true, description: UAD SiteInfluenceBase-seeded}
+      view_types: {multivalued: true}
+      site_influences: {multivalued: true}
       easements: {multivalued: true}
       restrictions: {multivalued: true}
       utilities: {multivalued: true}
@@ -366,25 +449,24 @@ classes:
       depth: {range: Length}
       topography: {}
       is_corner: {range: boolean}
-      entitlement_status: {description: raw | entitled | permitted | ... (open; construction/dev)}
+      entitlement_status: {}
       buildable_units: {range: integer}
       subdivision: {}
       lot_number: {}
       block: {}
       tract_number: {}
       phase_number: {}
-      section_township_range: {description: "US PLSS (US-specific, optional)"}
+      section_township_range: {}
 
-  Space:
-    unique_keys:
-      space_identity:
-        unique_key_slots: [property, space_identifier]
+  Site:
     is_a: Entity
-    description: Leasable suites/units (CRE, multifamily).
+    mixins: [SiteFacts]
     attributes:
       property: {range: Property, inlined: false, required: true}
-      structure: {range: Structure, inlined: false}
-      space_identifier: {required: true}
+
+  SpaceFacts:
+    mixin: true
+    attributes:
       floor_number: {range: integer}
       space_use: {}
       rentable_area: {range: Area}
@@ -395,13 +477,60 @@ classes:
       is_adu: {range: boolean}
       is_active: {range: boolean}
 
-  PropertyAssociation:
+  Space:
+    unique_keys:
+      space_identity:
+        unique_key_slots: [property, space_identifier]
     is_a: Entity
-    description: HOA / property association — minimal v1 footprint.
+    mixins: [SpaceFacts]
+    description: Leasable suites/units (CRE, multifamily).
     attributes:
       property: {range: Property, inlined: false, required: true}
-      party: {range: Party, inlined: false, description: The association as an organization}
-      name: {}
+      structure: {range: Structure, inlined: false}
+      space_identifier: {required: true}
+
+  PropertyState:
+    is_a: Entity
+    mixins: [PropertyFacts]
+    attributes:
+      subject: {range: Property, inlined: false, required: true}
+
+  SiteState:
+    is_a: Entity
+    mixins: [SiteFacts]
+    attributes:
+      subject: {range: Site, inlined: false, required: true}
+
+  StructureState:
+    is_a: Entity
+    mixins: [StructureFacts]
+    attributes:
+      subject: {range: Structure, inlined: false, required: true}
+
+  SpaceState:
+    is_a: Entity
+    mixins: [SpaceFacts]
+    attributes:
+      subject: {range: Space, inlined: false, required: true}
+
+  PropertyStateSnapshot:
+    is_a: Entity
+    description: Sparse asserted physical state effective on as_of_date.
+    attributes:
+      property: {range: Property, inlined: false, required: true}
+      as_of_date: {range: date, required: true}
+      basis: {range: CodeableConcept, description: "at_sale | at_listing | at_lease | inspection | reported | inferred (open vocabulary)"}
+      property_state: {range: PropertyState, inlined: true}
+      site_states: {range: SiteState, multivalued: true, inlined: true, inlined_as_list: true}
+      structure_states: {range: StructureState, multivalued: true, inlined: true, inlined_as_list: true}
+      space_states: {range: SpaceState, multivalued: true, inlined: true, inlined_as_list: true}
+
+  PropertyAssociation:
+    is_a: Entity
+    description: HOA or property-association relationship; identity and classification live on the canonical Party.
+    attributes:
+      property: {range: Property, inlined: false, required: true}
+      party: {range: Party, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: The canonical association organization}
       fee: {range: Money}
       fee_period: {range: RentPeriod}
 
@@ -465,8 +594,8 @@ classes:
 
   TaxLineItem:
     attributes:
-      authority: {description: Taxing authority name or code}
-      rate: {range: decimal, description: Mill rate / levy}
+      jurisdiction: {range: Jurisdiction, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Optional canonical taxing jurisdiction responsible for this line item}
+      rate: {range: decimal, description: Source-defined tax rate or levy value; not governed by the _pct percentage-points convention.}
       amount: {range: Money}
       extras: {range: Any}
 
@@ -483,7 +612,10 @@ classes:
       transfer_tax: {range: Money, description: Doc stamps; price-inference basis in many places}
       price_disclosure: {range: PriceDisclosure}
       price_code: {range: CodeableConcept}
-      partial_interest_pct: {range: decimal, minimum_value: 0, maximum_value: 100}
+      interest_conveyed:
+        range: CodeableConcept
+        description: The legal or beneficial interest conveyed by this transfer.
+      partial_interest_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 25 means 25 percent.}
       is_inter_family: {range: boolean}
       is_distressed: {range: boolean}
       parties: {range: TransferParty, multivalued: true, inlined: true, inlined_as_list: true}
@@ -497,23 +629,25 @@ classes:
     description: A market sale referencing its recorded transfer. A quitclaim never becomes a comp.
     attributes:
       property: {range: Property, inlined: false, required: true}
+      property_state: {range: PropertyStateSnapshot, inlined: false}
       transfer: {range: Transfer, inlined: false}
       sale_date: {range: date, required: true, exact_mappings: [reso:CloseDate]}
       sale_price: {range: Money, exact_mappings: [reso:ClosePrice]}
       price_disclosure: {range: PriceDisclosure}
       price_code: {range: CodeableConcept}
-      sale_type: {range: SaleTypeEnum, ifabsent: string(arms_length)}
+      sale_type: {range: SaleTypeEnum}
       price_per_area: {range: UnitRate}
       price_per_unit: {range: Money}
       financing: {description: cash | conventional | seller | assumption | other (coarse; loans carry detail)}
       concessions: {range: Money}
-      cap_rate: {range: decimal, minimum_value: 0, maximum_value: 100}
+      cap_rate: {range: decimal, minimum_value: 0, maximum_value: 100, description: Capitalization rate in percentage points; 5.75 means 5.75 percent.}
       noi_at_sale: {range: Money}
       opex_at_sale: {range: Money}
-      occupancy_at_sale_pct: {range: decimal, minimum_value: 0, maximum_value: 100}
+      occupancy_at_sale_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 90 means 90 percent.}
       unit_count_at_sale: {range: integer, minimum_value: 1}
       supporting_operating_statement: {range: OperatingStatement, inlined: false, description: "Traceability: the statement noi_at_sale derives from, when known"}
       parties: {range: SaleEventParty, multivalued: true, inlined: true, inlined_as_list: true}
+      remarks: {description: Source- or vendor-authored narrative interpreted through provenance.}
 
   SaleEventParty:
     is_a: TransactionParty
@@ -522,30 +656,34 @@ classes:
   Listing:
     is_a: Entity
     description: >-
-      Listing header. Lifecycle lives in events[]; header status/list_price are
-      denormalized conveniences reconstructible from events.
+      Listing identity and non-lifecycle facts. Process events by occurred_on
+      ascending; array order breaks same-date ties. Carry status, asking_price,
+      and rent_period forward independently from the latest event that supplies
+      each field. Original asking terms come from the earliest event supplying
+      them. close_price comes from the latest closed event supplying it.
     attributes:
       property: {range: Property, inlined: false, required: true}
+      property_state: {range: PropertyStateSnapshot, inlined: false}
       kind: {range: ListingKind, required: true}
       listing_type: {description: mls | fsbo | auction | pocket}
-      status: {range: ListingStatus}
-      original_list_price: {range: Money}
-      list_price: {range: Money}
-      list_rent: {range: Money}
-      list_rent_period: {range: RentPeriod}
-      listed_on: {range: date}
-      closed_on: {range: date}
-      close_price: {range: Money}
       mls_number: {}
-      events: {range: ListingEvent, multivalued: true, inlined: true, inlined_as_list: true}
+      events: {range: ListingEvent, multivalued: true, inlined: true, inlined_as_list: true, list_elements_ordered: true}
       participants: {range: ListingParticipant, multivalued: true, inlined: true, inlined_as_list: true}
+      artifacts: {range: SourceArtifact, multivalued: true, inlined: false}
+      remarks: {description: Source- or vendor-authored narrative interpreted through provenance.}
 
   ListingEvent:
+    description: >-
+      A dated listing assertion. asking_price is a sale price or periodic rent;
+      rent_period states the period when asking_price is rent. close_price is
+      asserted on a closed event.
     attributes:
       occurred_on: {range: date, required: true}
       event_kind: {required: true, description: listed | price_change | status_change | relisted | closed}
       status: {range: ListingStatus}
-      list_price: {range: Money}
+      asking_price: {range: Money}
+      rent_period: {range: RentPeriod}
+      close_price: {range: Money}
       extras: {range: Any}
       provenance: {range: Provenance}
 
@@ -558,6 +696,7 @@ classes:
     description: Executed leases (not asking rents — see UnitRentObservation).
     attributes:
       property: {range: Property, inlined: false, required: true}
+      property_state: {range: PropertyStateSnapshot, inlined: false}
       space: {range: Space, inlined: false}
       lease_type: {range: LeaseTypeEnum}
       execution_date: {range: date}
@@ -573,10 +712,10 @@ classes:
       free_rent_months: {range: decimal}
       ti_allowance_per_area: {range: UnitRate}
       expense_structure: {range: ExpenseStructure, inlined: true}
-      lessee_industry: {}
       parties: {range: LeaseEventParty, multivalued: true, inlined: true, inlined_as_list: true}
       escalations: {range: LeaseEscalation, multivalued: true, inlined: true, inlined_as_list: true}
       concessions: {range: LeaseConcession, multivalued: true, inlined: true, inlined_as_list: true}
+      remarks: {description: Source- or vendor-authored narrative interpreted through provenance.}
 
   LeaseEventParty:
     is_a: TransactionParty
@@ -595,11 +734,17 @@ classes:
   LeaseEscalation:
     attributes:
       escalation_type: {required: true, description: fixed_amount | fixed_percent | cpi | step_schedule | fmv | none}
-      escalation_value: {range: decimal}
+      escalation_value:
+        range: decimal
+        description: >-
+          For escalation_type=fixed_percent, a value from 0-100 percentage
+          points; 3 means 3 percent. For escalation_type=fixed_amount, the
+          increment in the currency of the parent LeaseEvent.rent and the
+          period specified by LeaseEvent.rent_period.
       frequency_months: {range: integer}
       cpi_index: {}
-      cpi_floor: {range: decimal}
-      cpi_cap: {range: decimal}
+      cpi_floor: {range: decimal, description: CPI escalation floor in percentage points; 2 means 2 percent.}
+      cpi_cap: {range: decimal, description: CPI escalation cap in percentage points; 5 means 5 percent.}
       steps: {range: RentStep, multivalued: true, inlined: true, inlined_as_list: true}
       effective_from: {range: date}
       effective_until: {range: date}
@@ -615,7 +760,7 @@ classes:
       concession_type: {required: true, description: free_rent | ti_allowance | moving_allowance | ...}
       concession_value: {range: Money}
       abatement_months: {range: decimal}
-      abatement_percent: {range: decimal, minimum_value: 0, maximum_value: 100}
+      abatement_percent: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 10 means 10 percent.}
       ti_cap_total: {range: Money}
       conditions: {range: Any}
       notes: {}
@@ -633,9 +778,9 @@ classes:
       unit_count: {range: integer, description: Units of this type}
       units_available: {range: integer}
       rate: {range: Money, required: true}
-      rate_period: {range: RentPeriod, ifabsent: string(monthly)}
-      rate_basis: {range: RateBasis, ifabsent: string(per_unit)}
-      rate_type: {range: RateType, ifabsent: string(asking)}
+      rate_period: {range: RentPeriod}
+      rate_basis: {range: RateBasis}
+      rate_type: {range: RateType}
       observed_on: {range: date, required: true}
       concessions_note: {}
 
@@ -643,30 +788,27 @@ classes:
     is_a: Entity
     mixins: [RecordedInstrument]
     description: >-
-      Recorded debt. lender_name is the immutable ORIGINATING lender;
-      assignments and status changes are dated loan events. status is a
-      derived projection of events.
+      Recorded debt. Originating lender identity and classification live on
+      the canonical Party referenced by a LoanParty. Assignments,
+      modifications, satisfactions, and other lifecycle assertions are dated
+      events; consumers derive current status and satisfaction dates.
     attributes:
       property: {range: Property, inlined: false, required: true}
       parcel: {range: Parcel, inlined: false}
       transfer: {range: Transfer, inlined: false, description: Purchase-money linkage}
       is_purchase_money: {range: boolean}
       loan_amount: {range: Money}
-      lender_name: {}
-      lender_type: {description: bank | credit_union | private | seller | ...}
       loan_type: {description: conventional | fha | va | ... (open)}
       purpose: {description: purchase | refinance | construction | heloc | ...}
       is_heloc: {range: boolean}
       is_construction: {range: boolean}
       is_seller_carryback: {range: boolean}
       is_assumable: {range: boolean}
-      interest_rate: {range: decimal, minimum_value: 0}
+      interest_rate: {range: decimal, minimum_value: 0, description: Nominal interest rate in percentage points; 6.5 means 6.5 percent.}
       is_variable_rate: {range: boolean}
       term_months: {range: integer, minimum_value: 1}
       due_date: {range: date}
       lien_position: {range: integer, minimum_value: 1}
-      status: {range: LoanStatus}
-      satisfied_on: {range: date}
       parties: {range: LoanParty, multivalued: true, inlined: true, inlined_as_list: true}
       events: {range: LoanEvent, multivalued: true, inlined: true, inlined_as_list: true}
 
@@ -684,8 +826,7 @@ classes:
       event_kind: {range: LoanEventKind, required: true}
       occurred_on: {range: date}
       amount: {range: Money}
-      to_name: {description: Assignee lender name (assignments)}
-      to_party: {range: Party, inlined: false}
+      to_party: {range: Party, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical assignee for assignment-like events}
       extras: {range: Any}
       provenance: {range: Provenance}
 
@@ -734,7 +875,10 @@ classes:
 
   ForeclosureCaseParty:
     is_a: TransactionParty
-    description: role = lender | trustee | borrower
+    description: >-
+      Open contextual role. Mortgage and deed-of-trust proceedings commonly
+      use lender | trustee | borrower; lien foreclosures may instead use
+      claimant | debtor.
 
   Permit:
     is_a: Entity
@@ -753,9 +897,8 @@ classes:
       expires_on: {range: date}
       job_value: {range: Money}
       fees: {range: Money}
-      contractor_name: {}
-      contractor_license: {}
-      contractor_party: {range: Party, inlined: false}
+      contractor_party: {range: Party, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical contractor Party reference; credential records are outside core v0.2}
+      artifacts: {range: SourceArtifact, multivalued: true, inlined: false}
 
   OperatingStatement:
     is_a: Entity
@@ -787,10 +930,10 @@ classes:
           period_end must be provided together; omit both for calendar-year
           statements.
       period_end: {range: date}
-      statement_basis: {range: StatementBasis, ifabsent: string(actual)}
+      statement_basis: {range: StatementBasis}
       pgi: {range: Money, description: Potential gross income}
       vacancy_loss: {range: Money}
-      vacancy_pct: {range: decimal, minimum_value: 0, maximum_value: 100}
+      vacancy_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 5 means 5 percent.}
       egi: {range: Money, description: Effective gross income}
       opex_total: {range: Money}
       noi: {range: Money, description: Net operating income; may be negative}
@@ -809,11 +952,58 @@ classes:
       amount: {range: Money, required: true}
       extras: {range: Any}
 
+  RentRoll:
+    is_a: Entity
+    description: >-
+      Dated rent and occupancy observation applicable to any property use.
+      Header totals are authoritative reported values; lines are supporting
+      detail and are not required to sum to the totals. All Money values on
+      one rent roll MUST use one currency (validator-enforced). For its
+      as_of_date, this record governs reported occupancy and rent facts;
+      current-state fields such as Space.occupancy and
+      CommercialDetails.occupancy_pct do not override it. A line preserves
+      dated rent-roll assertions and does not by itself create a canonical
+      Space, Party, or LeaseEvent.
+    attributes:
+      property: {range: Property, inlined: false, required: true}
+      as_of_date: {range: date, required: true}
+      unit_count: {range: integer, minimum_value: 0}
+      occupied_unit_count: {range: integer, minimum_value: 0}
+      occupancy_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: Occupancy in 0–100 percentage points; 95 means 95 percent.}
+      total_contract_rent: {range: Money}
+      total_market_rent: {range: Money}
+      rent_period: {range: RentPeriod}
+      lines: {range: RentRollLine, multivalued: true, inlined: true, inlined_as_list: true}
+
+  RentRollLine:
+    description: >-
+      Supporting rent-roll detail. space resolves to canonical Space. tenant
+      is the canonical legal lessee Party when present, and lease resolves to
+      canonical LeaseEvent when known. When both tenant and lease are present,
+      tenant must match a party with role: lessee declared by that lease, if
+      the lease declares any lessee. References remain optional for aggregate,
+      vacant, unleased, or unresolved lines; the line does not duplicate
+      canonical space identity, tenant names, or lease dates. When a source
+      tenant cannot be resolved to a canonical Party, omit tenant and preserve
+      the source evidence through the RentRoll provenance and profile-level
+      SourceArtifact records; do not mint a placeholder Party or copy the
+      source name into extras.
+    attributes:
+      space: {range: Space, inlined: false}
+      tenant: {range: Party, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      lease: {range: LeaseEvent, inlined: false}
+      occupancy_status: {range: CodeableConcept}
+      reported_area: {range: Area}
+      contract_rent: {range: Money}
+      market_rent: {range: Money}
+      extras: {range: Any}
+
   Valuation:
     is_a: Entity
     description: Opinions of value — AVM/appraisal/BPO. Never tax-roll values (those are assessments). Append-only.
     attributes:
       property: {range: Property, inlined: false, required: true}
+      property_state: {range: PropertyStateSnapshot, inlined: false}
       kind: {range: ValuationKind, required: true}
       valuation_method: {description: desktop | exterior | hybrid | traditional}
       value_type: {description: market_value | liquidation | insurable | land | ... (open)}
@@ -822,15 +1012,18 @@ classes:
       value_high: {range: Money}
       value_per_area: {range: UnitRate}
       land_value: {range: Money, description: Cost-approach site value}
-      confidence_score: {range: integer, minimum_value: 0, maximum_value: 100}
-      forecast_standard_deviation: {range: decimal, description: AVM FSD}
+      confidence_score: {range: integer, minimum_value: 0, maximum_value: 100, description: Source-defined confidence score; not governed by the _pct percentage-points convention.}
+      forecast_standard_deviation: {range: decimal, description: Source-defined AVM forecast standard deviation; not governed by the _pct percentage-points convention.}
       exposure_days: {range: integer}
       indicated_value_sales_comparison: {range: Money}
       indicated_value_cost: {range: Money}
       indicated_value_income: {range: Money}
       value_premise: {description: as_is | as_completed | as_stabilized}
-      interest: {description: fee_simple | leased_fee | leasehold}
-      performed_by: {}
-      performed_by_party: {range: Party, inlined: false}
+      interest:
+        description: >-
+          Interest valued for this opinion; independent of Property.estate_type
+          and Transfer.interest_conveyed.
+      performed_by_party: {range: Party, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical person or organization that performed the valuation}
       as_of_date: {range: date, required: true}
       report_date: {range: date}
+      artifacts: {range: SourceArtifact, multivalued: true, inlined: false}

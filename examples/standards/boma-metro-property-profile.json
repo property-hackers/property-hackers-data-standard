@@ -1,0 +1,36 @@
+{
+  "property": {"id": "property-boma-metro-1"},
+  "structures": [
+    {
+      "id": "structure-boma-metro-1",
+      "property": "property-boma-metro-1",
+      "commercial": {
+        "market_classification": {
+          "system": "urn:phds:standard:boma:office:metro",
+          "code": "A",
+          "display": "Class A"
+        }
+      }
+    }
+  ],
+  "property_state_snapshots": [
+    {
+      "id": "snapshot-boma-metro-1",
+      "property": "property-boma-metro-1",
+      "as_of_date": "2026-07-18",
+      "structure_states": [
+        {
+          "id": "structure-state-boma-metro-1",
+          "subject": "structure-boma-metro-1",
+          "commercial": {
+            "market_classification": {
+              "system": "urn:phds:standard:boma:office:metro",
+              "code": "B",
+              "display": "Class B"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

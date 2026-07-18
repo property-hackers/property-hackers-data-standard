@@ -1,0 +1,12 @@
+{
+  "property": {"id": "property-uad-bad-code"},
+  "structures": [{
+    "id": "structure-uad-bad-code",
+    "property": "property-uad-bad-code",
+    "condition_ratings": [{
+      "system": "urn:phds:standard:uad:3.6:condition",
+      "code": "C7",
+      "scope": "overall"
+    }]
+  }]
+}

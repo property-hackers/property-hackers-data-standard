@@ -1,0 +1,15 @@
+{
+  "property": {"id": "property-boma-wrong-placement"},
+  "structures": [{
+    "id": "structure-boma-wrong-placement",
+    "property": "property-boma-wrong-placement",
+    "condition_ratings": [{
+      "system": "urn:phds:standard:boma:office:metro",
+      "code": "A"
+    }],
+    "commercial": {"market_classification": {
+      "system": "urn:phds:standard:boma:office:metro",
+      "code": "A"
+    }}
+  }]
+}

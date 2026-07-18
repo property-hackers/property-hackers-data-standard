@@ -1,0 +1,24 @@
+{
+  "property": {
+    "id": "property-1"
+  },
+  "rent_rolls": [
+    {
+      "id": "rent-roll-1",
+      "property": "property-1",
+      "as_of_date": "2026-01-01",
+      "total_contract_rent": {
+        "amount": "1000.00",
+        "currency": "CAD"
+      },
+      "lines": [
+        {
+          "contract_rent": {
+            "amount": "700.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    }
+  ]
+}

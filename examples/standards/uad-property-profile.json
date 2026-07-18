@@ -1,0 +1,66 @@
+{
+  "property": {"id": "property-uad-1"},
+  "structures": [
+    {
+      "id": "structure-uad-1",
+      "property": "property-uad-1",
+      "condition_ratings": [
+        {
+          "system": "urn:phds:standard:uad:3.6:condition",
+          "code": "C3",
+          "scope": "overall"
+        },
+        {
+          "system": "urn:phds:standard:uad:3.6:condition",
+          "code": "C2",
+          "scope": "exterior"
+        },
+        {
+          "system": "urn:phds:standard:uad:3.6:condition",
+          "code": "C4",
+          "scope": "interior"
+        }
+      ],
+      "quality_ratings": [
+        {
+          "system": "urn:phds:standard:uad:3.6:quality",
+          "code": "Q2",
+          "scope": "overall"
+        },
+        {
+          "system": "urn:phds:standard:uad:3.6:quality",
+          "code": "Q3",
+          "scope": "exterior"
+        },
+        {
+          "system": "urn:phds:standard:uad:3.6:quality",
+          "code": "Q2",
+          "scope": "interior"
+        }
+      ]
+    }
+  ],
+  "property_state_snapshots": [
+    {
+      "id": "snapshot-uad-1",
+      "property": "property-uad-1",
+      "as_of_date": "2026-07-18",
+      "structure_states": [
+        {
+          "id": "structure-state-uad-1",
+          "subject": "structure-uad-1",
+          "condition_ratings": [{
+            "system": "urn:phds:standard:uad:3.6:condition",
+            "code": "C4",
+            "scope": "overall"
+          }],
+          "quality_ratings": [{
+            "system": "urn:phds:standard:uad:3.6:quality",
+            "code": "Q3",
+            "scope": "overall"
+          }]
+        }
+      ]
+    }
+  ]
+}

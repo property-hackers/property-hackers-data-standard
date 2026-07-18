@@ -1,0 +1,11 @@
+{
+  "property": {
+    "id": "urn:example:shared-jsonld-node"
+  },
+  "artifacts": [
+    {
+      "id": "urn:example:shared-jsonld-node",
+      "storage_reference": "reports/property.pdf"
+    }
+  ]
+}

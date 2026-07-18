@@ -1,0 +1,11 @@
+{
+  "property": {
+    "id": "property-artifact-blank-locator"
+  },
+  "artifacts": [
+    {
+      "id": "artifact-blank-locator",
+      "storage_reference": " "
+    }
+  ]
+}

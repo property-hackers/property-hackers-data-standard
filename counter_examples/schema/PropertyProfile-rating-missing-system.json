@@ -1,0 +1,10 @@
+{
+  "property": {"id": "property-rating-invalid"},
+  "structures": [
+    {
+      "id": "structure-rating-invalid",
+      "property": "property-rating-invalid",
+      "condition_ratings": [{"code": "average"}]
+    }
+  ]
+}

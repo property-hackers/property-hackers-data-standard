@@ -1,0 +1,2326 @@
+{
+  "@context": {
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "linkml": "https://w3id.org/linkml/",
+    "phds": "https://example.org/phds/",
+    "reso": "https://ddwiki.reso.org/display/DDW20/",
+    "skos": "http://www.w3.org/2004/02/skos/core#",
+    "@vocab": "https://example.org/phds/",
+    "address_hash": {
+      "@id": "address_hash"
+    },
+    "address_hash_scheme": {
+      "@id": "address_hash_scheme"
+    },
+    "admin_area": {
+      "@id": "admin_area"
+    },
+    "admin_area_code": {
+      "@id": "admin_area_code"
+    },
+    "city": {
+      "@id": "city"
+    },
+    "country": {
+      "@id": "country"
+    },
+    "location": {
+      "@type": "@id",
+      "@id": "location"
+    },
+    "location_accuracy": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "location_accuracy"
+    },
+    "postal_code": {
+      "@id": "postal_code"
+    },
+    "postal_code_suffix": {
+      "@id": "postal_code_suffix"
+    },
+    "region": {
+      "@id": "region"
+    },
+    "street_name": {
+      "@id": "street_name"
+    },
+    "street_number": {
+      "@id": "street_number"
+    },
+    "street_post_direction": {
+      "@id": "street_post_direction"
+    },
+    "street_pre_direction": {
+      "@id": "street_pre_direction"
+    },
+    "street_suffix": {
+      "@id": "street_suffix"
+    },
+    "sublocality": {
+      "@id": "sublocality"
+    },
+    "unformatted_address": {
+      "@id": "unformatted_address"
+    },
+    "unit_number": {
+      "@id": "unit_number"
+    },
+    "unit_type": {
+      "@id": "unit_type"
+    },
+    "address": {
+      "@type": "@id",
+      "@id": "address"
+    },
+    "is_primary": {
+      "@type": "xsd:boolean",
+      "@id": "is_primary"
+    },
+    "role": {
+      "@id": "role"
+    },
+    "valid_from": {
+      "@type": "xsd:date",
+      "@id": "valid_from"
+    },
+    "valid_to": {
+      "@type": "xsd:date",
+      "@id": "valid_to"
+    },
+    "amount": {
+      "@type": "@id",
+      "@id": "amount",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "unit": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "unit"
+    },
+    "value": {
+      "@type": "@id",
+      "@id": "value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "area": {
+      "@type": "@id",
+      "@id": "area"
+    },
+    "extras": {
+      "@type": "@id",
+      "@id": "extras"
+    },
+    "kind": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "kind"
+    },
+    "appraised_improvement_value": {
+      "@type": "@id",
+      "@id": "appraised_improvement_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "appraised_land_value": {
+      "@type": "@id",
+      "@id": "appraised_land_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "appraised_total_value": {
+      "@type": "@id",
+      "@id": "appraised_total_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "assessed_improvement_value": {
+      "@type": "@id",
+      "@id": "assessed_improvement_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "assessed_land_value": {
+      "@type": "@id",
+      "@id": "assessed_land_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "assessed_total_value": {
+      "@type": "@id",
+      "@id": "assessed_total_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "exemptions": {
+      "@type": "@id",
+      "@id": "exemptions"
+    },
+    "jurisdiction": {
+      "@type": "@id",
+      "@id": "jurisdiction"
+    },
+    "market_improvement_value": {
+      "@type": "@id",
+      "@id": "market_improvement_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "market_land_value": {
+      "@type": "@id",
+      "@id": "market_land_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "market_total_value": {
+      "@type": "@id",
+      "@id": "market_total_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "parcel": {
+      "@type": "@id",
+      "@id": "parcel"
+    },
+    "roll_type": {
+      "@id": "roll_type"
+    },
+    "tax_year": {
+      "@type": "xsd:integer",
+      "@id": "tax_year"
+    },
+    "artifact_refs": {
+      "@type": "@id",
+      "@id": "artifact_refs"
+    },
+    "assessor_url": {
+      "@type": "xsd:anyURI",
+      "@id": "assessor_url"
+    },
+    "error": {
+      "@id": "error"
+    },
+    "profile": {
+      "@type": "@id",
+      "@id": "profile"
+    },
+    "provenance": {
+      "@type": "@id",
+      "@id": "provenance"
+    },
+    "query_address": {
+      "@id": "query_address"
+    },
+    "query_parcel_number": {
+      "@id": "query_parcel_number"
+    },
+    "status": {
+      "@id": "status"
+    },
+    "code": {
+      "@id": "code"
+    },
+    "system": {
+      "@id": "system"
+    },
+    "display": {
+      "@id": "display"
+    },
+    "clear_height": {
+      "@type": "@id",
+      "@id": "clear_height"
+    },
+    "dock_doors": {
+      "@type": "xsd:integer",
+      "@id": "dock_doors"
+    },
+    "drive_in_doors": {
+      "@type": "xsd:integer",
+      "@id": "drive_in_doors"
+    },
+    "elevators": {
+      "@type": "xsd:integer",
+      "@id": "elevators"
+    },
+    "has_sprinkler": {
+      "@type": "xsd:boolean",
+      "@id": "has_sprinkler"
+    },
+    "market_classification": {
+      "@type": "@id",
+      "@id": "market_classification"
+    },
+    "occupancy_pct": {
+      "@type": "xsd:decimal",
+      "@id": "occupancy_pct"
+    },
+    "parking_ratio": {
+      "@type": "@id",
+      "@id": "parking_ratio",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "parking_spaces": {
+      "@type": "xsd:integer",
+      "@id": "parking_spaces"
+    },
+    "parking_types": {
+      "@id": "parking_types"
+    },
+    "submarket": {
+      "@id": "submarket"
+    },
+    "tenancy": {
+      "@id": "tenancy"
+    },
+    "tenant_count": {
+      "@type": "xsd:integer",
+      "@id": "tenant_count"
+    },
+    "currency": {
+      "@id": "currency"
+    },
+    "id": "@id",
+    "verifications": {
+      "@type": "@id",
+      "@id": "verifications"
+    },
+    "cam_paid_by": {
+      "@id": "cam_paid_by"
+    },
+    "insurance_paid_by": {
+      "@id": "insurance_paid_by"
+    },
+    "notes": {
+      "@id": "notes"
+    },
+    "taxes_paid_by": {
+      "@id": "taxes_paid_by"
+    },
+    "utilities_paid_by": {
+      "@id": "utilities_paid_by"
+    },
+    "category": {
+      "@id": "category"
+    },
+    "extracted_at": {
+      "@type": "xsd:dateTime",
+      "@id": "extracted_at"
+    },
+    "model": {
+      "@id": "model"
+    },
+    "source_category": {
+      "@id": "source_category"
+    },
+    "source_url": {
+      "@type": "xsd:anyURI",
+      "@id": "source_url"
+    },
+    "auction_location": {
+      "@id": "auction_location"
+    },
+    "auction_min_bid": {
+      "@type": "@id",
+      "@id": "auction_min_bid",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "case_number": {
+      "@id": "case_number"
+    },
+    "filings": {
+      "@type": "@id",
+      "@id": "filings"
+    },
+    "loan": {
+      "@type": "@id",
+      "@id": "loan"
+    },
+    "opened_on": {
+      "@type": "xsd:date",
+      "@id": "opened_on"
+    },
+    "original_loan_amount": {
+      "@type": "@id",
+      "@id": "original_loan_amount",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "parties": {
+      "@type": "@id",
+      "@id": "parties"
+    },
+    "past_due_amount": {
+      "@type": "@id",
+      "@id": "past_due_amount",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "property": {
+      "@type": "@id",
+      "@id": "property"
+    },
+    "resolution": {
+      "@id": "resolution"
+    },
+    "resolved_on": {
+      "@type": "xsd:date",
+      "@id": "resolved_on"
+    },
+    "unpaid_balance": {
+      "@type": "@id",
+      "@id": "unpaid_balance",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "auction_at_time": {
+      "@id": "auction_at_time"
+    },
+    "auction_on": {
+      "@type": "xsd:date",
+      "@id": "auction_on"
+    },
+    "coordinates": {
+      "@type": "@id",
+      "@id": "coordinates"
+    },
+    "type": {
+      "@id": "type"
+    },
+    "latitude": {
+      "@type": "xsd:decimal",
+      "@id": "latitude"
+    },
+    "longitude": {
+      "@type": "xsd:decimal",
+      "@id": "longitude"
+    },
+    "document_number": {
+      "@id": "document_number"
+    },
+    "recording_authority": {
+      "@type": "@id",
+      "@id": "recording_authority"
+    },
+    "registry_reference": {
+      "@id": "registry_reference"
+    },
+    "relationship_type": {
+      "@type": "@id",
+      "@id": "relationship_type"
+    },
+    "authority_code": {
+      "@id": "authority_code"
+    },
+    "boundary": {
+      "@type": "@id",
+      "@id": "boundary"
+    },
+    "name": {
+      "@id": "name"
+    },
+    "parent": {
+      "@type": "@id",
+      "@id": "parent"
+    },
+    "abatement_months": {
+      "@type": "xsd:decimal",
+      "@id": "abatement_months"
+    },
+    "abatement_percent": {
+      "@type": "xsd:decimal",
+      "@id": "abatement_percent"
+    },
+    "concession_type": {
+      "@id": "concession_type"
+    },
+    "concession_value": {
+      "@type": "@id",
+      "@id": "concession_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "conditions": {
+      "@type": "@id",
+      "@id": "conditions"
+    },
+    "ti_cap_total": {
+      "@type": "@id",
+      "@id": "ti_cap_total",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "cpi_cap": {
+      "@type": "xsd:decimal",
+      "@id": "cpi_cap"
+    },
+    "cpi_floor": {
+      "@type": "xsd:decimal",
+      "@id": "cpi_floor"
+    },
+    "cpi_index": {
+      "@id": "cpi_index"
+    },
+    "effective_from": {
+      "@type": "xsd:date",
+      "@id": "effective_from"
+    },
+    "effective_until": {
+      "@type": "xsd:date",
+      "@id": "effective_until"
+    },
+    "escalation_type": {
+      "@id": "escalation_type"
+    },
+    "escalation_value": {
+      "@type": "xsd:decimal",
+      "@id": "escalation_value"
+    },
+    "frequency_months": {
+      "@type": "xsd:integer",
+      "@id": "frequency_months"
+    },
+    "steps": {
+      "@type": "@id",
+      "@id": "steps"
+    },
+    "commencement_date": {
+      "@type": "xsd:date",
+      "@id": "commencement_date"
+    },
+    "concessions": {
+      "@type": "@id",
+      "@id": "concessions",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "effective_rent_per_area": {
+      "@type": "@id",
+      "@id": "effective_rent_per_area",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "escalations": {
+      "@type": "@id",
+      "@id": "escalations"
+    },
+    "execution_date": {
+      "@type": "xsd:date",
+      "@id": "execution_date"
+    },
+    "expense_structure": {
+      "@type": "@id",
+      "@id": "expense_structure"
+    },
+    "expiration_date": {
+      "@type": "xsd:date",
+      "@id": "expiration_date"
+    },
+    "free_rent_months": {
+      "@type": "xsd:decimal",
+      "@id": "free_rent_months"
+    },
+    "lease_type": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "lease_type"
+    },
+    "leased_area": {
+      "@type": "@id",
+      "@id": "leased_area"
+    },
+    "net_effective_rent_per_area": {
+      "@type": "@id",
+      "@id": "net_effective_rent_per_area",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "property_state": {
+      "@type": "@id",
+      "@id": "property_state"
+    },
+    "remarks": {
+      "@id": "remarks"
+    },
+    "rent": {
+      "@type": "@id",
+      "@id": "rent",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "rent_period": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "rent_period"
+    },
+    "space": {
+      "@type": "@id",
+      "@id": "space"
+    },
+    "starting_rent_per_area": {
+      "@type": "@id",
+      "@id": "starting_rent_per_area",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "term_months": {
+      "@type": "xsd:integer",
+      "@id": "term_months"
+    },
+    "ti_allowance_per_area": {
+      "@type": "@id",
+      "@id": "ti_allowance_per_area",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "released_on": {
+      "@type": "xsd:date",
+      "@id": "released_on"
+    },
+    "artifacts": {
+      "@type": "@id",
+      "@id": "artifacts"
+    },
+    "events": {
+      "@type": "@id",
+      "@id": "events"
+    },
+    "listing_type": {
+      "@id": "listing_type"
+    },
+    "mls_number": {
+      "@id": "mls_number"
+    },
+    "participants": {
+      "@type": "@id",
+      "@id": "participants"
+    },
+    "asking_price": {
+      "@type": "@id",
+      "@id": "asking_price",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "close_price": {
+      "@type": "@id",
+      "@id": "close_price",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "event_kind": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "event_kind"
+    },
+    "occurred_on": {
+      "@type": "xsd:date",
+      "@id": "occurred_on"
+    },
+    "due_date": {
+      "@type": "xsd:date",
+      "@id": "due_date"
+    },
+    "interest_rate": {
+      "@type": "xsd:decimal",
+      "@id": "interest_rate"
+    },
+    "is_assumable": {
+      "@type": "xsd:boolean",
+      "@id": "is_assumable"
+    },
+    "is_construction": {
+      "@type": "xsd:boolean",
+      "@id": "is_construction"
+    },
+    "is_heloc": {
+      "@type": "xsd:boolean",
+      "@id": "is_heloc"
+    },
+    "is_purchase_money": {
+      "@type": "xsd:boolean",
+      "@id": "is_purchase_money"
+    },
+    "is_seller_carryback": {
+      "@type": "xsd:boolean",
+      "@id": "is_seller_carryback"
+    },
+    "is_variable_rate": {
+      "@type": "xsd:boolean",
+      "@id": "is_variable_rate"
+    },
+    "lien_position": {
+      "@type": "xsd:integer",
+      "@id": "lien_position"
+    },
+    "loan_amount": {
+      "@type": "@id",
+      "@id": "loan_amount",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "loan_type": {
+      "@id": "loan_type"
+    },
+    "purpose": {
+      "@id": "purpose"
+    },
+    "transfer": {
+      "@type": "@id",
+      "@id": "transfer"
+    },
+    "to_party": {
+      "@type": "@id",
+      "@id": "to_party"
+    },
+    "capex": {
+      "@type": "@id",
+      "@id": "capex",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "egi": {
+      "@type": "@id",
+      "@id": "egi",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "ground_lease_expense": {
+      "@type": "@id",
+      "@id": "ground_lease_expense",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "ground_lease_included_in_opex": {
+      "@type": "xsd:boolean",
+      "@id": "ground_lease_included_in_opex"
+    },
+    "line_items": {
+      "@type": "@id",
+      "@id": "line_items"
+    },
+    "noi": {
+      "@type": "@id",
+      "@id": "noi",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "opex_total": {
+      "@type": "@id",
+      "@id": "opex_total",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "period_end": {
+      "@type": "xsd:date",
+      "@id": "period_end"
+    },
+    "period_start": {
+      "@type": "xsd:date",
+      "@id": "period_start"
+    },
+    "pgi": {
+      "@type": "@id",
+      "@id": "pgi",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "reimbursements": {
+      "@type": "@id",
+      "@id": "reimbursements",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "reserves": {
+      "@type": "@id",
+      "@id": "reserves",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "reserves_included_in_opex": {
+      "@type": "xsd:boolean",
+      "@id": "reserves_included_in_opex"
+    },
+    "statement_basis": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "statement_basis"
+    },
+    "statement_year": {
+      "@type": "xsd:integer",
+      "@id": "statement_year"
+    },
+    "vacancy_loss": {
+      "@type": "@id",
+      "@id": "vacancy_loss",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "vacancy_pct": {
+      "@type": "xsd:decimal",
+      "@id": "vacancy_pct"
+    },
+    "interest_pct": {
+      "@type": "xsd:decimal",
+      "@id": "interest_pct"
+    },
+    "is_owner_occupied": {
+      "@type": "xsd:boolean",
+      "@id": "is_owner_occupied"
+    },
+    "party": {
+      "@type": "@id",
+      "@id": "party"
+    },
+    "acquired_via_transfer": {
+      "@type": "@id",
+      "@id": "acquired_via_transfer"
+    },
+    "disposed_via_transfer": {
+      "@type": "@id",
+      "@id": "disposed_via_transfer"
+    },
+    "ended_on": {
+      "@type": "xsd:date",
+      "@id": "ended_on"
+    },
+    "interests": {
+      "@type": "@id",
+      "@id": "interests"
+    },
+    "mailing_address": {
+      "@type": "@id",
+      "@id": "mailing_address"
+    },
+    "started_on": {
+      "@type": "xsd:date",
+      "@id": "started_on"
+    },
+    "vesting_type": {
+      "@id": "vesting_type"
+    },
+    "land_area": {
+      "@type": "@id",
+      "@id": "land_area"
+    },
+    "legal_description": {
+      "@id": "legal_description"
+    },
+    "normalized_parcel_number": {
+      "@id": "normalized_parcel_number"
+    },
+    "parcel_number": {
+      "@id": "parcel_number"
+    },
+    "reso_upi": {
+      "@id": "reso_upi"
+    },
+    "retired_on": {
+      "@type": "xsd:date",
+      "@id": "retired_on"
+    },
+    "unit_designator": {
+      "@id": "unit_designator"
+    },
+    "effective_on": {
+      "@type": "xsd:date",
+      "@id": "effective_on"
+    },
+    "predecessor_parcel": {
+      "@type": "@id",
+      "@id": "predecessor_parcel"
+    },
+    "successor_parcel": {
+      "@type": "@id",
+      "@id": "successor_parcel"
+    },
+    "addresses": {
+      "@type": "@id",
+      "@id": "addresses"
+    },
+    "classifications": {
+      "@type": "@id",
+      "@id": "classifications"
+    },
+    "contacts": {
+      "@type": "@id",
+      "@id": "contacts"
+    },
+    "legal_form": {
+      "@type": "@id",
+      "@id": "legal_form"
+    },
+    "name_first": {
+      "@id": "name_first"
+    },
+    "name_last": {
+      "@id": "name_last"
+    },
+    "name_middle": {
+      "@id": "name_middle"
+    },
+    "normalized_name": {
+      "@id": "normalized_name"
+    },
+    "do_not_contact": {
+      "@type": "xsd:boolean",
+      "@id": "do_not_contact"
+    },
+    "label": {
+      "@id": "label"
+    },
+    "applied_on": {
+      "@type": "xsd:date",
+      "@id": "applied_on"
+    },
+    "contractor_party": {
+      "@type": "@id",
+      "@id": "contractor_party"
+    },
+    "description": {
+      "@id": "description"
+    },
+    "expires_on": {
+      "@type": "xsd:date",
+      "@id": "expires_on"
+    },
+    "fees": {
+      "@type": "@id",
+      "@id": "fees",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "finaled_on": {
+      "@type": "xsd:date",
+      "@id": "finaled_on"
+    },
+    "issued_on": {
+      "@type": "xsd:date",
+      "@id": "issued_on"
+    },
+    "job_value": {
+      "@type": "@id",
+      "@id": "job_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "permit_number": {
+      "@id": "permit_number"
+    },
+    "permitting_jurisdiction": {
+      "@type": "@id",
+      "@id": "permitting_jurisdiction"
+    },
+    "structure": {
+      "@type": "@id",
+      "@id": "structure"
+    },
+    "fee": {
+      "@type": "@id",
+      "@id": "fee",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "fee_period": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "fee_period"
+    },
+    "building_count": {
+      "@type": "xsd:integer",
+      "@id": "building_count"
+    },
+    "estate_type": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "estate_type"
+    },
+    "property_use_class": {
+      "@id": "property_use_class"
+    },
+    "property_use_subtype": {
+      "@id": "property_use_subtype"
+    },
+    "property_use_system": {
+      "@id": "property_use_system"
+    },
+    "property_use_type": {
+      "@id": "property_use_type"
+    },
+    "namespace": {
+      "@id": "namespace"
+    },
+    "scheme": {
+      "@id": "scheme"
+    },
+    "assessments": {
+      "@type": "@id",
+      "@id": "assessments"
+    },
+    "associations": {
+      "@type": "@id",
+      "@id": "associations"
+    },
+    "foreclosure_cases": {
+      "@type": "@id",
+      "@id": "foreclosure_cases"
+    },
+    "identifiers": {
+      "@type": "@id",
+      "@id": "identifiers"
+    },
+    "jurisdictions": {
+      "@type": "@id",
+      "@id": "jurisdictions"
+    },
+    "leases": {
+      "@type": "@id",
+      "@id": "leases"
+    },
+    "liens": {
+      "@type": "@id",
+      "@id": "liens"
+    },
+    "listings": {
+      "@type": "@id",
+      "@id": "listings"
+    },
+    "loans": {
+      "@type": "@id",
+      "@id": "loans"
+    },
+    "operating_statements": {
+      "@type": "@id",
+      "@id": "operating_statements"
+    },
+    "ownership": {
+      "@type": "@id",
+      "@id": "ownership"
+    },
+    "parcel_lineage": {
+      "@type": "@id",
+      "@id": "parcel_lineage"
+    },
+    "parcels": {
+      "@type": "@id",
+      "@id": "parcels"
+    },
+    "permits": {
+      "@type": "@id",
+      "@id": "permits"
+    },
+    "property_addresses": {
+      "@type": "@id",
+      "@id": "property_addresses"
+    },
+    "property_parcels": {
+      "@type": "@id",
+      "@id": "property_parcels"
+    },
+    "property_state_snapshots": {
+      "@type": "@id",
+      "@id": "property_state_snapshots"
+    },
+    "rent_rolls": {
+      "@type": "@id",
+      "@id": "rent_rolls"
+    },
+    "sales": {
+      "@type": "@id",
+      "@id": "sales"
+    },
+    "site": {
+      "@type": "@id",
+      "@id": "site"
+    },
+    "spaces": {
+      "@type": "@id",
+      "@id": "spaces"
+    },
+    "structures": {
+      "@type": "@id",
+      "@id": "structures"
+    },
+    "tax_bills": {
+      "@type": "@id",
+      "@id": "tax_bills"
+    },
+    "transfers": {
+      "@type": "@id",
+      "@id": "transfers"
+    },
+    "unit_rents": {
+      "@type": "@id",
+      "@id": "unit_rents"
+    },
+    "valuations": {
+      "@type": "@id",
+      "@id": "valuations"
+    },
+    "subject": {
+      "@type": "@id",
+      "@id": "subject"
+    },
+    "as_of_date": {
+      "@type": "xsd:date",
+      "@id": "as_of_date"
+    },
+    "basis": {
+      "@type": "@id",
+      "@id": "basis"
+    },
+    "site_states": {
+      "@type": "@id",
+      "@id": "site_states"
+    },
+    "space_states": {
+      "@type": "@id",
+      "@id": "space_states"
+    },
+    "structure_states": {
+      "@type": "@id",
+      "@id": "structure_states"
+    },
+    "confidence": {
+      "@type": "xsd:float",
+      "@id": "confidence"
+    },
+    "method": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "method"
+    },
+    "provider": {
+      "@id": "provider"
+    },
+    "retrieved_at": {
+      "@type": "xsd:dateTime",
+      "@id": "retrieved_at"
+    },
+    "verification": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "verification"
+    },
+    "scope": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "scope"
+    },
+    "document_type": {
+      "@type": "@id",
+      "@id": "document_type"
+    },
+    "instrument_date": {
+      "@type": "xsd:date",
+      "@id": "instrument_date"
+    },
+    "recorded_on": {
+      "@type": "xsd:date",
+      "@id": "recorded_on"
+    },
+    "recording_book": {
+      "@id": "recording_book"
+    },
+    "recording_page": {
+      "@id": "recording_page"
+    },
+    "related_instruments": {
+      "@type": "@id",
+      "@id": "related_instruments"
+    },
+    "completed_on": {
+      "@type": "xsd:date",
+      "@id": "completed_on"
+    },
+    "completed_year": {
+      "@type": "xsd:integer",
+      "@id": "completed_year"
+    },
+    "cost": {
+      "@type": "@id",
+      "@id": "cost",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "lines": {
+      "@type": "@id",
+      "@id": "lines"
+    },
+    "occupied_unit_count": {
+      "@type": "xsd:integer",
+      "@id": "occupied_unit_count"
+    },
+    "total_contract_rent": {
+      "@type": "@id",
+      "@id": "total_contract_rent",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "total_market_rent": {
+      "@type": "@id",
+      "@id": "total_market_rent",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "unit_count": {
+      "@type": "xsd:integer",
+      "@id": "unit_count"
+    },
+    "contract_rent": {
+      "@type": "@id",
+      "@id": "contract_rent",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "lease": {
+      "@type": "@id",
+      "@id": "lease"
+    },
+    "market_rent": {
+      "@type": "@id",
+      "@id": "market_rent",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "occupancy_status": {
+      "@type": "@id",
+      "@id": "occupancy_status"
+    },
+    "reported_area": {
+      "@type": "@id",
+      "@id": "reported_area"
+    },
+    "tenant": {
+      "@type": "@id",
+      "@id": "tenant"
+    },
+    "from_date": {
+      "@type": "xsd:date",
+      "@id": "from_date"
+    },
+    "adu_legally_rentable": {
+      "@type": "xsd:boolean",
+      "@id": "adu_legally_rentable"
+    },
+    "architectural_design": {
+      "@id": "architectural_design"
+    },
+    "attachment": {
+      "@id": "attachment"
+    },
+    "basement_type": {
+      "@id": "basement_type"
+    },
+    "bathrooms_full": {
+      "@type": "xsd:integer",
+      "@id": "bathrooms_full"
+    },
+    "bathrooms_half": {
+      "@type": "xsd:integer",
+      "@id": "bathrooms_half"
+    },
+    "bathrooms_three_quarter": {
+      "@type": "xsd:integer",
+      "@id": "bathrooms_three_quarter"
+    },
+    "bedrooms_total": {
+      "@type": "xsd:integer",
+      "@id": "bedrooms_total"
+    },
+    "fireplaces": {
+      "@type": "xsd:integer",
+      "@id": "fireplaces"
+    },
+    "garage_attachment": {
+      "@id": "garage_attachment"
+    },
+    "garage_type": {
+      "@id": "garage_type"
+    },
+    "has_adu": {
+      "@type": "xsd:boolean",
+      "@id": "has_adu"
+    },
+    "has_attic": {
+      "@type": "xsd:boolean",
+      "@id": "has_attic"
+    },
+    "has_pool": {
+      "@type": "xsd:boolean",
+      "@id": "has_pool"
+    },
+    "occupancy": {
+      "@id": "occupancy"
+    },
+    "renewable_energy_components": {
+      "@id": "renewable_energy_components"
+    },
+    "rooms_total": {
+      "@type": "xsd:integer",
+      "@id": "rooms_total"
+    },
+    "cap_rate": {
+      "@type": "xsd:decimal",
+      "@id": "cap_rate"
+    },
+    "financing": {
+      "@id": "financing"
+    },
+    "noi_at_sale": {
+      "@type": "@id",
+      "@id": "noi_at_sale",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "occupancy_at_sale_pct": {
+      "@type": "xsd:decimal",
+      "@id": "occupancy_at_sale_pct"
+    },
+    "opex_at_sale": {
+      "@type": "@id",
+      "@id": "opex_at_sale",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "price_code": {
+      "@type": "@id",
+      "@id": "price_code"
+    },
+    "price_disclosure": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "price_disclosure"
+    },
+    "price_per_area": {
+      "@type": "@id",
+      "@id": "price_per_area",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "price_per_unit": {
+      "@type": "@id",
+      "@id": "price_per_unit",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "sale_date": {
+      "@type": "xsd:date",
+      "@id": "sale_date"
+    },
+    "sale_price": {
+      "@type": "@id",
+      "@id": "sale_price",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "sale_type": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "sale_type"
+    },
+    "supporting_operating_statement": {
+      "@type": "@id",
+      "@id": "supporting_operating_statement"
+    },
+    "unit_count_at_sale": {
+      "@type": "xsd:integer",
+      "@id": "unit_count_at_sale"
+    },
+    "block": {
+      "@id": "block"
+    },
+    "buildable_units": {
+      "@type": "xsd:integer",
+      "@id": "buildable_units"
+    },
+    "depth": {
+      "@type": "@id",
+      "@id": "depth"
+    },
+    "easements": {
+      "@id": "easements"
+    },
+    "entitlement_status": {
+      "@id": "entitlement_status"
+    },
+    "flood_zone": {
+      "@id": "flood_zone"
+    },
+    "frontage": {
+      "@type": "@id",
+      "@id": "frontage"
+    },
+    "hazard_zones": {
+      "@id": "hazard_zones"
+    },
+    "is_corner": {
+      "@type": "xsd:boolean",
+      "@id": "is_corner"
+    },
+    "land_use": {
+      "@type": "@id",
+      "@id": "land_use"
+    },
+    "land_use_category": {
+      "@id": "land_use_category"
+    },
+    "lot_number": {
+      "@id": "lot_number"
+    },
+    "lot_size": {
+      "@type": "@id",
+      "@id": "lot_size"
+    },
+    "phase_number": {
+      "@id": "phase_number"
+    },
+    "restrictions": {
+      "@id": "restrictions"
+    },
+    "section_township_range": {
+      "@id": "section_township_range"
+    },
+    "site_influences": {
+      "@id": "site_influences"
+    },
+    "subdivision": {
+      "@id": "subdivision"
+    },
+    "topography": {
+      "@id": "topography"
+    },
+    "tract_number": {
+      "@id": "tract_number"
+    },
+    "usable_land_area": {
+      "@type": "@id",
+      "@id": "usable_land_area"
+    },
+    "usable_land_area_basis": {
+      "@id": "usable_land_area_basis"
+    },
+    "utilities": {
+      "@id": "utilities"
+    },
+    "view_types": {
+      "@id": "view_types"
+    },
+    "zoning_code": {
+      "@id": "zoning_code"
+    },
+    "captured_on": {
+      "@type": "xsd:dateTime",
+      "@id": "captured_on"
+    },
+    "content_hash": {
+      "@id": "content_hash"
+    },
+    "hash_scheme": {
+      "@id": "hash_scheme"
+    },
+    "media_type": {
+      "@id": "media_type"
+    },
+    "original_filename": {
+      "@id": "original_filename"
+    },
+    "page_count": {
+      "@type": "xsd:integer",
+      "@id": "page_count"
+    },
+    "storage_reference": {
+      "@id": "storage_reference"
+    },
+    "title": {
+      "@id": "title"
+    },
+    "uri": {
+      "@type": "xsd:anyURI",
+      "@id": "uri"
+    },
+    "space_identifier": {
+      "@id": "space_identifier"
+    },
+    "bathrooms": {
+      "@type": "xsd:decimal",
+      "@id": "bathrooms"
+    },
+    "bedrooms": {
+      "@type": "xsd:integer",
+      "@id": "bedrooms"
+    },
+    "floor_number": {
+      "@type": "xsd:integer",
+      "@id": "floor_number"
+    },
+    "is_active": {
+      "@type": "xsd:boolean",
+      "@id": "is_active"
+    },
+    "is_adu": {
+      "@type": "xsd:boolean",
+      "@id": "is_adu"
+    },
+    "rentable_area": {
+      "@type": "@id",
+      "@id": "rentable_area"
+    },
+    "space_use": {
+      "@id": "space_use"
+    },
+    "usable_area": {
+      "@type": "@id",
+      "@id": "usable_area"
+    },
+    "areas": {
+      "@type": "@id",
+      "@id": "areas"
+    },
+    "basement_area": {
+      "@type": "@id",
+      "@id": "basement_area"
+    },
+    "basement_finished_area": {
+      "@type": "@id",
+      "@id": "basement_finished_area"
+    },
+    "commercial": {
+      "@type": "@id",
+      "@id": "commercial"
+    },
+    "condition_ratings": {
+      "@type": "@id",
+      "@id": "condition_ratings"
+    },
+    "construction_method": {
+      "@id": "construction_method"
+    },
+    "construction_status": {
+      "@id": "construction_status"
+    },
+    "construction_type": {
+      "@id": "construction_type"
+    },
+    "cooling_types": {
+      "@id": "cooling_types"
+    },
+    "effective_year_built": {
+      "@type": "xsd:integer",
+      "@id": "effective_year_built"
+    },
+    "exterior_wall_type": {
+      "@id": "exterior_wall_type"
+    },
+    "features": {
+      "@id": "features"
+    },
+    "foundation_material": {
+      "@id": "foundation_material"
+    },
+    "foundation_type": {
+      "@id": "foundation_type"
+    },
+    "garage_area": {
+      "@type": "@id",
+      "@id": "garage_area"
+    },
+    "gross_area": {
+      "@type": "@id",
+      "@id": "gross_area"
+    },
+    "ground_floor_area": {
+      "@type": "@id",
+      "@id": "ground_floor_area"
+    },
+    "heating_fuel_type": {
+      "@id": "heating_fuel_type"
+    },
+    "heating_types": {
+      "@id": "heating_types"
+    },
+    "living_area": {
+      "@type": "@id",
+      "@id": "living_area"
+    },
+    "quality_ratings": {
+      "@type": "@id",
+      "@id": "quality_ratings"
+    },
+    "renovations": {
+      "@type": "@id",
+      "@id": "renovations"
+    },
+    "residential": {
+      "@type": "@id",
+      "@id": "residential"
+    },
+    "roof_material_type": {
+      "@id": "roof_material_type"
+    },
+    "roof_style_type": {
+      "@id": "roof_style_type"
+    },
+    "sewer_type": {
+      "@id": "sewer_type"
+    },
+    "stories": {
+      "@type": "xsd:decimal",
+      "@id": "stories"
+    },
+    "structure_number": {
+      "@id": "structure_number"
+    },
+    "water_type": {
+      "@id": "water_type"
+    },
+    "year_built": {
+      "@type": "xsd:integer",
+      "@id": "year_built"
+    },
+    "year_built_estimated": {
+      "@type": "xsd:boolean",
+      "@id": "year_built_estimated"
+    },
+    "amount_billed": {
+      "@type": "@id",
+      "@id": "amount_billed",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "amount_paid": {
+      "@type": "@id",
+      "@id": "amount_paid",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "bill_number": {
+      "@id": "bill_number"
+    },
+    "delinquent_amount": {
+      "@type": "@id",
+      "@id": "delinquent_amount",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "delinquent_year": {
+      "@type": "xsd:integer",
+      "@id": "delinquent_year"
+    },
+    "installments": {
+      "@type": "@id",
+      "@id": "installments"
+    },
+    "is_delinquent": {
+      "@type": "xsd:boolean",
+      "@id": "is_delinquent"
+    },
+    "rate_code_area": {
+      "@id": "rate_code_area"
+    },
+    "due_on": {
+      "@type": "xsd:date",
+      "@id": "due_on"
+    },
+    "installment_number": {
+      "@type": "xsd:integer",
+      "@id": "installment_number"
+    },
+    "paid_on": {
+      "@type": "xsd:date",
+      "@id": "paid_on"
+    },
+    "rate": {
+      "@type": "@id",
+      "@id": "rate",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "sequence": {
+      "@type": "xsd:integer",
+      "@id": "sequence"
+    },
+    "consideration": {
+      "@type": "@id",
+      "@id": "consideration",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "interest_conveyed": {
+      "@type": "@id",
+      "@id": "interest_conveyed"
+    },
+    "is_distressed": {
+      "@type": "xsd:boolean",
+      "@id": "is_distressed"
+    },
+    "is_inter_family": {
+      "@type": "xsd:boolean",
+      "@id": "is_inter_family"
+    },
+    "partial_interest_pct": {
+      "@type": "xsd:decimal",
+      "@id": "partial_interest_pct"
+    },
+    "transfer_kind": {
+      "@id": "transfer_kind"
+    },
+    "transfer_tax": {
+      "@type": "@id",
+      "@id": "transfer_tax",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "denominator": {
+      "@id": "denominator"
+    },
+    "concessions_note": {
+      "@id": "concessions_note"
+    },
+    "observed_on": {
+      "@type": "xsd:date",
+      "@id": "observed_on"
+    },
+    "rate_basis": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "rate_basis"
+    },
+    "rate_period": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "rate_period"
+    },
+    "rate_type": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "rate_type"
+    },
+    "unit_area": {
+      "@type": "@id",
+      "@id": "unit_area"
+    },
+    "units_available": {
+      "@type": "xsd:integer",
+      "@id": "units_available"
+    },
+    "confidence_score": {
+      "@type": "xsd:integer",
+      "@id": "confidence_score"
+    },
+    "exposure_days": {
+      "@type": "xsd:integer",
+      "@id": "exposure_days"
+    },
+    "forecast_standard_deviation": {
+      "@type": "xsd:decimal",
+      "@id": "forecast_standard_deviation"
+    },
+    "indicated_value_cost": {
+      "@type": "@id",
+      "@id": "indicated_value_cost",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "indicated_value_income": {
+      "@type": "@id",
+      "@id": "indicated_value_income",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "indicated_value_sales_comparison": {
+      "@type": "@id",
+      "@id": "indicated_value_sales_comparison",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "interest": {
+      "@id": "interest"
+    },
+    "land_value": {
+      "@type": "@id",
+      "@id": "land_value",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "performed_by_party": {
+      "@type": "@id",
+      "@id": "performed_by_party"
+    },
+    "report_date": {
+      "@type": "xsd:date",
+      "@id": "report_date"
+    },
+    "valuation_method": {
+      "@id": "valuation_method"
+    },
+    "value_high": {
+      "@type": "@id",
+      "@id": "value_high",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "value_low": {
+      "@type": "@id",
+      "@id": "value_low",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "value_per_area": {
+      "@type": "@id",
+      "@id": "value_per_area",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "value_premise": {
+      "@id": "value_premise"
+    },
+    "value_type": {
+      "@id": "value_type"
+    },
+    "note": {
+      "@id": "note"
+    },
+    "verified_at": {
+      "@type": "xsd:dateTime",
+      "@id": "verified_at"
+    },
+    "verifier": {
+      "@type": "@id",
+      "@id": "verifier"
+    },
+    "Address": {
+      "@id": "Address"
+    },
+    "AddressAssociation": {
+      "@id": "AddressAssociation"
+    },
+    "Any": {
+      "@id": "linkml:Any"
+    },
+    "Area": {
+      "@id": "Area"
+    },
+    "AreaMeasure": {
+      "@id": "AreaMeasure"
+    },
+    "Assessment": {
+      "@id": "Assessment"
+    },
+    "AssessorObservation": {
+      "@id": "AssessorObservation"
+    },
+    "Classification": {
+      "@id": "Classification"
+    },
+    "CodeableConcept": {
+      "@id": "CodeableConcept"
+    },
+    "CommercialDetails": {
+      "@id": "CommercialDetails"
+    },
+    "Entity": {
+      "@id": "Entity"
+    },
+    "ExpenseStructure": {
+      "@id": "ExpenseStructure"
+    },
+    "ExtractionObservation": {
+      "@id": "ExtractionObservation"
+    },
+    "ForeclosureCase": {
+      "@id": "ForeclosureCase"
+    },
+    "ForeclosureCaseParty": {
+      "@id": "ForeclosureCaseParty"
+    },
+    "ForeclosureFiling": {
+      "@id": "ForeclosureFiling"
+    },
+    "Geometry": {
+      "@id": "Geometry"
+    },
+    "GeoPoint": {
+      "@id": "GeoPoint"
+    },
+    "InstrumentReference": {
+      "@id": "InstrumentReference"
+    },
+    "Jurisdiction": {
+      "@id": "Jurisdiction"
+    },
+    "LeaseConcession": {
+      "@id": "LeaseConcession"
+    },
+    "LeaseEscalation": {
+      "@id": "LeaseEscalation"
+    },
+    "LeaseEvent": {
+      "@id": "LeaseEvent"
+    },
+    "LeaseEventParty": {
+      "@id": "LeaseEventParty"
+    },
+    "Length": {
+      "@id": "Length"
+    },
+    "Lien": {
+      "@id": "Lien",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "LienParty": {
+      "@id": "LienParty"
+    },
+    "Listing": {
+      "@id": "Listing"
+    },
+    "ListingEvent": {
+      "@id": "ListingEvent"
+    },
+    "ListingParticipant": {
+      "@id": "ListingParticipant"
+    },
+    "Loan": {
+      "@id": "Loan"
+    },
+    "LoanEvent": {
+      "@id": "LoanEvent",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "LoanParty": {
+      "@id": "LoanParty"
+    },
+    "Money": {
+      "@id": "Money"
+    },
+    "OperatingStatement": {
+      "@id": "OperatingStatement"
+    },
+    "OwnershipInterest": {
+      "@id": "OwnershipInterest"
+    },
+    "OwnershipPeriod": {
+      "@id": "OwnershipPeriod"
+    },
+    "Parcel": {
+      "@id": "Parcel"
+    },
+    "ParcelLineage": {
+      "@id": "ParcelLineage"
+    },
+    "Party": {
+      "@id": "Party"
+    },
+    "PartyAddress": {
+      "@id": "PartyAddress"
+    },
+    "PartyContact": {
+      "@id": "PartyContact"
+    },
+    "Permit": {
+      "@id": "Permit"
+    },
+    "Property": {
+      "@id": "Property"
+    },
+    "PropertyAddress": {
+      "@id": "PropertyAddress"
+    },
+    "PropertyAssociation": {
+      "@id": "PropertyAssociation"
+    },
+    "PropertyFacts": {
+      "@id": "PropertyFacts"
+    },
+    "PropertyIdentifier": {
+      "@id": "PropertyIdentifier"
+    },
+    "PropertyParcel": {
+      "@id": "PropertyParcel"
+    },
+    "PropertyProfile": {
+      "@id": "PropertyProfile"
+    },
+    "PropertyState": {
+      "@id": "PropertyState"
+    },
+    "PropertyStateSnapshot": {
+      "@id": "PropertyStateSnapshot"
+    },
+    "Provenance": {
+      "@id": "Provenance"
+    },
+    "Rating": {
+      "@id": "Rating"
+    },
+    "RecordedInstrument": {
+      "@id": "RecordedInstrument"
+    },
+    "Renovation": {
+      "@id": "Renovation"
+    },
+    "RentRoll": {
+      "@id": "RentRoll"
+    },
+    "RentRollLine": {
+      "@id": "RentRollLine"
+    },
+    "RentStep": {
+      "@id": "RentStep",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "ResidentialDetails": {
+      "@id": "ResidentialDetails"
+    },
+    "SaleEvent": {
+      "@id": "SaleEvent"
+    },
+    "SaleEventParty": {
+      "@id": "SaleEventParty"
+    },
+    "Site": {
+      "@id": "Site"
+    },
+    "SiteFacts": {
+      "@id": "SiteFacts"
+    },
+    "SiteState": {
+      "@id": "SiteState"
+    },
+    "SourceArtifact": {
+      "@id": "SourceArtifact"
+    },
+    "Space": {
+      "@id": "Space"
+    },
+    "SpaceFacts": {
+      "@id": "SpaceFacts"
+    },
+    "SpaceState": {
+      "@id": "SpaceState"
+    },
+    "StatementLineItem": {
+      "@id": "StatementLineItem",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "Structure": {
+      "@id": "Structure"
+    },
+    "StructureFacts": {
+      "@id": "StructureFacts"
+    },
+    "StructureState": {
+      "@id": "StructureState"
+    },
+    "TaxBill": {
+      "@id": "TaxBill"
+    },
+    "TaxExemption": {
+      "@id": "TaxExemption",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "TaxInstallment": {
+      "@id": "TaxInstallment",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "TaxLineItem": {
+      "@id": "TaxLineItem",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount",
+          "@type": "@id"
+        }
+      }
+    },
+    "TransactionParty": {
+      "@id": "TransactionParty"
+    },
+    "Transfer": {
+      "@id": "Transfer"
+    },
+    "TransferParty": {
+      "@id": "TransferParty"
+    },
+    "UnitRate": {
+      "@id": "UnitRate"
+    },
+    "UnitRentObservation": {
+      "@id": "UnitRentObservation"
+    },
+    "Valuation": {
+      "@id": "Valuation"
+    },
+    "VerificationAttribution": {
+      "@id": "VerificationAttribution"
+    }
+  }
+}

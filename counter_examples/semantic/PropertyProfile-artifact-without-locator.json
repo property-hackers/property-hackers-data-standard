@@ -1,0 +1,10 @@
+{
+  "property": {
+    "id": "property-artifact-without-locator"
+  },
+  "artifacts": [
+    {
+      "id": "artifact-without-locator"
+    }
+  ]
+}

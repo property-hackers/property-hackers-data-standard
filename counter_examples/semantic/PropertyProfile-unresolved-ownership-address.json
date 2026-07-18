@@ -1,0 +1,12 @@
+{
+  "property": {
+    "id": "property-1"
+  },
+  "ownership": [
+    {
+      "id": "ownership-1",
+      "property": "property-1",
+      "mailing_address": "address-missing"
+    }
+  ]
+}

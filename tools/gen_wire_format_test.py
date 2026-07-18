@@ -14,12 +14,22 @@ tests/test_generated_contract.py census-checks the result.
 
 from __future__ import annotations
 
+import argparse
 import json
 import re
 from pathlib import Path
 
+from linkml_runtime.utils.schemaview import SchemaView
+
 ROOT = Path(__file__).resolve().parents[1]
 GENERATED = ROOT / "schema" / "generated"
+LINKML_SCHEMA_BY_CRATE = {
+    "phds": ROOT / "schema/capture.yaml",
+    "phds_uad_3_6": ROOT / "schema/standards/uad_3_6.yaml",
+    "phds_boma_building_class": (
+        ROOT / "schema/standards/boma_building_class.yaml"
+    ),
+}
 
 ENUM_RE = re.compile(r"pub enum (\w+) \{(.*?)\n\}", re.DOTALL)
 VARIANT_RE = re.compile(
@@ -38,7 +48,7 @@ HEADER = """\
 // with the schema.
 #![cfg(feature = "serde")]
 
-use phds::*;
+use {crate_name}::*;
 
 fn assert_round_trip<T>(value: T, wire: &str)
 where
@@ -53,6 +63,339 @@ where
 #[test]
 fn all_enum_variants_round_trip_canonical_wire_values() {
 """
+
+CORE_FOOTER = """\
+}
+
+fn assert_boundary_rejected<T>(document: &str)
+where
+    T: serde::de::DeserializeOwned + core::fmt::Debug,
+{
+    let error = serde_yml::from_str::<T>(document)
+        .expect_err("boundary-constrained string must be rejected");
+    assert!(
+        error.to_string().contains("nonblank"),
+        "{document}: {error}"
+    );
+}
+
+#[test]
+fn boundary_constrained_strings_reject_invalid_wire_values() {
+    for value in ["", " ", "\\tactor", " actor", "actor ", "\\u{feff}actor", "actor\\u{3000}"] {
+        assert_boundary_rejected::<Property>(&format!("id: '{value}'\\n"));
+    }
+    assert_boundary_rejected::<Party>("id: party-1\\nkind: person\\nname: ' actor'\\n");
+    assert_boundary_rejected::<TransferParty>("role: grantor\\nparty: 'actor ' \\n");
+    assert_boundary_rejected::<Classification>("system: ' urn:test'\\ncode: code\\n");
+    assert_boundary_rejected::<Classification>("system: urn:test\\ncode: 'code ' \\n");
+    assert_boundary_rejected::<Rating>("system: ' urn:rating'\\ncode: A\\n");
+    assert_boundary_rejected::<Rating>("system: urn:rating\\ncode: ' A'\\n");
+    assert_boundary_rejected::<VerificationAttribution>("verifier: ' party-1'\\nverified_at: 2026-07-18T12:00:00Z\\n");
+    for field in ["uri", "storage_reference", "content_hash", "hash_scheme"] {
+        let document = format!("id: artifact-1\\n{field}: ' value'\\n");
+        assert_boundary_rejected::<SourceArtifact>(&document);
+    }
+    assert_boundary_rejected::<Address>(
+        "id: address-1\ncountry: CA\naddress_hash: ' hash'\naddress_hash_scheme: producer.scheme\n",
+    );
+    assert_boundary_rejected::<Address>(
+        "id: address-1\ncountry: CA\naddress_hash: hash\naddress_hash_scheme: 'producer.scheme '\n",
+    );
+}
+
+#[test]
+fn boundary_constrained_strings_accept_international_values() {
+    serde_yml::from_str::<Property>("id: 物件-1\\n").expect("international id");
+    serde_yml::from_str::<Party>("id: party-1\\nkind: person\\nname: Мария Иванова\\n")
+        .expect("international party name");
+    serde_yml::from_str::<TransferParty>("role: grantee\\nparty: 山田-1\\n")
+        .expect("international party reference");
+    serde_yml::from_str::<Classification>("system: urn:分類\\ncode: качество\\n")
+        .expect("international classification");
+    serde_yml::from_str::<Rating>("system: urn:評価\\ncode: 良好\\n")
+        .expect("international rating");
+    serde_yml::from_str::<VerificationAttribution>("verifier: 検証者-1\\nverified_at: 2026-07-18T12:00:00Z\\n")
+        .expect("international verifier");
+    serde_yml::from_str::<SourceArtifact>(
+        "id: artifact-1\\nstorage_reference: 資料/評価書\\ncontent_hash: ハッシュ値\\nhash_scheme: 方式.sha256\\n",
+    )
+    .expect("international artifact boundaries");
+    serde_yml::from_str::<Address>(
+        "id: address-1\ncountry: JP\naddress_hash: 住所ハッシュ\naddress_hash_scheme: 方式.sha256\n",
+    )
+    .expect("international address hash boundaries");
+}
+
+#[test]
+fn property_profile_extras_round_trip_losslessly() {
+    let document = r#"
+property:
+  id: property-1
+  extras:
+    nested_object:
+      nested_list:
+        - text
+        - true
+        - 42
+        - null
+    string_value: retained
+    boolean_value: false
+    numeric_value: 3.5
+    null_value: null
+rent_rolls:
+  - id: rent-roll-1
+    property: property-1
+    as_of_date: 2026-01-01
+    lines:
+      - extras:
+          nested_object:
+            nested_list:
+              - line text
+              - false
+              - 7
+              - null
+"#;
+    let expected: serde_yml::Value = serde_yml::from_str(document).expect("fixture YAML");
+    let profile: PropertyProfile = serde_yml::from_str(document).expect("deserialize profile");
+    let encoded = serde_yml::to_string(&profile).expect("reserialize profile");
+    let actual: serde_yml::Value = serde_yml::from_str(&encoded).expect("encoded YAML");
+
+    assert_eq!(actual["property"]["extras"], expected["property"]["extras"]);
+    assert_eq!(
+        actual["rent_rolls"]["rent-roll-1"]["lines"][0]["extras"],
+        expected["rent_rolls"][0]["lines"][0]["extras"]
+    );
+}
+
+#[test]
+fn every_shipped_core_example_round_trips() {
+    let examples = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("examples");
+    let mut paths = std::fs::read_dir(&examples)
+        .expect("repository examples directory")
+        .map(|entry| entry.expect("example entry").path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| {
+                    name.starts_with("PropertyProfile-") && name.ends_with(".json")
+                })
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    assert!(!paths.is_empty(), "no shipped core examples found");
+
+    for path in paths {
+        let document = std::fs::read_to_string(&path).expect("read example");
+        let decoded: PropertyProfile = serde_yml::from_str(&document)
+            .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+        let encoded = serde_yml::to_string(&decoded).expect("serialize example");
+        let reparsed: PropertyProfile = serde_yml::from_str(&encoded)
+            .unwrap_or_else(|error| panic!("{} reparse: {error}", path.display()));
+        let reencoded = serde_yml::to_string(&reparsed).expect("reserialize example");
+        assert_eq!(reencoded, encoded, "{} canonical round trip", path.display());
+    }
+}
+"""
+
+GENERIC_STRICTNESS_TESTS = r'''
+
+#[test]
+fn generic_unknown_fields_are_rejected() {
+    let document = r#"{"id":"property-1","unexpected":true}"#;
+    assert!(serde_yml::from_str::<Property>(document).is_err());
+}
+
+#[test]
+fn generic_patterned_strings_are_rejected() {
+    for document in [
+        r#"{"amount":"12,500","currency":"USD"}"#,
+        r#"{"amount":"١٢٣.٤٥","currency":"USD"}"#,
+        "amount: \"125000.00\\n\"\ncurrency: USD\n",
+        r#"{"amount":"125000.00","currency":"usd"}"#,
+    ] {
+        assert!(serde_yml::from_str::<Money>(document).is_err(), "{document}");
+    }
+    for country in ["usa", "USA", "us", "U1"] {
+        let document = format!(r#"{{"id":"address-1","country":"{country}"}}"#);
+        assert!(serde_yml::from_str::<Address>(&document).is_err(), "{document}");
+    }
+}
+
+#[test]
+fn generic_patterned_strings_accept_canonical_values() {
+    for amount in ["0", "-0", "01", "1.0", "-125000.25"] {
+        let document = format!(r#"{{"amount":"{amount}","currency":"USD"}}"#);
+        serde_yml::from_str::<Money>(&document).expect("canonical money");
+    }
+    for country in ["CA", "JP", "US"] {
+        let document = format!(r#"{{"id":"address-1","country":"{country}"}}"#);
+        serde_yml::from_str::<Address>(&document).expect("canonical country");
+    }
+}
+
+#[test]
+fn generic_geometry_uses_canonical_type_wire_name() {
+    let document = r#"{"type":"Point","coordinates":[1,2]}"#;
+    let geometry: Geometry = serde_yml::from_str(document).expect("canonical geometry");
+    let encoded = serde_yml::to_string(&geometry).expect("serialize geometry");
+    assert!(encoded.contains("type: Point"), "{encoded}");
+    assert!(!encoded.contains("type_:"), "{encoded}");
+    assert!(serde_yml::from_str::<Geometry>(r#"{"type_":"Point"}"#).is_err());
+}
+
+#[test]
+fn generic_datetime_uses_explicit_rfc3339_offset() {
+    for verified_at in ["2026-07-18T12:00:00Z", "2026-07-18T17:30:00+05:30"] {
+        let document = format!(
+            r#"{{"verifier":"party-1","verified_at":"{verified_at}"}}"#
+        );
+        let attribution: VerificationAttribution =
+            serde_yml::from_str(&document).expect("RFC 3339 datetime");
+        let encoded = serde_yml::to_string(&attribution).expect("serialize datetime");
+        let expected_offset = if verified_at.ends_with('Z') {
+            "Z"
+        } else {
+            &verified_at[19..]
+        };
+        assert!(
+            encoded.contains(expected_offset),
+            "serialized datetime needs explicit offset: {encoded}"
+        );
+    }
+    assert!(serde_yml::from_str::<VerificationAttribution>(
+        r#"{"verifier":"party-1","verified_at":"2026-07-18T12:00:00"}"#
+    )
+    .is_err());
+}
+'''
+
+GENERIC_FOOTER = """\
+}
+""" + GENERIC_STRICTNESS_TESTS
+
+UAD_FOOTER = GENERIC_FOOTER + r'''
+
+fn assert_standard_example_round_trip<T>(filename: &str)
+where
+    T: serde::Serialize + serde::de::DeserializeOwned,
+{
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("examples")
+        .join("standards")
+        .join(filename);
+    let document = std::fs::read_to_string(&path).expect("read standards example");
+    let decoded: T = serde_yml::from_str(&document)
+        .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+    let encoded = serde_yml::to_string(&decoded).expect("serialize standards example");
+    serde_yml::from_str::<T>(&encoded)
+        .unwrap_or_else(|error| panic!("{} reparse: {error}", path.display()));
+}
+
+#[test]
+fn every_shipped_uad_example_round_trips() {
+    assert_standard_example_round_trip::<Uad36PropertyProfile>(
+        "uad-property-profile.json",
+    );
+}
+
+#[test]
+fn uad_profile_accepts_constrained_ratings() {
+    let valid = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","condition_ratings":[{"system":"urn:phds:standard:uad:3.6:condition","code":"C3","scope":"overall"}],"quality_ratings":[{"system":"urn:phds:standard:uad:3.6:quality","code":"Q2","scope":"interior"}]}]}"#;
+    serde_yml::from_str::<Uad36PropertyProfile>(valid).expect("valid UAD profile");
+}
+
+#[test]
+fn uad_profile_rejects_invalid_ratings() {
+    let missing_scope = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","condition_ratings":[{"system":"urn:phds:standard:uad:3.6:condition","code":"C3"}]}]}"#;
+    let invalid_code = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","condition_ratings":[{"system":"urn:phds:standard:uad:3.6:condition","code":"C7","scope":"overall"}]}]}"#;
+    let quality_rating_in_condition = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","condition_ratings":[{"system":"urn:phds:standard:uad:3.6:quality","code":"Q3","scope":"overall"}]}]}"#;
+    for (name, document) in [
+        ("missing_scope", missing_scope),
+        ("invalid_code", invalid_code),
+        ("quality_rating_in_condition", quality_rating_in_condition),
+    ] {
+        assert!(
+            serde_yml::from_str::<Uad36PropertyProfile>(document).is_err(),
+            "{name} must be rejected"
+        );
+    }
+}
+
+#[test]
+fn uad_profile_rejects_unknown_root_field() {
+    let document = r#"{"property":{"id":"p"},"unexpected":true}"#;
+    assert!(serde_yml::from_str::<Uad36PropertyProfile>(document).is_err());
+}
+'''
+
+BOMA_FOOTER = GENERIC_FOOTER + r'''
+
+fn assert_standard_example_round_trip<T>(filename: &str)
+where
+    T: serde::Serialize + serde::de::DeserializeOwned,
+{
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("examples")
+        .join("standards")
+        .join(filename);
+    let document = std::fs::read_to_string(&path).expect("read standards example");
+    let decoded: T = serde_yml::from_str(&document)
+        .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+    let encoded = serde_yml::to_string(&decoded).expect("serialize standards example");
+    serde_yml::from_str::<T>(&encoded)
+        .unwrap_or_else(|error| panic!("{} reparse: {error}", path.display()));
+}
+
+#[test]
+fn every_shipped_boma_example_round_trips() {
+    assert_standard_example_round_trip::<BomaMetroPropertyProfile>(
+        "boma-metro-property-profile.json",
+    );
+    assert_standard_example_round_trip::<BomaInternationalPropertyProfile>(
+        "boma-international-property-profile.json",
+    );
+}
+
+#[test]
+fn boma_profiles_accept_coupled_ratings() {
+    let metro = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","commercial":{"market_classification":{"system":"urn:phds:standard:boma:office:metro","code":"A"}}}]}"#;
+    let international = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","commercial":{"market_classification":{"system":"urn:phds:standard:boma:office:international","code":"investment"}}}]}"#;
+    serde_yml::from_str::<BomaMetroPropertyProfile>(metro).expect("valid metro profile");
+    serde_yml::from_str::<BomaInternationalPropertyProfile>(international)
+        .expect("valid international profile");
+}
+
+#[test]
+fn boma_profiles_reject_invalid_ratings() {
+    let metro_invalid_code = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","commercial":{"market_classification":{"system":"urn:phds:standard:boma:office:metro","code":"D"}}}]}"#;
+    let international_invalid_code = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","commercial":{"market_classification":{"system":"urn:phds:standard:boma:office:international","code":"A"}}}]}"#;
+    // Intentionally the same bytes as `international_invalid_code`: decoding
+    // against the metro root isolates a wrong system while `A` is metro-valid.
+    let system_code_mismatch = r#"{"property":{"id":"p"},"structures":[{"id":"s","property":"p","commercial":{"market_classification":{"system":"urn:phds:standard:boma:office:international","code":"A"}}}]}"#;
+    assert!(serde_yml::from_str::<BomaMetroPropertyProfile>(metro_invalid_code).is_err(), "metro_invalid_code must be rejected");
+    assert!(serde_yml::from_str::<BomaInternationalPropertyProfile>(international_invalid_code).is_err(), "international_invalid_code must be rejected");
+    assert!(serde_yml::from_str::<BomaMetroPropertyProfile>(system_code_mismatch).is_err(), "system_code_mismatch must be rejected");
+}
+
+#[test]
+fn boma_profiles_reject_unknown_root_field() {
+    let document = r#"{"property":{"id":"p"},"unexpected":true}"#;
+    assert!(serde_yml::from_str::<BomaMetroPropertyProfile>(document).is_err());
+    assert!(serde_yml::from_str::<BomaInternationalPropertyProfile>(document).is_err());
+}
+'''
 
 
 def rust_enum_variants(lib_rs: str) -> dict[str, dict[str, str]]:
@@ -69,15 +412,60 @@ def rust_enum_variants(lib_rs: str) -> dict[str, dict[str, str]]:
     return enums
 
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--linkml-schema",
+        type=Path,
+        help="LinkML source whose full import closure defines the enum census",
+    )
+    parser.add_argument(
+        "--json-schema",
+        type=Path,
+        default=GENERATED / "phds.schema.json",
+    )
+    parser.add_argument(
+        "--rust-lib",
+        type=Path,
+        default=GENERATED / "phds-rust/src/lib.rs",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=GENERATED / "phds-rust/tests/wire_format.rs",
+    )
+    parser.add_argument("--crate", default="phds")
+    return parser.parse_args()
+
+
 def main() -> None:
-    schema = json.loads((GENERATED / "phds.schema.json").read_text(encoding="utf-8"))
+    args = parse_args()
+    schema = json.loads(args.json_schema.read_text(encoding="utf-8"))
     schema_enums = {
         name: d["enum"]
         for name, d in sorted(schema["$defs"].items())
         if d.get("type") == "string" and "enum" in d
     }
-    lib_rs = (GENERATED / "phds-rust" / "src" / "lib.rs").read_text(encoding="utf-8")
+    lib_rs = args.rust_lib.read_text(encoding="utf-8")
     rust_enums = rust_enum_variants(lib_rs)
+    linkml_schema = args.linkml_schema or LINKML_SCHEMA_BY_CRATE.get(args.crate)
+    if linkml_schema is not None:
+        source_enums = set(
+            SchemaView(str(linkml_schema)).all_enums(imports=True)
+        )
+        schema_enum_names = set(schema_enums)
+        missing_from_schema = sorted(source_enums - schema_enum_names)
+        extra_in_schema = sorted(schema_enum_names - source_enums)
+        if missing_from_schema or extra_in_schema:
+            raise SystemExit(
+                "JSON Schema enum census differs from the LinkML import closure: "
+                f"missing={missing_from_schema}, extra={extra_in_schema}"
+            )
+    rust_only_enums = sorted(set(rust_enums) - set(schema_enums))
+    if rust_only_enums:
+        raise SystemExit(
+            f"Rust enum types absent from phds.schema.json: {rust_only_enums}"
+        )
 
     lines = []
     for name, values in schema_enums.items():
@@ -94,12 +482,21 @@ def main() -> None:
             escaped = wire.replace("\\", "\\\\").replace('"', '\\"')
             lines.append(f'    assert_round_trip({name}::{rust[wire]}, "{escaped}");')
 
-    body = HEADER.replace("{n_variants}", str(len(lines))).replace(
-        "{n_enums}", str(len(schema_enums))
+    body = (
+        HEADER.replace("{crate_name}", args.crate)
+        .replace("{n_variants}", str(len(lines)))
+        .replace("{n_enums}", str(len(schema_enums)))
     )
-    out = GENERATED / "phds-rust" / "tests" / "wire_format.rs"
-    out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(body + "\n".join(lines) + "\n}\n", encoding="utf-8")
+    footer = {
+        "phds": CORE_FOOTER + GENERIC_STRICTNESS_TESTS,
+        "phds_uad_3_6": UAD_FOOTER,
+        "phds_boma_building_class": BOMA_FOOTER,
+    }.get(args.crate, GENERIC_FOOTER)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(
+        body + "\n".join(lines) + "\n" + footer,
+        encoding="utf-8",
+    )
     print(f"wire_format.rs: {len(lines)} variants across {len(schema_enums)} enums")
 
 

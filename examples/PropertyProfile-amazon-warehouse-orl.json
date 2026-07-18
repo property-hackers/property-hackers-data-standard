@@ -3,13 +3,20 @@
     {
       "id": "party-ta-fulfillment",
       "kind": "organization",
-      "organization_kind": "llc",
+      "legal_form": {
+        "system": "urn:phds:example:legal-form",
+        "code": "llc"
+      },
       "name": "Ta Fulfillment Center Orl Llc",
       "normalized_name": "ta fulfillment center orl llc",
       "addresses": [
         {
           "address": "addr-mailing-atlanta",
-          "kind": "mailing",
+          "role": {
+            "system": "https://example.org/phds/address-role",
+            "code": "mailing",
+            "display": "Mailing"
+          },
           "is_primary": true
         }
       ]
@@ -17,42 +24,61 @@
     {
       "id": "party-relp-mojo",
       "kind": "organization",
-      "organization_kind": "llc",
+      "legal_form": {
+        "system": "urn:phds:example:legal-form",
+        "code": "llc"
+      },
       "name": "RELP MOJO LLC",
       "normalized_name": "relp mojo llc"
     },
     {
       "id": "party-crockett",
       "kind": "organization",
-      "organization_kind": "llc",
+      "legal_form": {
+        "system": "urn:phds:example:legal-form",
+        "code": "llc"
+      },
       "name": "CROCKETT DEVELOPEMENT PROPERTY LLC",
       "normalized_name": "crockett developement property llc"
     },
     {
       "id": "party-wells-fargo",
       "kind": "organization",
-      "organization_kind": "lender",
       "name": "WELLS FARGO BANK NA",
-      "normalized_name": "wells fargo bank na"
+      "normalized_name": "wells fargo bank na",
+      "classifications": [
+        {
+          "system": "urn:phds:example:party-classification",
+          "code": "bank",
+          "display": "Bank"
+        }
+      ]
     },
     {
       "id": "party-sunbelt",
       "kind": "organization",
-      "organization_kind": "corporation",
+      "legal_form": {
+        "system": "urn:phds:example:legal-form",
+        "code": "corporation"
+      },
       "name": "SUNBELT RENTALS INC",
       "normalized_name": "sunbelt rentals inc"
     },
     {
-      "id": "party-kalmanson",
+      "id": "party-example-claimant",
       "kind": "person",
-      "name": "Barry Kalmanson",
-      "normalized_name": "barry kalmanson",
-      "name_first": "Barry",
-      "name_last": "Kalmanson",
+      "name": "Example Claimant",
+      "normalized_name": "example claimant",
+      "name_first": "Example",
+      "name_last": "Claimant",
       "addresses": [
         {
           "address": "addr-trustee",
-          "kind": "physical"
+          "role": {
+            "system": "https://example.org/phds/address-role",
+            "code": "physical",
+            "display": "Physical"
+          }
         }
       ],
       "contacts": [
@@ -63,12 +89,12 @@
       ]
     },
     {
-      "id": "party-doe",
+      "id": "party-example-debtor",
       "kind": "person",
-      "name": "DOE ALEX",
-      "normalized_name": "doe alex",
-      "name_first": "Alex",
-      "name_last": "Doe"
+      "name": "Example Debtor",
+      "normalized_name": "example debtor",
+      "name_first": "Example",
+      "name_last": "Debtor"
     }
   ],
   "addresses": [
@@ -85,6 +111,7 @@
       "admin_area": "Orange",
       "admin_area_code": "12095",
       "address_hash": "example-com1-situs-hash",
+      "address_hash_scheme": "urn:phds:example-hash:pseudonymized-v1",
       "location": {
         "latitude": 28.384266,
         "longitude": -81.316246
@@ -106,6 +133,7 @@
       "postal_code_suffix": "6411",
       "admin_area": "Cobb",
       "address_hash": "example-com1-mailing-hash",
+      "address_hash_scheme": "urn:phds:example-hash:pseudonymized-v1",
       "location": {
         "latitude": 33.87812,
         "longitude": -84.45943
@@ -115,7 +143,8 @@
       "id": "addr-trustee",
       "country": "US",
       "unformatted_address": "500 N Maitland Ave Ste 305",
-      "address_hash": "trustee-500-n-maitland"
+      "address_hash": "trustee-500-n-maitland",
+      "address_hash_scheme": "urn:phds:example-hash:pseudonymized-v1"
     }
   ],
   "jurisdictions": [
@@ -133,17 +162,29 @@
     "property_use_class": "industrial",
     "property_use_type": "warehouse",
     "property_use_system": "pucs_1_0",
-    "situs_address": "addr-situs",
     "location": {
       "latitude": 28.384266,
       "longitude": -81.316246
     },
     "building_count": 2,
     "extras": {
-      "vendor_property_type_detail": "Warehouse (Industrial)",
-      "standardized_land_use_code": "5003"
+      "example_vendor.vendor_property_type_detail": "Warehouse (Industrial)",
+      "example_vendor.standardized_land_use_code": "5003"
     }
   },
+  "property_addresses": [
+    {
+      "id": "property-address-situs",
+      "property": "prop-amazon-orl",
+      "address": "addr-situs",
+      "role": {
+        "system": "https://example.org/phds/address-role",
+        "code": "situs",
+        "display": "Situs"
+      },
+      "is_primary": true
+    }
+  ],
   "identifiers": [
     {
       "id": "ident-apn-alt",
@@ -187,9 +228,9 @@
     "tract_number": "GINN - AIRPORT",
     "section_township_range": "SEC 21 TWN 24S RNG 30E",
     "extras": {
-      "estimated_lot_size_sqft": 5688807,
-      "lot_code": "P",
-      "municipality": "Un-incorporated"
+      "example_vendor.estimated_lot_size_sqft": 5688807,
+      "example_vendor.lot_code": "P",
+      "example_vendor.municipality": "Un-incorporated"
     }
   },
   "structures": [
@@ -221,8 +262,12 @@
       "exterior_wall_type": "Concrete",
       "roof_material_type": "Other",
       "roof_style_type": "Rigid Frame Bar Joist",
-      "condition_rating": "Good",
-      "rating_system": "local",
+      "condition_ratings": [{
+        "system": "urn:phds:example-rating:local",
+        "code": "good",
+        "display": "Good",
+        "scope": "overall"
+      }],
       "heating_types": [
         "Forced Air Unit"
       ],
@@ -235,19 +280,18 @@
         "Garage"
       ],
       "commercial": {
-        "building_class": null,
         "extras": {
-          "vendor_building_class": "Buildings having wood or wood and steel frames.",
-          "vendor_building_class_code": "4"
+          "example_vendor.vendor_building_class": "Buildings having wood or wood and steel frames.",
+          "example_vendor.vendor_building_class_code": "4"
         }
       },
       "extras": {
-        "bathroom_count": 73,
-        "bath_fixture_count": 219,
-        "room_count": 4,
-        "interior_walls": "Minimum/Plywood",
-        "floor_cover": "Concrete",
-        "total_building_area_code": "R"
+        "example_vendor.bathroom_count": 73,
+        "example_vendor.bath_fixture_count": 219,
+        "example_vendor.room_count": 4,
+        "example_vendor.interior_walls": "Minimum/Plywood",
+        "example_vendor.floor_cover": "Concrete",
+        "example_vendor.total_building_area_code": "R"
       }
     }
   ],
@@ -317,7 +361,6 @@
       "parties": [
         {
           "role": "grantee",
-          "name": "RELP MOJO LLC",
           "party": "party-relp-mojo",
           "sequence": 1
         }
@@ -343,13 +386,11 @@
       "parties": [
         {
           "role": "grantor",
-          "name": "CROCKETT DEVELOPEMENT PROPERTY LLC",
           "party": "party-crockett",
           "sequence": 1
         },
         {
           "role": "grantee",
-          "name": "RELP MOJO LLC",
           "party": "party-relp-mojo",
           "sequence": 1
         }
@@ -375,13 +416,11 @@
       "parties": [
         {
           "role": "grantor",
-          "name": "RELP MOJO LLC",
           "party": "party-relp-mojo",
           "sequence": 1
         },
         {
           "role": "grantee",
-          "name": "TA FULFILLMENT CENTER ORL LLC",
           "party": "party-ta-fulfillment",
           "sequence": 1
         }
@@ -413,13 +452,11 @@
       "parties": [
         {
           "role": "buyer",
-          "name": "Relp Mojo Llc",
           "party": "party-relp-mojo",
           "sequence": 1
         },
         {
           "role": "seller",
-          "name": "Crockett Developement Property Llc",
           "party": "party-crockett",
           "sequence": 1
         }
@@ -449,13 +486,11 @@
       "parties": [
         {
           "role": "buyer",
-          "name": "Ta Fulfillment Center Orl Llc",
           "party": "party-ta-fulfillment",
           "sequence": 1
         },
         {
           "role": "seller",
-          "name": "Relp Mojo Llc",
           "party": "party-relp-mojo",
           "sequence": 1
         }
@@ -475,22 +510,17 @@
         "amount": "45000",
         "currency": "USD"
       },
-      "lender_name": "WELLS FARGO BANK NA",
-      "lender_type": "bank",
       "loan_type": "commercial",
       "interest_rate": 3.95,
       "term_months": 360,
-      "status": "unknown",
       "parties": [
         {
           "role": "borrower",
-          "name": "RELP MOJO LLC",
           "party": "party-relp-mojo",
           "sequence": 1
         },
         {
           "role": "lender",
-          "name": "WELLS FARGO BANK NA",
           "party": "party-wells-fargo",
           "sequence": 1
         }
@@ -516,17 +546,15 @@
       "parties": [
         {
           "role": "claimant",
-          "name": "SUNBELT RENTALS INC",
           "party": "party-sunbelt",
           "sequence": 1
         },
         {
           "role": "debtor",
-          "name": "DOE ALEX",
-          "party": "party-doe",
+          "party": "party-example-debtor",
           "sequence": 1,
           "extras": {
-            "source_role": "Owner"
+            "example_vendor.source_role": "Owner"
           }
         }
       ]
@@ -547,23 +575,21 @@
           },
           "recorded_on": "2021-12-07",
           "extras": {
-            "transaction_id": "5109927168",
-            "status_code": "LP",
-            "status_display": "Notice of Default and Lis Pendens"
+            "example_vendor.transaction_id": "5109927168",
+            "example_vendor.status_code": "LP",
+            "example_vendor.status_display": "Notice of Default and Lis Pendens"
           }
         }
       ],
       "parties": [
         {
-          "role": "lender",
-          "name": "Sunbelt Rentals Inc",
+          "role": "claimant",
           "party": "party-sunbelt",
           "sequence": 1
         },
         {
           "role": "trustee",
-          "name": "Barry Kalmanson",
-          "party": "party-kalmanson",
+          "party": "party-example-claimant",
           "sequence": 1
         }
       ]
@@ -592,7 +618,7 @@
     "verification": "unverified"
   },
   "extras": {
-    "vendor_record_id": "example-vendor-record-com1",
-    "vendor_date_modified": "2023-08-24T08:21:28.669Z"
+    "example_vendor.vendor_record_id": "example-vendor-record-com1",
+    "example_vendor.vendor_date_modified": "2023-08-24T08:21:28.669Z"
   }
 }

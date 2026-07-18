@@ -1,0 +1,20 @@
+{
+  "property": {
+    "id": "property-unresolved-artifact"
+  },
+  "valuations": [
+    {
+      "id": "valuation-unresolved-artifact",
+      "property": "property-unresolved-artifact",
+      "kind": "appraisal",
+      "value": {
+        "amount": "100000",
+        "currency": "CAD"
+      },
+      "as_of_date": "2026-07-01",
+      "artifacts": [
+        "artifact-missing"
+      ]
+    }
+  ]
+}

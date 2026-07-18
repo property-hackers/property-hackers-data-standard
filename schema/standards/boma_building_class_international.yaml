@@ -1,0 +1,18 @@
+id: https://example.org/phds/standards/boma-building-class/international
+name: phds_boma_building_class_international
+title: PHDS BOMA International Office Building Class Profile
+license: MIT
+version: 0.2.0
+prefixes:
+  phds: https://example.org/phds/
+default_prefix: phds
+default_range: string
+imports: [boma_building_class]
+
+classes:
+  BomaInternationalBuildingClassPropertyProfile:
+    is_a: BomaInternationalPropertyProfile
+    tree_root: true
+    description: >-
+      Optional BOMA international-basis office building class interchange
+      document. Core PHDS does not depend on this profile.

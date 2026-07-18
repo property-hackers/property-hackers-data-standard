@@ -1,0 +1,40 @@
+{
+  "property": {
+    "id": "https://example.org/properties/overlapping-primary-addresses"
+  },
+  "addresses": [
+    {
+      "id": "https://example.org/addresses/first-primary",
+      "country": "JP"
+    },
+    {
+      "id": "https://example.org/addresses/second-primary",
+      "country": "JP"
+    }
+  ],
+  "property_addresses": [
+    {
+      "id": "https://example.org/property-addresses/first-primary",
+      "property": "https://example.org/properties/overlapping-primary-addresses",
+      "address": "https://example.org/addresses/first-primary",
+      "role": {
+        "system": "https://example.org/address-role",
+        "code": "situs"
+      },
+      "is_primary": true,
+      "valid_from": "2020-01-01",
+      "valid_to": "2024-12-31"
+    },
+    {
+      "id": "https://example.org/property-addresses/second-primary",
+      "property": "https://example.org/properties/overlapping-primary-addresses",
+      "address": "https://example.org/addresses/second-primary",
+      "role": {
+        "system": "https://example.org/address-role",
+        "code": "situs"
+      },
+      "is_primary": true,
+      "valid_from": "2024-12-31"
+    }
+  ]
+}

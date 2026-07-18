@@ -1,0 +1,12 @@
+{
+  "property": {"id": "property-uad-wrong-rating"},
+  "structures": [{
+    "id": "structure-uad-wrong-rating",
+    "property": "property-uad-wrong-rating",
+    "condition_ratings": [{
+      "system": "urn:phds:standard:uad:3.6:quality",
+      "code": "Q3",
+      "scope": "overall"
+    }]
+  }]
+}

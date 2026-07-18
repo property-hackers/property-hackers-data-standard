@@ -1,0 +1,13 @@
+{
+  "property": {
+    "id": "property-1"
+  },
+  "leases": [
+    {
+      "id": "lease-1",
+      "property": "property-1",
+      "commencement_date": "2026-01-01",
+      "expiration_date": "2025-01-01"
+    }
+  ]
+}

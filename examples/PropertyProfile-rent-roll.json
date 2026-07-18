@@ -1,0 +1,98 @@
+{
+  "property": {
+    "id": "property-ca-1",
+    "name": "Mixed-use property"
+  },
+  "parties": [
+    {
+      "id": "party-ca-1",
+      "kind": "organization",
+      "name": "Example Tenant Cooperative"
+    }
+  ],
+  "spaces": [
+    {
+      "id": "space-ca-101",
+      "property": "property-ca-1",
+      "space_identifier": "101"
+    }
+  ],
+  "leases": [
+    {
+      "id": "lease-ca-1",
+      "property": "property-ca-1",
+      "space": "space-ca-101",
+      "commencement_date": "2025-07-01",
+      "expiration_date": "2027-06-30"
+    }
+  ],
+  "rent_rolls": [
+    {
+      "id": "rent-roll-ca-2026-01",
+      "property": "property-ca-1",
+      "as_of_date": "2026-01-01",
+      "unit_count": 3,
+      "occupied_unit_count": 2,
+      "occupancy_pct": 66.67,
+      "total_contract_rent": {
+        "amount": "2500.00",
+        "currency": "CAD"
+      },
+      "total_market_rent": {
+        "amount": "2900.00",
+        "currency": "CAD"
+      },
+      "rent_period": "monthly",
+      "lines": [
+        {
+          "space": "space-ca-101",
+          "tenant": "party-ca-1",
+          "lease": "lease-ca-1",
+          "occupancy_status": {
+            "system": "https://example.ca/occupancy-status",
+            "code": "occupied",
+            "display": "Occupied"
+          },
+          "reported_area": {
+            "value": 92.9,
+            "unit": "sqm"
+          },
+          "contract_rent": {
+            "amount": "700.00",
+            "currency": "CAD"
+          },
+          "market_rent": {
+            "amount": "850.00",
+            "currency": "CAD"
+          }
+        },
+        {
+          "occupancy_status": {
+            "system": "https://example.ca/occupancy-status",
+            "code": "occupied",
+            "display": "Occupied"
+          },
+          "contract_rent": {
+            "amount": "800.00",
+            "currency": "CAD"
+          },
+          "market_rent": {
+            "amount": "900.00",
+            "currency": "CAD"
+          }
+        },
+        {
+          "occupancy_status": {
+            "system": "https://example.ca/occupancy-status",
+            "code": "vacant",
+            "display": "Vacant"
+          },
+          "market_rent": {
+            "amount": "1000.00",
+            "currency": "CAD"
+          }
+        }
+      ]
+    }
+  ]
+}

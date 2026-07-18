@@ -12,7 +12,7 @@ id: https://example.org/phds
 name: phds
 title: PHDS
 license: MIT
-version: 0.1.0
+version: 0.2.0
 
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -80,6 +80,7 @@ classes:
       profile: {range: PropertyProfile, inlined: true}
       error: {}
       provenance: {range: Provenance, required: true}
+      artifact_refs: {range: SourceArtifact, multivalued: true, inlined: false, description: "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent."}
       extras: {range: Any}
 
   ExtractionObservation:
@@ -103,4 +104,5 @@ classes:
       model: {description: Extraction model identifier}
       profile: {range: PropertyProfile, inlined: true}
       provenance: {range: Provenance, required: true}
+      artifact_refs: {range: SourceArtifact, multivalued: true, inlined: false, description: "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent."}
       extras: {range: Any}

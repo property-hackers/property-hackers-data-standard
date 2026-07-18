@@ -1,0 +1,67 @@
+{
+  "property": {
+    "id": "https://example.org/properties/physical-state-example",
+    "property_use_class": "commercial",
+    "property_use_type": "office",
+    "property_use_system": "https://example.org/property-use"
+  },
+  "structures": [
+    {
+      "id": "https://example.org/structures/physical-state-example-building",
+      "property": "https://example.org/properties/physical-state-example",
+      "kind": "building",
+      "gross_area": {
+        "value": 12500,
+        "unit": "sqft"
+      }
+    }
+  ],
+  "property_state_snapshots": [
+    {
+      "id": "https://example.org/property-state-snapshots/physical-state-example-2019",
+      "property": "https://example.org/properties/physical-state-example",
+      "as_of_date": "2019-06-14",
+      "basis": {
+        "system": "https://example.org/property-state-basis",
+        "code": "at_sale"
+      },
+      "structure_states": [
+        {
+          "id": "https://example.org/structure-states/physical-state-example-2019",
+          "subject": "https://example.org/structures/physical-state-example-building",
+          "gross_area": {
+            "value": 12000,
+              "unit": "sqft"
+          }
+        }
+      ]
+    },
+    {
+      "id": "https://example.org/property-state-snapshots/physical-state-example-2024",
+      "property": "https://example.org/properties/physical-state-example",
+      "as_of_date": "2024-10-03",
+      "basis": {
+        "system": "https://example.org/property-state-basis",
+        "code": "inspection"
+      },
+      "structure_states": [
+        {
+          "id": "https://example.org/structure-states/physical-state-example-2024",
+          "subject": "https://example.org/structures/physical-state-example-building",
+          "condition_ratings": [{
+            "system": "https://example.org/condition-rating",
+            "code": "good"
+          }]
+        }
+      ]
+    }
+  ],
+  "sales": [
+    {
+      "id": "https://example.org/sales/physical-state-example-2019",
+      "property": "https://example.org/properties/physical-state-example",
+      "property_state": "https://example.org/property-state-snapshots/physical-state-example-2019",
+      "sale_date": "2019-06-14"
+    }
+  ]
+}

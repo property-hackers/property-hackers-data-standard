@@ -1,0 +1,150 @@
+{% include "upstream/serde_utils.rs.jinja" %}
+
+#[cfg(feature = "serde")]
+fn is_phds_boundary_whitespace(value: char) -> bool {
+    matches!(
+        value,
+        '\u{0009}'..='\u{000D}'
+            | '\u{0020}'
+            | '\u{0085}'
+            | '\u{00A0}'
+            | '\u{1680}'
+            | '\u{2000}'..='\u{200A}'
+            | '\u{2028}'
+            | '\u{2029}'
+            | '\u{202F}'
+            | '\u{205F}'
+            | '\u{3000}'
+            | '\u{FEFF}'
+    )
+}
+
+#[cfg(feature = "serde")]
+fn validate_nonblank_trimmed_string<E>(value: String) -> Result<String, E>
+where
+    E: serde::de::Error,
+{
+    let mut characters = value.chars();
+    let first = characters.next();
+    let last = value.chars().next_back();
+    if first.is_none()
+        || first.is_some_and(is_phds_boundary_whitespace)
+        || last.is_some_and(is_phds_boundary_whitespace)
+    {
+        return Err(E::custom(
+            "value must be nonblank with no leading or trailing boundary whitespace",
+        ));
+    }
+    Ok(value)
+}
+
+#[cfg(feature = "serde")]
+pub fn deserialize_nonblank_trimmed_string<'de, D>(
+    deserializer: D,
+) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    validate_nonblank_trimmed_string(String::deserialize(deserializer)?)
+}
+
+#[cfg(feature = "serde")]
+pub fn deserialize_nonblank_trimmed_string_optional<'de, D>(
+    deserializer: D,
+) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::<String>::deserialize(deserializer)?
+        .map(validate_nonblank_trimmed_string)
+        .transpose()
+}
+
+#[cfg(feature = "serde")]
+fn validate_decimal_string<E>(value: String) -> Result<String, E>
+where
+    E: serde::de::Error,
+{
+    let bytes = value.as_bytes();
+    let mut index = usize::from(bytes.first() == Some(&b'-'));
+    let integer_start = index;
+    while bytes.get(index).is_some_and(u8::is_ascii_digit) {
+        index += 1;
+    }
+    if index == integer_start {
+        return Err(E::custom("value must be a canonical decimal string"));
+    }
+    if index < bytes.len() {
+        if bytes[index] != b'.' {
+            return Err(E::custom("value must be a canonical decimal string"));
+        }
+        index += 1;
+        let fraction_start = index;
+        while bytes.get(index).is_some_and(u8::is_ascii_digit) {
+            index += 1;
+        }
+        if index == fraction_start {
+            return Err(E::custom("value must be a canonical decimal string"));
+        }
+    }
+    if index != bytes.len() {
+        return Err(E::custom("value must be a canonical decimal string"));
+    }
+    Ok(value)
+}
+
+#[cfg(feature = "serde")]
+fn validate_ascii_uppercase_code<E>(
+    value: String,
+    length: usize,
+    label: &str,
+) -> Result<String, E>
+where
+    E: serde::de::Error,
+{
+    if value.len() != length || !value.bytes().all(|byte| byte.is_ascii_uppercase()) {
+        return Err(E::custom(format!(
+            "value must be an uppercase ASCII {label} code of length {length}"
+        )));
+    }
+    Ok(value)
+}
+
+#[cfg(feature = "serde")]
+fn validate_iso_currency<E>(value: String) -> Result<String, E>
+where
+    E: serde::de::Error,
+{
+    validate_ascii_uppercase_code(value, 3, "currency")
+}
+
+#[cfg(feature = "serde")]
+fn validate_iso_country<E>(value: String) -> Result<String, E>
+where
+    E: serde::de::Error,
+{
+    validate_ascii_uppercase_code(value, 2, "country")
+}
+
+{% for validator in ['decimal_string', 'iso_currency', 'iso_country'] %}
+#[cfg(feature = "serde")]
+pub fn deserialize_{{ validator }}<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    validate_{{ validator }}(String::deserialize(deserializer)?)
+}
+
+#[cfg(feature = "serde")]
+#[allow(dead_code)]
+pub fn deserialize_{{ validator }}_optional<'de, D>(
+    deserializer: D,
+) -> Result<Option<String>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    Option::<String>::deserialize(deserializer)?
+        .map(validate_{{ validator }})
+        .transpose()
+}
+{% endfor %}

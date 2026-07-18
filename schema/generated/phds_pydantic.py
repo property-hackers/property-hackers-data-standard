@@ -28,9 +28,12 @@ from pydantic import (
     model_serializer
 )
 
+import math
+from pydantic import field_serializer
+
 
 metamodel_version = "1.11.0"
-version = "0.1.0"
+version = "0.2.0"
 
 
 class ConfiguredBaseModel(BaseModel):
@@ -44,6 +47,23 @@ class ConfiguredBaseModel(BaseModel):
         use_enum_values = True,
         strict = False,
     )
+
+    @field_serializer("*", when_used="json", check_fields=False)
+    def serialize_decimals_as_json_numbers(self, value: Any) -> Any:
+        if isinstance(value, Decimal):
+            if not value.is_finite():
+                raise ValueError(
+                    f"Decimal {value!r} is not a finite JSON number"
+                )
+            if value == value.to_integral_value():
+                return int(value)
+            candidate = float(value)
+            if not math.isfinite(candidate) or Decimal(str(candidate)) != value:
+                raise ValueError(
+                    f"Decimal {value!r} cannot be represented exactly as a JSON number"
+                )
+            return candidate
+        return value
 
 
 
@@ -112,22 +132,6 @@ class PartyKind(str, Enum):
     organization = "organization"
 
 
-class OrganizationKind(str, Enum):
-    llc = "llc"
-    corporation = "corporation"
-    partnership = "partnership"
-    trust = "trust"
-    estate = "estate"
-    government = "government"
-    nonprofit = "nonprofit"
-    reit = "reit"
-    fund = "fund"
-    lender = "lender"
-    brokerage = "brokerage"
-    hoa = "hoa"
-    other = "other"
-
-
 class SaleTypeEnum(str, Enum):
     arms_length = "arms_length"
     reo = "reo"
@@ -191,6 +195,7 @@ class RateBasis(str, Enum):
 
 class RateType(str, Enum):
     asking = "asking"
+    market = "market"
     effective = "effective"
     contract = "contract"
 
@@ -217,15 +222,6 @@ class ValuationKind(str, Enum):
     bpo = "bpo"
     broker_opinion = "broker_opinion"
     internal = "internal"
-
-
-class LoanStatus(str, Enum):
-    active = "active"
-    satisfied = "satisfied"
-    assigned = "assigned"
-    foreclosure = "foreclosure"
-    released = "released"
-    unknown = "unknown"
 
 
 class LoanEventKind(str, Enum):
@@ -256,9 +252,18 @@ class ParcelLineageKind(str, Enum):
 
 class EstateType(str, Enum):
     fee_simple = "fee_simple"
+    leased_fee = "leased_fee"
     leasehold = "leasehold"
     life_estate = "life_estate"
     cooperative_shares = "cooperative_shares"
+    other = "other"
+
+
+class RatingScope(str, Enum):
+    overall = "overall"
+    exterior = "exterior"
+    interior = "interior"
+    component = "component"
     other = "other"
 
 
@@ -457,9 +462,85 @@ class CodeableConcept(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/core'})
 
-    system: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept']} })
-    code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept']} })
+    system: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept', 'Classification', 'Rating']} })
+    code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept', 'Classification', 'Rating']} })
     display: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept']} })
+
+
+class Classification(CodeableConcept):
+    """
+    An open-vocabulary classification qualified by the system that defines its code. Codes from different systems are not assumed equivalent.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/core'})
+
+    system: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept', 'Classification', 'Rating']} })
+    code: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept', 'Classification', 'Rating']} })
+    display: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept']} })
+
+    @field_validator('system')
+    def pattern_system(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid system format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid system format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('code')
+    def pattern_code(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid code format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid code format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class Rating(CodeableConcept):
+    """
+    A rating qualified by the system that defines its code. PHDS does not assume codes from different systems are ordinally or semantically equal.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/core'})
+
+    system: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept', 'Classification', 'Rating']} })
+    code: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept', 'Classification', 'Rating']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Rating', 'Renovation', 'Permit']} })
+    scope: Optional[RatingScope] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Rating']} })
+    display: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CodeableConcept']} })
+
+    @field_validator('system')
+    def pattern_system(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid system format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid system format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('code')
+    def pattern_code(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid code format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid code format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class GeoPoint(ConfiguredBaseModel):
@@ -492,17 +573,18 @@ class Provenance(ConfiguredBaseModel):
     source_url: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance', 'ExtractionObservation']} })
     retrieved_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
     method: Optional[CaptureMethod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
-    confidence: Optional[float] = Field(default=None, ge=0, le=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
+    confidence: Optional[float] = Field(default=None, description="""Fraction from 0 through 1; 0.8 means 80 percent confidence.""", ge=0, le=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
     verification: Optional[VerificationStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
 
 
 class Entity(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'abstract': True, 'from_schema': 'https://example.org/phds/entities'})
 
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -520,6 +602,7 @@ class Entity(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -535,6 +618,20 @@ class Entity(ConfiguredBaseModel):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class InstrumentReference(ConfiguredBaseModel):
@@ -550,6 +647,7 @@ class InstrumentReference(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -567,6 +665,7 @@ class InstrumentReference(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -587,26 +686,26 @@ class RecordedInstrument(ConfiguredBaseModel):
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
 
 
 class TransactionParty(ConfiguredBaseModel):
     """
-    A participant in an event, as recorded on the instrument. `name` is the immutable recorded fact; `party` is optional resolution to a canonical Party. Multi-party is the norm (couples on deeds, co-borrowers).
+    A contextual role-bearing relationship from an event or record to a canonical Party. Exact source wording belongs in provenance or source artifacts, not in a second actor-name field. Multi-party is the norm (couples on deeds, co-borrowers).
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'abstract': True, 'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -624,9 +723,23 @@ class TransactionParty(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Jurisdiction(Entity):
@@ -634,18 +747,13 @@ class Jurisdiction(Entity):
 
     country: str = Field(default=..., description="""ISO 3166-1 alpha-2 (no default — i18n)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'Address']} })
     region: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'Address']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
+    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
     kind: str = Field(default=..., description="""county | municipality | taxing_district | ... (open vocab)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -656,10 +764,11 @@ class Jurisdiction(Entity):
     authority_code: Optional[str] = Field(default=None, description="""US: FIPS/GEOID""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction']} })
     parent: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction']} })
     boundary: Optional[Geometry] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'Parcel']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -677,6 +786,7 @@ class Jurisdiction(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -692,6 +802,7 @@ class Jurisdiction(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('country')
     def pattern_country(cls, v):
@@ -706,12 +817,25 @@ class Jurisdiction(Entity):
             raise ValueError(err_msg)
         return v
 
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
 
 class Address(Entity):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     country: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'Address']} })
-    unformatted_address: Optional[str] = Field(default=None, description="""Fallback when components don't parse""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
+    unformatted_address: Optional[str] = Field(default=None, description="""Fallback when components do not parse""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
     street_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
     street_pre_direction: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
     street_name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
@@ -725,14 +849,16 @@ class Address(Entity):
     postal_code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
     postal_code_suffix: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
     admin_area: Optional[str] = Field(default=None, description="""county/district name""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
-    admin_area_code: Optional[str] = Field(default=None, description="""authority code (US: county FIPS)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
-    address_hash: str = Field(default=..., description="""App-computed dedup key""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
-    location: Optional[GeoPoint] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'Property']} })
+    admin_area_code: Optional[str] = Field(default=None, description="""authority code""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
+    address_hash: Optional[str] = Field(default=None, description="""Producer-computed matching key; comparable only under the same scheme""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
+    address_hash_scheme: Optional[str] = Field(default=None, description="""Producer-namespaced normalization and hashing scheme""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
+    location: Optional[GeoPoint] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'PropertyFacts']} })
     location_accuracy: Optional[GeocodeAccuracy] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -750,6 +876,7 @@ class Address(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -765,6 +892,7 @@ class Address(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('country')
     def pattern_country(cls, v):
@@ -779,31 +907,79 @@ class Address(Entity):
             raise ValueError(err_msg)
         return v
 
+    @field_validator('address_hash')
+    def pattern_address_hash(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid address_hash format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid address_hash format: {v}"
+            raise ValueError(err_msg)
+        return v
 
-class Property(Entity):
-    """
-    The immutable anchor. Parcel numbers/APNs/vendor IDs are labels about a property, never its key.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+    @field_validator('address_hash_scheme')
+    def pattern_address_hash_scheme(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid address_hash_scheme format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid address_hash_scheme format: {v}"
+            raise ValueError(err_msg)
+        return v
 
-    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    property_use_class: Optional[str] = Field(default=None, description="""PUCS class when property_use_system = pucs_1_0""", json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    property_use_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    property_use_subtype: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    property_use_system: Optional[str] = Field(default=None, description="""'pucs_1_0' | local system; REQUIRED when use fields are set (no default)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    estate_type: Optional[EstateType] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    situs_address: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    location: Optional[GeoPoint] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'Property']} })
-    building_count: Optional[int] = Field(default=None, description="""Vendor summary when structures are not enumerated""", json_schema_extra = { "linkml_meta": {'domain_of': ['Property']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class PropertyFacts(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixin': True})
+
+    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    property_use_class: Optional[str] = Field(default=None, description="""PUCS class when property_use_system identifies PUCS""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_subtype: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_system: Optional[str] = Field(default=None, description="""Required when use fields are set; no default""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    estate_type: Optional[EstateType] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    location: Optional[GeoPoint] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'PropertyFacts']} })
+    building_count: Optional[int] = Field(default=None, description="""Producer summary when structures are not enumerated""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+
+
+class Property(PropertyFacts, Entity):
+    """
+    Stable property identity; mutable descriptive fields come from PropertyFacts.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['PropertyFacts']})
+
+    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    property_use_class: Optional[str] = Field(default=None, description="""PUCS class when property_use_system identifies PUCS""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_subtype: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_system: Optional[str] = Field(default=None, description="""Required when use fields are set; no default""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    estate_type: Optional[EstateType] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    location: Optional[GeoPoint] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'PropertyFacts']} })
+    building_count: Optional[int] = Field(default=None, description="""Producer summary when structures are not enumerated""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -821,6 +997,7 @@ class Property(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -836,6 +1013,20 @@ class Property(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Parcel(Entity):
@@ -846,7 +1037,7 @@ class Parcel(Entity):
                                                                   'unit_designator',
                                                                   'retired_on']}}})
 
-    jurisdiction: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill']} })
+    jurisdiction: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
     parcel_number: str = Field(default=..., description="""RAW as issued (RESO UPI rule)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel'], 'exact_mappings': ['reso:ParcelNumber']} })
     normalized_parcel_number: Optional[str] = Field(default=None, description="""Matching only, never identity""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     unit_designator: Optional[str] = Field(default=None, description="""Condo sub-parcel discriminator""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
@@ -855,10 +1046,11 @@ class Parcel(Entity):
     land_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     boundary: Optional[Geometry] = Field(default=None, description="""GeoJSON MultiPolygon (optional)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'Parcel']} })
     retired_on: Optional[date] = Field(default=None, description="""Set by lineage events""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -876,6 +1068,7 @@ class Parcel(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -891,6 +1084,20 @@ class Parcel(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class PropertyParcel(Entity):
@@ -904,10 +1111,12 @@ class PropertyParcel(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -919,16 +1128,18 @@ class PropertyParcel(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'PartyAddress', 'PartyContact']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
     started_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
     ended_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -946,6 +1157,7 @@ class PropertyParcel(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -961,6 +1173,20 @@ class PropertyParcel(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class ParcelLineage(Entity):
@@ -971,9 +1197,9 @@ class ParcelLineage(Entity):
     kind: ParcelLineageKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -982,10 +1208,11 @@ class ParcelLineage(Entity):
                        'Permit',
                        'Valuation']} })
     effective_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1003,6 +1230,7 @@ class ParcelLineage(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1018,6 +1246,20 @@ class ParcelLineage(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class PropertyIdentifier(Entity):
@@ -1032,10 +1274,12 @@ class PropertyIdentifier(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -1047,6 +1291,7 @@ class PropertyIdentifier(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     scheme: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier']} })
@@ -1056,10 +1301,11 @@ class PropertyIdentifier(Entity):
                        'PropertyIdentifier',
                        'PartyContact',
                        'Valuation']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1077,6 +1323,7 @@ class PropertyIdentifier(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1092,20 +1339,34 @@ class PropertyIdentifier(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Party(Entity):
     """
-    One model for every actor — owners, buyers, borrowers, lenders, brokers, trustees, claimants, contractors, HOAs.
+    One canonical model for every actor — owners, buyers, tenants and lessees, borrowers, lenders, brokers, trustees, claimants, contractors, associations, and valuation performers.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     kind: PartyKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -1113,24 +1374,20 @@ class Party(Entity):
                        'Lien',
                        'Permit',
                        'Valuation']} })
-    organization_kind: Optional[OrganizationKind] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
-    name: str = Field(default=..., description="""Display name as recorded""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    normalized_name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
-    name_first: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
-    name_middle: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
-    name_last: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
-    license_number: Optional[str] = Field(default=None, description="""Agents / brokers / appraisers""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
+    legal_form: Optional[Classification] = Field(default=None, description="""Optional system-qualified legal form for an organization under an identified jurisdictional or producer vocabulary. This is not an industry classification or a contextual role such as lender, broker, tenant, or association.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
+    name: str = Field(default=..., description="""Canonical display name for this Party in the profile; nonblank with no leading or trailing whitespace. Source-specific wording is attributed through provenance or SourceArtifact.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    normalized_name: Optional[str] = Field(default=None, description="""Producer-derived matching key for the canonical display name. Its normalization algorithm is producer-defined; it is not authoritative display text or a separate identity.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
+    name_first: Optional[str] = Field(default=None, description="""Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
+    name_middle: Optional[str] = Field(default=None, description="""Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
+    name_last: Optional[str] = Field(default=None, description="""Optional producer-derived parsed component of a person's canonical display name; not an independent identity and not universally applicable across naming systems.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
+    classifications: Optional[list[Classification]] = Field(default=None, description="""System-qualified actor classifications from an open vocabulary; use producer-namespaced system and code values""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
     addresses: Optional[list[PartyAddress]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party', 'PropertyProfile']} })
     contacts: Optional[list[PartyContact]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Party']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1148,6 +1405,7 @@ class Party(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1163,32 +1421,48 @@ class Party(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('name')
+    def pattern_name(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid name format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid name format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
-class PartyAddress(ConfiguredBaseModel):
+class VerificationAttribution(ConfiguredBaseModel):
     """
-    mailing | physical | registered_agent | previous | other
+    Verification performed by one canonical party.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PartyAddress']} })
-    kind: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
-                       'ParcelLineage',
-                       'Party',
-                       'PartyAddress',
-                       'PartyContact',
-                       'Structure',
-                       'AreaMeasure',
-                       'Renovation',
-                       'TaxExemption',
-                       'Listing',
-                       'Lien',
-                       'Permit',
-                       'Valuation']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'PartyAddress', 'PartyContact']} })
+    verifier: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['VerificationAttribution']} })
+    verified_at: datetime  = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['VerificationAttribution']} })
+    note: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['VerificationAttribution']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1206,6 +1480,76 @@ class PartyAddress(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+
+    @field_validator('verifier')
+    def pattern_verifier(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid verifier format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid verifier format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class SourceArtifact(Entity):
+    """
+    Source material that supports or preserves an assertion. Semantic validation requires at least one nonblank uri or storage_reference.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    uri: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    storage_reference: Optional[str] = Field(default=None, description="""Producer-defined object or document storage reference""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    media_type: Optional[str] = Field(default=None, description="""MIME media type""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    kind: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+                       'ParcelLineage',
+                       'Party',
+                       'SourceArtifact',
+                       'PartyContact',
+                       'StructureFacts',
+                       'AreaMeasure',
+                       'Renovation',
+                       'TaxExemption',
+                       'Listing',
+                       'Lien',
+                       'Permit',
+                       'Valuation']} })
+    title: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    original_filename: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    content_hash: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    hash_scheme: Optional[str] = Field(default=None, description="""Producer-namespaced content hashing scheme""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    page_count: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    captured_on: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1221,6 +1565,254 @@ class PartyAddress(ConfiguredBaseModel):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('uri')
+    def pattern_uri(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid uri format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid uri format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('storage_reference')
+    def pattern_storage_reference(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid storage_reference format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid storage_reference format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('content_hash')
+    def pattern_content_hash(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid content_hash format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid content_hash format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('hash_scheme')
+    def pattern_hash_scheme(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid hash_scheme format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid hash_scheme format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class AddressAssociation(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixin': True})
+
+    address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    role: Optional[CodeableConcept] = Field(default=None, description="""situs | entrance | alias | address_range | former | mailing | other (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+
+    @field_validator('address')
+    def pattern_address(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid address format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid address format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class PartyAddress(AddressAssociation):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['AddressAssociation']})
+
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    role: Optional[CodeableConcept] = Field(default=None, description="""situs | entrance | alias | address_range | former | mailing | other (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+
+    @field_validator('address')
+    def pattern_address(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid address format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid address format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class PropertyAddress(AddressAssociation, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['AddressAssociation']})
+
+    property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'PropertyIdentifier',
+                       'PropertyAddress',
+                       'OwnershipPeriod',
+                       'Structure',
+                       'Site',
+                       'Space',
+                       'PropertyStateSnapshot',
+                       'PropertyAssociation',
+                       'Transfer',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'UnitRentObservation',
+                       'Loan',
+                       'Lien',
+                       'ForeclosureCase',
+                       'Permit',
+                       'OperatingStatement',
+                       'RentRoll',
+                       'Valuation',
+                       'PropertyProfile']} })
+    address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    role: Optional[CodeableConcept] = Field(default=None, description="""situs | entrance | alias | address_range | former | mailing | other (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('address')
+    def pattern_address(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid address format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid address format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class PartyContact(ConfiguredBaseModel):
@@ -1229,9 +1821,9 @@ class PartyContact(ConfiguredBaseModel):
     kind: str = Field(default=..., description="""phone | email | website | other""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -1245,11 +1837,12 @@ class PartyContact(ConfiguredBaseModel):
                        'PartyContact',
                        'Valuation']} })
     label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PartyContact', 'StatementLineItem']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'PartyAddress', 'PartyContact']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
     do_not_contact: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PartyContact']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1267,6 +1860,7 @@ class PartyContact(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1292,10 +1886,12 @@ class OwnershipPeriod(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -1307,6 +1903,7 @@ class OwnershipPeriod(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     started_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
@@ -1316,10 +1913,11 @@ class OwnershipPeriod(Entity):
     acquired_via_transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipPeriod']} })
     disposed_via_transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipPeriod']} })
     interests: Optional[list[OwnershipInterest]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipPeriod']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1337,6 +1935,7 @@ class OwnershipPeriod(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1352,18 +1951,46 @@ class OwnershipPeriod(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('mailing_address')
+    def pattern_mailing_address(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid mailing_address format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid mailing_address format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class OwnershipInterest(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
-    interest_pct: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipInterest']} })
-    role: Optional[str] = Field(default=None, description="""owner | trustee | gp | lp""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
+    interest_pct: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 75 means 75 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipInterest']} })
+    role: Optional[str] = Field(default=None, description="""owner | trustee | gp | lp""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
     is_owner_occupied: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipInterest']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1381,20 +2008,89 @@ class OwnershipInterest(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
 
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
-class Structure(Entity):
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+class StructureFacts(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixin': True})
+
+    kind: Optional[str] = Field(default=None, description="""building | barn | silo | shed | outbuilding | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+                       'ParcelLineage',
+                       'Party',
+                       'SourceArtifact',
+                       'PartyContact',
+                       'StructureFacts',
+                       'AreaMeasure',
+                       'Renovation',
+                       'TaxExemption',
+                       'Listing',
+                       'Lien',
+                       'Permit',
+                       'Valuation']} })
+    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    structure_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    living_area: Optional[Area] = Field(default=None, description="""Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts'], 'exact_mappings': ['reso:LivingArea']} })
+    gross_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    rentable_area: Optional[Area] = Field(default=None, description="""Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'SpaceFacts']} })
+    ground_floor_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    basement_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    basement_finished_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    garage_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    areas: Optional[list[AreaMeasure]] = Field(default=None, description="""Long-tail area kinds; canonical kinds forbidden here (validator-enforced)""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    year_built: Optional[int] = Field(default=None, ge=1, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts'], 'exact_mappings': ['reso:YearBuilt']} })
+    year_built_estimated: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    effective_year_built: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    stories: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    unit_count: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'UnitRentObservation', 'RentRoll']} })
+    construction_method: Optional[str] = Field(default=None, description="""site_built | manufactured | modular | container | 3d_printed | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    construction_status: Optional[str] = Field(default=None, description="""complete | proposed | under_construction""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    construction_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    exterior_wall_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    roof_material_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    roof_style_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    foundation_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    foundation_material: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    condition_ratings: Optional[list[Rating]] = Field(default=None, description="""Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    quality_ratings: Optional[list[Rating]] = Field(default=None, description="""Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    heating_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    heating_fuel_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    cooling_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    sewer_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    water_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    features: Optional[list[str]] = Field(default=None, description="""Open vocabulary for physical features and amenities""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    residential: Optional[ResidentialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    commercial: Optional[CommercialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    renovations: Optional[list[Renovation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+
+
+class Structure(StructureFacts, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['StructureFacts']})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -1406,14 +2102,15 @@ class Structure(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     kind: Optional[str] = Field(default=None, description="""building | barn | silo | shed | outbuilding | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -1421,50 +2118,45 @@ class Structure(Entity):
                        'Lien',
                        'Permit',
                        'Valuation']} })
-    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    structure_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    living_area: Optional[Area] = Field(default=None, description="""Finished above-grade living area per UAD 3.6 definition""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure'], 'exact_mappings': ['reso:LivingArea']} })
-    gross_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    rentable_area: Optional[Area] = Field(default=None, description="""BOMA definitions""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure', 'Space']} })
-    ground_floor_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    basement_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    basement_finished_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    garage_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    areas: Optional[list[AreaMeasure]] = Field(default=None, description="""Long-tail area kinds; canonical kinds forbidden here (validator-enforced)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    year_built: Optional[int] = Field(default=None, ge=1, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure'], 'exact_mappings': ['reso:YearBuilt']} })
-    year_built_estimated: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    effective_year_built: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    stories: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    unit_count: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure', 'UnitRentObservation']} })
-    construction_method: Optional[str] = Field(default=None, description="""site_built | manufactured | modular | container | 3d_printed | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    construction_status: Optional[str] = Field(default=None, description="""complete | proposed | under_construction""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    construction_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    exterior_wall_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    roof_material_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    roof_style_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    foundation_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    foundation_material: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    condition_rating: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    quality_rating: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    rating_system: Optional[str] = Field(default=None, description="""'uad_3_6' (C1–C6/Q1–Q6) | 'local' | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    heating_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    heating_fuel_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    cooling_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    sewer_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    water_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    features: Optional[list[str]] = Field(default=None, description="""Open vocab seeded from UAD AmenityBase""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    residential: Optional[ResidentialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    commercial: Optional[CommercialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    renovations: Optional[list[Renovation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    structure_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    living_area: Optional[Area] = Field(default=None, description="""Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts'], 'exact_mappings': ['reso:LivingArea']} })
+    gross_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    rentable_area: Optional[Area] = Field(default=None, description="""Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'SpaceFacts']} })
+    ground_floor_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    basement_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    basement_finished_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    garage_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    areas: Optional[list[AreaMeasure]] = Field(default=None, description="""Long-tail area kinds; canonical kinds forbidden here (validator-enforced)""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    year_built: Optional[int] = Field(default=None, ge=1, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts'], 'exact_mappings': ['reso:YearBuilt']} })
+    year_built_estimated: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    effective_year_built: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    stories: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    unit_count: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'UnitRentObservation', 'RentRoll']} })
+    construction_method: Optional[str] = Field(default=None, description="""site_built | manufactured | modular | container | 3d_printed | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    construction_status: Optional[str] = Field(default=None, description="""complete | proposed | under_construction""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    construction_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    exterior_wall_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    roof_material_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    roof_style_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    foundation_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    foundation_material: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    condition_ratings: Optional[list[Rating]] = Field(default=None, description="""Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    quality_ratings: Optional[list[Rating]] = Field(default=None, description="""Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    heating_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    heating_fuel_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    cooling_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    sewer_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    water_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    features: Optional[list[str]] = Field(default=None, description="""Open vocabulary for physical features and amenities""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    residential: Optional[ResidentialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    commercial: Optional[CommercialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    renovations: Optional[list[Renovation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1482,6 +2174,7 @@ class Structure(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1497,6 +2190,20 @@ class Structure(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class AreaMeasure(ConfiguredBaseModel):
@@ -1505,9 +2212,9 @@ class AreaMeasure(ConfiguredBaseModel):
     kind: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -1519,6 +2226,7 @@ class AreaMeasure(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1536,6 +2244,7 @@ class AreaMeasure(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1543,7 +2252,7 @@ class AreaMeasure(ConfiguredBaseModel):
 
 class ResidentialDetails(ConfiguredBaseModel):
     """
-    International core; the UAD 3.6 profile constrains enums for US appraisal use. A CURRENT-STATE snapshot dated by provenance.retrieved_at (see CommercialDetails note).
+    Internationally neutral residential facts. When nested in Structure, these fields describe observation-derived current state. When nested in StructureState, they are asserted historical facts governed by PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval metadata, not the effective date. Events reference a separately bundled PropertyStateSnapshot rather than containing the snapshot. Optional standards profiles may constrain values for a specific use case.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
@@ -1563,11 +2272,12 @@ class ResidentialDetails(ConfiguredBaseModel):
     has_attic: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails']} })
     has_adu: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails']} })
     adu_legally_rentable: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails']} })
-    occupancy: Optional[str] = Field(default=None, description="""owner_occupied | tenant | vacant""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'Space']} })
+    occupancy: Optional[str] = Field(default=None, description="""owner_occupied | tenant | vacant""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'SpaceFacts']} })
     renewable_energy_components: Optional[list[str]] = Field(default=None, description="""solar | geothermal | wind""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1585,6 +2295,7 @@ class ResidentialDetails(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1604,19 +2315,19 @@ class ResidentialDetails(ConfiguredBaseModel):
 
 class CommercialDetails(ConfiguredBaseModel):
     """
-    BOMA/OSCRE-cited semantics. Like all detail records, this is a CURRENT-STATE snapshot whose as-of date is provenance.retrieved_at; time-varying fields (occupancy_pct, tenant_count, condition) are not individually dated. Historical/per-period figures belong on dated records: OperatingStatement, UnitRentObservation, or as-of-event snapshots on SaleEvent.
+    Internationally neutral commercial facts. When nested in Structure, these fields describe observation-derived current state. When nested in StructureState, they are asserted historical facts governed by PropertyStateSnapshot.as_of_date. provenance.retrieved_at is retrieval metadata, not the effective date. Historical/per-period financial figures belong on dated records such as OperatingStatement and UnitRentObservation. Events reference a separately bundled PropertyStateSnapshot rather than containing the snapshot. Optional standards profiles may constrain values for a specific use case.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    building_class: Optional[str] = Field(default=None, description="""A | B | C""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
+    market_classification: Optional[Rating] = Field(default=None, description="""Competitive market positioning under the named rating system; distinct from physical condition and construction quality.""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     clear_height: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     dock_doors: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     drive_in_doors: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
-    occupancy_pct: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
+    occupancy_pct: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 95 means 95 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails', 'RentRoll']} })
     parking_spaces: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'CommercialDetails']} })
     parking_ratio: Optional[UnitRate] = Field(default=None, description="""e.g. spaces per 1000 sqft — denominator explicit""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     tenancy: Optional[str] = Field(default=None, description="""single_tenant | multi_tenant""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
-    tenant_count: Optional[int] = Field(default=None, description="""Distinct legal tenants (not suites or leases); current-state, dated by provenance""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
+    tenant_count: Optional[int] = Field(default=None, description="""Distinct legal tenants (not suites or leases); timing follows the containing Structure or StructureState context""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     parking_types: Optional[list[str]] = Field(default=None, description="""surface | structured | underground | covered | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     has_sprinkler: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
     elevators: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails']} })
@@ -1624,6 +2335,7 @@ class CommercialDetails(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1641,6 +2353,7 @@ class CommercialDetails(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1667,9 +2380,9 @@ class Renovation(ConfiguredBaseModel):
     kind: Optional[str] = Field(default=None, description="""kitchen | bath | roof | addition | gut | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -1677,13 +2390,14 @@ class Renovation(ConfiguredBaseModel):
                        'Lien',
                        'Permit',
                        'Valuation']} })
-    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation', 'Permit']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Rating', 'Renovation', 'Permit']} })
     completed_year: Optional[int] = Field(default=None, ge=1, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
     completed_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
     cost: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1701,6 +2415,7 @@ class Renovation(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1718,18 +2433,47 @@ class Renovation(ConfiguredBaseModel):
                        'ExtractionObservation']} })
 
 
-class Site(Entity):
-    """
-    1:1 with property.
-    """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+class SiteFacts(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixin': True})
+
+    lot_size: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    usable_land_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    usable_land_area_basis: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    land_use: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    land_use_category: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    zoning_code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    flood_zone: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    hazard_zones: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    view_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    site_influences: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    easements: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    restrictions: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    utilities: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    frontage: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    depth: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    topography: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    is_corner: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    entitlement_status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    buildable_units: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    subdivision: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    lot_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    block: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    tract_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    phase_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    section_township_range: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+
+
+class Site(SiteFacts, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixins': ['SiteFacts']})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -1741,37 +2485,39 @@ class Site(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    lot_size: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    usable_land_area: Optional[Area] = Field(default=None, description="""Usable portion of the lot; see usable_land_area_basis""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    usable_land_area_basis: Optional[str] = Field(default=None, description="""surveyed | buildable | net_of_constraints | ... (what \"usable\" means here)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    land_use: Optional[CodeableConcept] = Field(default=None, description="""County code + label, system-tagged""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    land_use_category: Optional[str] = Field(default=None, description="""Standardized (PUCS land classes)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    zoning_code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    flood_zone: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    hazard_zones: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    view_types: Optional[list[str]] = Field(default=None, description="""UAD ViewBase-seeded""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    site_influences: Optional[list[str]] = Field(default=None, description="""UAD SiteInfluenceBase-seeded""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    easements: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    restrictions: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    utilities: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    frontage: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    depth: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    topography: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    is_corner: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    entitlement_status: Optional[str] = Field(default=None, description="""raw | entitled | permitted | ... (open; construction/dev)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    buildable_units: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    subdivision: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    lot_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    block: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    tract_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    phase_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    section_township_range: Optional[str] = Field(default=None, description="""US PLSS (US-specific, optional)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Site']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    lot_size: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    usable_land_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    usable_land_area_basis: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    land_use: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    land_use_category: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    zoning_code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    flood_zone: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    hazard_zones: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    view_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    site_influences: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    easements: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    restrictions: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    utilities: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    frontage: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    depth: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    topography: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    is_corner: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    entitlement_status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    buildable_units: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    subdivision: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    lot_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    block: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    tract_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    phase_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    section_township_range: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1789,6 +2535,7 @@ class Site(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1804,23 +2551,54 @@ class Site(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
-class Space(Entity):
+class SpaceFacts(ConfiguredBaseModel):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixin': True})
+
+    floor_number: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    space_use: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    rentable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'SpaceFacts']} })
+    usable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    bedrooms: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    bathrooms: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    occupancy: Optional[str] = Field(default=None, description="""owner_occupied | tenant | vacant""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'SpaceFacts']} })
+    is_adu: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    is_active: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+
+
+class Space(SpaceFacts, Entity):
     """
     Leasable suites/units (CRE, multifamily).
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['SpaceFacts'],
          'unique_keys': {'space_identity': {'unique_key_name': 'space_identity',
                                             'unique_key_slots': ['property',
                                                                  'space_identifier']}}})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -1832,23 +2610,25 @@ class Space(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     structure: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space', 'Permit']} })
     space_identifier: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Space']} })
-    floor_number: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space']} })
-    space_use: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space']} })
-    rentable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Structure', 'Space']} })
-    usable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space']} })
-    bedrooms: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space', 'UnitRentObservation']} })
-    bathrooms: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space', 'UnitRentObservation']} })
-    occupancy: Optional[str] = Field(default=None, description="""owner_occupied | tenant | vacant""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'Space']} })
-    is_adu: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space']} })
-    is_active: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    floor_number: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    space_use: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    rentable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'SpaceFacts']} })
+    usable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    bedrooms: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    bathrooms: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    occupancy: Optional[str] = Field(default=None, description="""owner_occupied | tenant | vacant""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'SpaceFacts']} })
+    is_adu: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    is_active: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1866,6 +2646,7 @@ class Space(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1881,20 +2662,359 @@ class Space(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
-class PropertyAssociation(Entity):
+class PropertyState(PropertyFacts, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['PropertyFacts']})
+
+    subject: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyState', 'SiteState', 'StructureState', 'SpaceState']} })
+    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    property_use_class: Optional[str] = Field(default=None, description="""PUCS class when property_use_system identifies PUCS""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_subtype: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    property_use_system: Optional[str] = Field(default=None, description="""Required when use fields are set; no default""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    estate_type: Optional[EstateType] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    location: Optional[GeoPoint] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'PropertyFacts']} })
+    building_count: Optional[int] = Field(default=None, description="""Producer summary when structures are not enumerated""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class SiteState(SiteFacts, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixins': ['SiteFacts']})
+
+    subject: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyState', 'SiteState', 'StructureState', 'SpaceState']} })
+    lot_size: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    usable_land_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    usable_land_area_basis: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    land_use: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    land_use_category: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    zoning_code: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    flood_zone: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    hazard_zones: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    view_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    site_influences: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    easements: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    restrictions: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    utilities: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    frontage: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    depth: Optional[Length] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    topography: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    is_corner: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    entitlement_status: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    buildable_units: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    subdivision: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    lot_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    block: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    tract_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    phase_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    section_township_range: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SiteFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class StructureState(StructureFacts, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'mixins': ['StructureFacts']})
+
+    subject: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyState', 'SiteState', 'StructureState', 'SpaceState']} })
+    kind: Optional[str] = Field(default=None, description="""building | barn | silo | shed | outbuilding | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+                       'ParcelLineage',
+                       'Party',
+                       'SourceArtifact',
+                       'PartyContact',
+                       'StructureFacts',
+                       'AreaMeasure',
+                       'Renovation',
+                       'TaxExemption',
+                       'Listing',
+                       'Lien',
+                       'Permit',
+                       'Valuation']} })
+    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'PropertyFacts', 'Party', 'StructureFacts']} })
+    structure_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    living_area: Optional[Area] = Field(default=None, description="""Finished area intended for human habitation. The measurement method and treatment of above-grade and below-grade space come from the applicable profile or provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts'], 'exact_mappings': ['reso:LivingArea']} })
+    gross_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    rentable_area: Optional[Area] = Field(default=None, description="""Area of occupiable premises allocated to a tenant or available for lease under the stated measurement method.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'SpaceFacts']} })
+    ground_floor_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    basement_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    basement_finished_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    garage_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    areas: Optional[list[AreaMeasure]] = Field(default=None, description="""Long-tail area kinds; canonical kinds forbidden here (validator-enforced)""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    year_built: Optional[int] = Field(default=None, ge=1, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts'], 'exact_mappings': ['reso:YearBuilt']} })
+    year_built_estimated: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    effective_year_built: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    stories: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    unit_count: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'UnitRentObservation', 'RentRoll']} })
+    construction_method: Optional[str] = Field(default=None, description="""site_built | manufactured | modular | container | 3d_printed | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    construction_status: Optional[str] = Field(default=None, description="""complete | proposed | under_construction""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    construction_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    exterior_wall_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    roof_material_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    roof_style_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    foundation_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    foundation_material: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    condition_ratings: Optional[list[Rating]] = Field(default=None, description="""Physical-condition ratings. Semantic validation permits at most one rating for each system and scope pair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    quality_ratings: Optional[list[Rating]] = Field(default=None, description="""Construction-quality ratings. Semantic validation permits at most one rating for each system and scope pair.""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    heating_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    heating_fuel_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    cooling_types: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    sewer_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    water_type: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    features: Optional[list[str]] = Field(default=None, description="""Open vocabulary for physical features and amenities""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    residential: Optional[ResidentialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    commercial: Optional[CommercialDetails] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    renovations: Optional[list[Renovation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class SpaceState(SpaceFacts, Entity):
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixins': ['SpaceFacts']})
+
+    subject: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyState', 'SiteState', 'StructureState', 'SpaceState']} })
+    floor_number: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    space_use: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    rentable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'SpaceFacts']} })
+    usable_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    bedrooms: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    bathrooms: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    occupancy: Optional[str] = Field(default=None, description="""owner_occupied | tenant | vacant""", json_schema_extra = { "linkml_meta": {'domain_of': ['ResidentialDetails', 'SpaceFacts']} })
+    is_adu: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    is_active: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class PropertyStateSnapshot(Entity):
     """
-    HOA / property association — minimal v1 footprint.
+    Sparse asserted physical state effective on as_of_date.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -1906,21 +3026,24 @@ class PropertyAssociation(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    party: Optional[str] = Field(default=None, description="""The association as an organization""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
-    name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    fee: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyAssociation']} })
-    fee_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyAssociation']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    as_of_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot', 'RentRoll', 'Valuation']} })
+    basis: Optional[CodeableConcept] = Field(default=None, description="""at_sale | at_listing | at_lease | inspection | reported | inferred (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot']} })
+    property_state: Optional[PropertyState] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'Valuation']} })
+    site_states: Optional[list[SiteState]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot']} })
+    structure_states: Optional[list[StructureState]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot']} })
+    space_states: Optional[list[SpaceState]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -1938,6 +3061,7 @@ class PropertyAssociation(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -1953,6 +3077,118 @@ class PropertyAssociation(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class PropertyAssociation(Entity):
+    """
+    HOA or property-association relationship; identity and classification live on the canonical Party.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'PropertyIdentifier',
+                       'PropertyAddress',
+                       'OwnershipPeriod',
+                       'Structure',
+                       'Site',
+                       'Space',
+                       'PropertyStateSnapshot',
+                       'PropertyAssociation',
+                       'Transfer',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'UnitRentObservation',
+                       'Loan',
+                       'Lien',
+                       'ForeclosureCase',
+                       'Permit',
+                       'OperatingStatement',
+                       'RentRoll',
+                       'Valuation',
+                       'PropertyProfile']} })
+    party: str = Field(default=..., description="""The canonical association organization""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    fee: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyAssociation']} })
+    fee_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyAssociation']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Assessment(Entity):
@@ -1967,7 +3203,7 @@ class Assessment(Entity):
                                                                       'roll_type']}}})
 
     parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
-    jurisdiction: str = Field(default=..., description="""The ASSESSING authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill']} })
+    jurisdiction: str = Field(default=..., description="""The ASSESSING authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
     tax_year: int = Field(default=..., ge=1000, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment', 'TaxBill']} })
     roll_type: Optional[str] = Field(default=None, description="""original | corrected | supplemental | appeal | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment']} })
     assessed_land_value: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment']} })
@@ -1980,10 +3216,11 @@ class Assessment(Entity):
     appraised_improvement_value: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment']} })
     appraised_total_value: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment']} })
     exemptions: Optional[list[TaxExemption]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2001,6 +3238,7 @@ class Assessment(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2016,6 +3254,20 @@ class Assessment(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class TaxExemption(ConfiguredBaseModel):
@@ -2024,9 +3276,9 @@ class TaxExemption(ConfiguredBaseModel):
     kind: str = Field(default=..., description="""homestead | senior | veteran | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -2046,6 +3298,7 @@ class TaxExemption(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2063,6 +3316,7 @@ class TaxExemption(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2077,7 +3331,7 @@ class TaxBill(Entity):
                                                                     'bill_number']}}})
 
     parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
-    jurisdiction: str = Field(default=..., description="""Issuing authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill']} })
+    jurisdiction: str = Field(default=..., description="""Issuing authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
     tax_year: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment', 'TaxBill']} })
     bill_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill']} })
     amount_billed: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill']} })
@@ -2088,10 +3342,11 @@ class TaxBill(Entity):
     rate_code_area: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill']} })
     installments: Optional[list[TaxInstallment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill']} })
     line_items: Optional[list[TaxLineItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill', 'OperatingStatement']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2109,6 +3364,7 @@ class TaxBill(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2124,6 +3380,20 @@ class TaxBill(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class TaxInstallment(ConfiguredBaseModel):
@@ -2146,6 +3416,7 @@ class TaxInstallment(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2163,6 +3434,7 @@ class TaxInstallment(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2171,8 +3443,8 @@ class TaxInstallment(ConfiguredBaseModel):
 class TaxLineItem(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    authority: Optional[str] = Field(default=None, description="""Taxing authority name or code""", json_schema_extra = { "linkml_meta": {'domain_of': ['TaxLineItem']} })
-    rate: Optional[Decimal] = Field(default=None, description="""Mill rate / levy""", json_schema_extra = { "linkml_meta": {'domain_of': ['TaxLineItem', 'UnitRentObservation']} })
+    jurisdiction: Optional[str] = Field(default=None, description="""Optional canonical taxing jurisdiction responsible for this line item""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
+    rate: Optional[Decimal] = Field(default=None, description="""Source-defined tax rate or levy value; not governed by the _pct percentage-points convention.""", json_schema_extra = { "linkml_meta": {'domain_of': ['TaxLineItem', 'UnitRentObservation']} })
     amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Money',
                        'UnitRate',
                        'TaxExemption',
@@ -2185,6 +3457,7 @@ class TaxLineItem(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2202,9 +3475,23 @@ class TaxLineItem(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('jurisdiction')
+    def pattern_jurisdiction(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid jurisdiction format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid jurisdiction format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Transfer(RecordedInstrument, Entity):
@@ -2216,10 +3503,12 @@ class Transfer(RecordedInstrument, Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -2231,6 +3520,7 @@ class Transfer(RecordedInstrument, Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     parcel: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
@@ -2240,7 +3530,8 @@ class Transfer(RecordedInstrument, Entity):
     transfer_tax: Optional[Money] = Field(default=None, description="""Doc stamps; price-inference basis in many places""", json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
     price_disclosure: Optional[PriceDisclosure] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
     price_code: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
-    partial_interest_pct: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
+    interest_conveyed: Optional[CodeableConcept] = Field(default=None, description="""The legal or beneficial interest conveyed by this transfer.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
+    partial_interest_pct: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 25 means 25 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
     is_inter_family: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
     is_distressed: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
     parties: Optional[list[TransferParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
@@ -2259,10 +3550,16 @@ class Transfer(RecordedInstrument, Entity):
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2280,6 +3577,7 @@ class Transfer(RecordedInstrument, Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2295,6 +3593,20 @@ class Transfer(RecordedInstrument, Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class TransferParty(TransactionParty):
@@ -2303,18 +3615,13 @@ class TransferParty(TransactionParty):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2332,9 +3639,23 @@ class TransferParty(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class SaleEvent(Entity):
@@ -2345,10 +3666,12 @@ class SaleEvent(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -2360,22 +3683,28 @@ class SaleEvent(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
+    property_state: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'Valuation']} })
     transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Loan']} })
     sale_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent'], 'exact_mappings': ['reso:CloseDate']} })
     sale_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent'], 'exact_mappings': ['reso:ClosePrice']} })
     price_disclosure: Optional[PriceDisclosure] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
     price_code: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
-    sale_type: Optional[SaleTypeEnum] = Field(default=SaleTypeEnum.arms_length, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent'], 'ifabsent': 'string(arms_length)'} })
+    sale_type: Optional[SaleTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     price_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     price_per_unit: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     financing: Optional[str] = Field(default=None, description="""cash | conventional | seller | assumption | other (coarse; loans carry detail)""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     concessions: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'LeaseEvent']} })
-    cap_rate: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
+    cap_rate: Optional[Decimal] = Field(default=None, description="""Capitalization rate in percentage points; 5.75 means 5.75 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     noi_at_sale: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     opex_at_sale: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
-    occupancy_at_sale_pct: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
+    occupancy_at_sale_pct: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 90 means 90 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     unit_count_at_sale: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     supporting_operating_statement: Optional[str] = Field(default=None, description="""Traceability: the statement noi_at_sale derives from, when known""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     parties: Optional[list[SaleEventParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
@@ -2385,10 +3714,12 @@ class SaleEvent(Entity):
                        'Lien',
                        'ForeclosureCase',
                        'PropertyProfile']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Listing', 'LeaseEvent']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2406,6 +3737,7 @@ class SaleEvent(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2421,6 +3753,20 @@ class SaleEvent(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class SaleEventParty(TransactionParty):
@@ -2429,18 +3775,13 @@ class SaleEventParty(TransactionParty):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2458,23 +3799,39 @@ class SaleEventParty(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
 
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
+
 
 class Listing(Entity):
     """
-    Listing header. Lifecycle lives in events[]; header status/list_price are denormalized conveniences reconstructible from events.
+    Listing identity and non-lifecycle facts. Process events by occurred_on ascending; array order breaks same-date ties. Carry status, asking_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -2486,14 +3843,20 @@ class Listing(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
+    property_state: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'Valuation']} })
     kind: ListingKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -2502,27 +3865,20 @@ class Listing(Entity):
                        'Permit',
                        'Valuation']} })
     listing_type: Optional[str] = Field(default=None, description="""mls | fsbo | auction | pocket""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    status: Optional[ListingStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
-                       'ForeclosureFiling',
-                       'Permit',
-                       'AssessorObservation',
-                       'ExtractionObservation']} })
-    original_list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'ListingEvent']} })
-    list_rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    list_rent_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    listed_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    closed_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    close_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
     mls_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    events: Optional[list[ListingEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'Loan']} })
+    events: Optional[list[ListingEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'Loan'], 'list_elements_ordered': True} })
     participants: Optional[list[ListingParticipant]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Listing', 'LeaseEvent']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2540,6 +3896,7 @@ class Listing(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2555,24 +3912,42 @@ class Listing(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class ListingEvent(ConfiguredBaseModel):
+    """
+    A dated listing assertion. asking_price is a sale price or periodic rent; rent_period states the period when asking_price is rent. close_price is asserted on a closed event.
+    """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     occurred_on: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
     event_kind: str = Field(default=..., description="""listed | price_change | status_change | relisted | closed""", json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
-    status: Optional[ListingStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
+    status: Optional[ListingStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
                        'ExtractionObservation']} })
-    list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'ListingEvent']} })
+    asking_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent']} })
+    rent_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LeaseEvent', 'RentRoll']} })
+    close_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2590,6 +3965,7 @@ class ListingEvent(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2613,18 +3989,13 @@ class ListingParticipant(TransactionParty):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2642,9 +4013,23 @@ class ListingParticipant(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class LeaseEvent(Entity):
@@ -2655,10 +4040,12 @@ class LeaseEvent(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -2670,9 +4057,15 @@ class LeaseEvent(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    space: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
+    property_state: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'Valuation']} })
+    space: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent', 'RentRollLine']} })
     lease_type: Optional[LeaseTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     execution_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     commencement_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
@@ -2680,14 +4073,13 @@ class LeaseEvent(Entity):
     term_months: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent', 'Loan']} })
     leased_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
-    rent_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
+    rent_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LeaseEvent', 'RentRoll']} })
     starting_rent_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     effective_rent_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     net_effective_rent_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     free_rent_months: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     ti_allowance_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     expense_structure: Optional[ExpenseStructure] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
-    lessee_industry: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     parties: Optional[list[LeaseEventParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
                        'SaleEvent',
                        'LeaseEvent',
@@ -2697,10 +4089,12 @@ class LeaseEvent(Entity):
                        'PropertyProfile']} })
     escalations: Optional[list[LeaseEscalation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     concessions: Optional[list[LeaseConcession]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'LeaseEvent']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Listing', 'LeaseEvent']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2718,6 +4112,7 @@ class LeaseEvent(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2733,6 +4128,20 @@ class LeaseEvent(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class LeaseEventParty(TransactionParty):
@@ -2741,18 +4150,13 @@ class LeaseEventParty(TransactionParty):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2770,9 +4174,23 @@ class LeaseEventParty(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class ExpenseStructure(ConfiguredBaseModel):
@@ -2789,6 +4207,7 @@ class ExpenseStructure(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2806,6 +4225,7 @@ class ExpenseStructure(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2815,17 +4235,18 @@ class LeaseEscalation(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     escalation_type: str = Field(default=..., description="""fixed_amount | fixed_percent | cpi | step_schedule | fmv | none""", json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
-    escalation_value: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
+    escalation_value: Optional[Decimal] = Field(default=None, description="""For escalation_type=fixed_percent, a value from 0-100 percentage points; 3 means 3 percent. For escalation_type=fixed_amount, the increment in the currency of the parent LeaseEvent.rent and the period specified by LeaseEvent.rent_period.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
     frequency_months: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
     cpi_index: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
-    cpi_floor: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
-    cpi_cap: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
+    cpi_floor: Optional[Decimal] = Field(default=None, description="""CPI escalation floor in percentage points; 2 means 2 percent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
+    cpi_cap: Optional[Decimal] = Field(default=None, description="""CPI escalation cap in percentage points; 5 means 5 percent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
     steps: Optional[list[RentStep]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
     effective_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
     effective_until: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEscalation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2843,6 +4264,7 @@ class LeaseEscalation(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2869,13 +4291,14 @@ class LeaseConcession(ConfiguredBaseModel):
     concession_type: str = Field(default=..., description="""free_rent | ti_allowance | moving_allowance | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
     concession_value: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
     abatement_months: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
-    abatement_percent: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
+    abatement_percent: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 10 means 10 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
     ti_cap_total: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
     conditions: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseConcession']} })
     notes: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExpenseStructure', 'LeaseConcession']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2893,6 +4316,7 @@ class LeaseConcession(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2906,10 +4330,12 @@ class UnitRentObservation(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -2921,24 +4347,26 @@ class UnitRentObservation(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     unit_type: str = Field(default=..., description="""'1BR/1BA', '10x10'""", json_schema_extra = { "linkml_meta": {'domain_of': ['Address', 'UnitRentObservation']} })
     unit_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
-    bedrooms: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space', 'UnitRentObservation']} })
-    bathrooms: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space', 'UnitRentObservation']} })
-    unit_count: Optional[int] = Field(default=None, description="""Units of this type""", json_schema_extra = { "linkml_meta": {'domain_of': ['Structure', 'UnitRentObservation']} })
+    bedrooms: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    bathrooms: Optional[Decimal] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SpaceFacts', 'UnitRentObservation']} })
+    unit_count: Optional[int] = Field(default=None, description="""Units of this type""", json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'UnitRentObservation', 'RentRoll']} })
     units_available: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     rate: Money = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TaxLineItem', 'UnitRentObservation']} })
-    rate_period: Optional[RentPeriod] = Field(default=RentPeriod.monthly, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation'], 'ifabsent': 'string(monthly)'} })
-    rate_basis: Optional[RateBasis] = Field(default=RateBasis.per_unit, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation'], 'ifabsent': 'string(per_unit)'} })
-    rate_type: Optional[RateType] = Field(default=RateType.asking, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation'], 'ifabsent': 'string(asking)'} })
+    rate_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
+    rate_basis: Optional[RateBasis] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
+    rate_type: Optional[RateType] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     observed_on: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     concessions_note: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -2956,6 +4384,7 @@ class UnitRentObservation(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -2971,21 +4400,37 @@ class UnitRentObservation(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Loan(RecordedInstrument, Entity):
     """
-    Recorded debt. lender_name is the immutable ORIGINATING lender; assignments and status changes are dated loan events. status is a derived projection of events.
+    Recorded debt. Originating lender identity and classification live on the canonical Party referenced by a LoanParty. Assignments, modifications, satisfactions, and other lifecycle assertions are dated events; consumers derive current status and satisfaction dates.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
          'mixins': ['RecordedInstrument']})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -2997,33 +4442,24 @@ class Loan(RecordedInstrument, Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     parcel: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
     transfer: Optional[str] = Field(default=None, description="""Purchase-money linkage""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Loan']} })
     is_purchase_money: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     loan_amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
-    lender_name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
-    lender_type: Optional[str] = Field(default=None, description="""bank | credit_union | private | seller | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     loan_type: Optional[str] = Field(default=None, description="""conventional | fha | va | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     purpose: Optional[str] = Field(default=None, description="""purchase | refinance | construction | heloc | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     is_heloc: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     is_construction: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     is_seller_carryback: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     is_assumable: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
-    interest_rate: Optional[Decimal] = Field(default=None, ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
+    interest_rate: Optional[Decimal] = Field(default=None, description="""Nominal interest rate in percentage points; 6.5 means 6.5 percent.""", ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     is_variable_rate: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     term_months: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent', 'Loan']} })
     due_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     lien_position: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
-    status: Optional[LoanStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
-                       'ForeclosureFiling',
-                       'Permit',
-                       'AssessorObservation',
-                       'ExtractionObservation']} })
-    satisfied_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     parties: Optional[list[LoanParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
                        'SaleEvent',
                        'LeaseEvent',
@@ -3041,10 +4477,16 @@ class Loan(RecordedInstrument, Entity):
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3062,6 +4504,7 @@ class Loan(RecordedInstrument, Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3077,6 +4520,20 @@ class Loan(RecordedInstrument, Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class LoanParty(TransactionParty):
@@ -3085,18 +4542,13 @@ class LoanParty(TransactionParty):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3114,9 +4566,23 @@ class LoanParty(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class LoanEvent(RecordedInstrument):
@@ -3137,11 +4603,11 @@ class LoanEvent(RecordedInstrument):
                        'LoanEvent',
                        'Lien',
                        'StatementLineItem']} })
-    to_name: Optional[str] = Field(default=None, description="""Assignee lender name (assignments)""", json_schema_extra = { "linkml_meta": {'domain_of': ['LoanEvent']} })
-    to_party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LoanEvent']} })
+    to_party: Optional[str] = Field(default=None, description="""Canonical assignee for assignment-like events""", json_schema_extra = { "linkml_meta": {'domain_of': ['LoanEvent']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3159,6 +4625,7 @@ class LoanEvent(RecordedInstrument):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3183,6 +4650,24 @@ class LoanEvent(RecordedInstrument):
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+
+    @field_validator('to_party')
+    def pattern_to_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid to_party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid to_party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Lien(RecordedInstrument, Entity):
@@ -3194,10 +4679,12 @@ class Lien(RecordedInstrument, Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -3209,14 +4696,15 @@ class Lien(RecordedInstrument, Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     kind: LienKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -3250,10 +4738,16 @@ class Lien(RecordedInstrument, Entity):
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3271,6 +4765,7 @@ class Lien(RecordedInstrument, Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3286,6 +4781,20 @@ class Lien(RecordedInstrument, Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class LienParty(TransactionParty):
@@ -3294,18 +4803,13 @@ class LienParty(TransactionParty):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3323,9 +4827,23 @@ class LienParty(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class ForeclosureCase(Entity):
@@ -3336,10 +4854,12 @@ class ForeclosureCase(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -3351,6 +4871,7 @@ class ForeclosureCase(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     loan: Optional[str] = Field(default=None, description="""The defaulted loan, when known""", json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
@@ -3371,10 +4892,11 @@ class ForeclosureCase(Entity):
                        'Lien',
                        'ForeclosureCase',
                        'PropertyProfile']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3392,6 +4914,7 @@ class ForeclosureCase(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3407,6 +4930,20 @@ class ForeclosureCase(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class ForeclosureFiling(RecordedInstrument):
@@ -3416,9 +4953,7 @@ class ForeclosureFiling(RecordedInstrument):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
          'mixins': ['RecordedInstrument']})
 
-    status: str = Field(default=..., description="""nod | lis_pendens | notice_of_sale | auction_scheduled | postponement | ... (open; US-seeded)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
+    status: str = Field(default=..., description="""nod | lis_pendens | notice_of_sale | auction_scheduled | postponement | ... (open; US-seeded)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
@@ -3428,6 +4963,7 @@ class ForeclosureFiling(RecordedInstrument):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3445,6 +4981,7 @@ class ForeclosureFiling(RecordedInstrument):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3469,26 +5006,26 @@ class ForeclosureFiling(RecordedInstrument):
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
 
 
 class ForeclosureCaseParty(TransactionParty):
     """
-    role = lender | trustee | borrower
+    Open contextual role. Mortgage and deed-of-trust proceedings commonly use lender | trustee | borrower; lien foreclosures may instead use claimant | debtor.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest']} })
-    name: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty',
-                       'Jurisdiction',
-                       'Property',
-                       'Party',
-                       'Structure',
-                       'PropertyAssociation']} })
-    party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
+    role: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
+    party: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'OwnershipInterest', 'PropertyAssociation']} })
     sequence: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3506,9 +5043,23 @@ class ForeclosureCaseParty(TransactionParty):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+
+    @field_validator('party')
+    def pattern_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid party format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class Permit(Entity):
@@ -3519,10 +5070,12 @@ class Permit(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -3534,6 +5087,7 @@ class Permit(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     structure: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Space', 'Permit']} })
@@ -3542,9 +5096,9 @@ class Permit(Entity):
     kind: Optional[str] = Field(default=None, description="""roofing | solar | hvac | adu | pool | new_construction | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -3552,27 +5106,29 @@ class Permit(Entity):
                        'Lien',
                        'Permit',
                        'Valuation']} })
-    status: Optional[str] = Field(default=None, description="""issued | finaled | expired | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
+    status: Optional[str] = Field(default=None, description="""issued | finaled | expired | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
                        'ExtractionObservation']} })
-    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation', 'Permit']} })
+    description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Rating', 'Renovation', 'Permit']} })
     applied_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     issued_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     finaled_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     expires_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     job_value: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     fees: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    contractor_name: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    contractor_license: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    contractor_party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    contractor_party: Optional[str] = Field(default=None, description="""Canonical contractor Party reference; credential records are outside core v0.2""", json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3590,6 +5146,7 @@ class Permit(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3605,6 +5162,33 @@ class Permit(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('contractor_party')
+    def pattern_contractor_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid contractor_party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid contractor_party format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class OperatingStatement(Entity):
@@ -3615,10 +5199,12 @@ class OperatingStatement(Entity):
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -3630,15 +5216,16 @@ class OperatingStatement(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
     statement_year: int = Field(default=..., description="""The calendar year the statement is for (the year containing period_end for fiscal/trailing periods).""", ge=1000, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     period_start: Optional[date] = Field(default=None, description="""For fiscal-year, trailing-12, or partial periods. period_start and period_end must be provided together; omit both for calendar-year statements.""", json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     period_end: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
-    statement_basis: Optional[StatementBasis] = Field(default=StatementBasis.actual, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement'], 'ifabsent': 'string(actual)'} })
+    statement_basis: Optional[StatementBasis] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     pgi: Optional[Money] = Field(default=None, description="""Potential gross income""", json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     vacancy_loss: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
-    vacancy_pct: Optional[Decimal] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
+    vacancy_pct: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 5 means 5 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     egi: Optional[Money] = Field(default=None, description="""Effective gross income""", json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     opex_total: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     noi: Optional[Money] = Field(default=None, description="""Net operating income; may be negative""", json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
@@ -3649,10 +5236,11 @@ class OperatingStatement(Entity):
     ground_lease_expense: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     ground_lease_included_in_opex: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OperatingStatement']} })
     line_items: Optional[list[StatementLineItem]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill', 'OperatingStatement']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3670,6 +5258,7 @@ class OperatingStatement(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3685,6 +5274,20 @@ class OperatingStatement(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class StatementLineItem(ConfiguredBaseModel):
@@ -3704,6 +5307,7 @@ class StatementLineItem(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3721,23 +5325,26 @@ class StatementLineItem(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
 
 
-class Valuation(Entity):
+class RentRoll(Entity):
     """
-    Opinions of value — AVM/appraisal/BPO. Never tax-roll values (those are assessments). Append-only.
+    Dated rent and occupancy observation applicable to any property use. Header totals are authoritative reported values; lines are supporting detail and are not required to sum to the totals. All Money values on one rent roll MUST use one currency (validator-enforced). For its as_of_date, this record governs reported occupancy and rent facts; current-state fields such as Space.occupancy and CommercialDetails.occupancy_pct do not override it. A line preserves dated rent-roll assertions and does not by itself create a canonical Space, Party, or LeaseEvent.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -3749,14 +5356,163 @@ class Valuation(Entity):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
+    as_of_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot', 'RentRoll', 'Valuation']} })
+    unit_count: Optional[int] = Field(default=None, ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['StructureFacts', 'UnitRentObservation', 'RentRoll']} })
+    occupied_unit_count: Optional[int] = Field(default=None, ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRoll']} })
+    occupancy_pct: Optional[Decimal] = Field(default=None, description="""Occupancy in 0–100 percentage points; 95 means 95 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['CommercialDetails', 'RentRoll']} })
+    total_contract_rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRoll']} })
+    total_market_rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRoll']} })
+    rent_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LeaseEvent', 'RentRoll']} })
+    lines: Optional[list[RentRollLine]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRoll']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class RentRollLine(ConfiguredBaseModel):
+    """
+    Supporting rent-roll detail. space resolves to canonical Space. tenant is the canonical legal lessee Party when present, and lease resolves to canonical LeaseEvent when known. When both tenant and lease are present, tenant must match a party with role: lessee declared by that lease, if the lease declares any lessee. References remain optional for aggregate, vacant, unleased, or unresolved lines; the line does not duplicate canonical space identity, tenant names, or lease dates. When a source tenant cannot be resolved to a canonical Party, omit tenant and preserve the source evidence through the RentRoll provenance and profile-level SourceArtifact records; do not mint a placeholder Party or copy the source name into extras.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    space: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent', 'RentRollLine']} })
+    tenant: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRollLine']} })
+    lease: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRollLine']} })
+    occupancy_status: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRollLine']} })
+    reported_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRollLine']} })
+    contract_rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRollLine']} })
+    market_rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RentRollLine']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+
+    @field_validator('tenant')
+    def pattern_tenant(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid tenant format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid tenant format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class Valuation(Entity):
+    """
+    Opinions of value — AVM/appraisal/BPO. Never tax-roll values (those are assessments). Append-only.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    property: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'PropertyIdentifier',
+                       'PropertyAddress',
+                       'OwnershipPeriod',
+                       'Structure',
+                       'Site',
+                       'Space',
+                       'PropertyStateSnapshot',
+                       'PropertyAssociation',
+                       'Transfer',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'UnitRentObservation',
+                       'Loan',
+                       'Lien',
+                       'ForeclosureCase',
+                       'Permit',
+                       'OperatingStatement',
+                       'RentRoll',
+                       'Valuation',
+                       'PropertyProfile']} })
+    property_state: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot',
+                       'SaleEvent',
+                       'Listing',
+                       'LeaseEvent',
+                       'Valuation']} })
     kind: ValuationKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
-                       'PartyAddress',
+                       'SourceArtifact',
                        'PartyContact',
-                       'Structure',
+                       'StructureFacts',
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
@@ -3775,22 +5531,27 @@ class Valuation(Entity):
     value_high: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     value_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     land_value: Optional[Money] = Field(default=None, description="""Cost-approach site value""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    confidence_score: Optional[int] = Field(default=None, ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    forecast_standard_deviation: Optional[Decimal] = Field(default=None, description="""AVM FSD""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
+    confidence_score: Optional[int] = Field(default=None, description="""Source-defined confidence score; not governed by the _pct percentage-points convention.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
+    forecast_standard_deviation: Optional[Decimal] = Field(default=None, description="""Source-defined AVM forecast standard deviation; not governed by the _pct percentage-points convention.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     exposure_days: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     indicated_value_sales_comparison: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     indicated_value_cost: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     indicated_value_income: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     value_premise: Optional[str] = Field(default=None, description="""as_is | as_completed | as_stabilized""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    interest: Optional[str] = Field(default=None, description="""fee_simple | leased_fee | leasehold""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    performed_by: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    performed_by_party: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    as_of_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
+    interest: Optional[str] = Field(default=None, description="""Interest valued for this opinion; independent of Property.estate_type and Transfer.interest_conveyed.""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
+    performed_by_party: Optional[str] = Field(default=None, description="""Canonical person or organization that performed the valuation""", json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
+    as_of_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot', 'RentRoll', 'Valuation']} })
     report_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
-    id: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3808,6 +5569,7 @@ class Valuation(Entity):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3823,11 +5585,38 @@ class Valuation(Entity):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('performed_by_party')
+    def pattern_performed_by_party(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid performed_by_party format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid performed_by_party format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
 
 
 class PropertyProfile(ConfiguredBaseModel):
     """
-    The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any event (required for lossless round-trip). Conformance requires passing the entities → profile → entities round-trip test.
+    The flagship interchange document: everything known about one property, as one bundle. Every section is exactly the corresponding entity shape. parties[] is the deduplicated bundle carrying every Party referenced by any record, including tenants, lenders, contractors, associations, and valuation performers (required for lossless round-trip). Conformance requires passing the entities → profile → entities round-trip test.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/profiles', 'tree_root': True})
 
@@ -3838,13 +5627,20 @@ class PropertyProfile(ConfiguredBaseModel):
                        'Lien',
                        'ForeclosureCase',
                        'PropertyProfile']} })
+    artifacts: Optional[list[SourceArtifact]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
     addresses: Optional[list[Address]] = Field(default=None, description="""Address bundle referenced by property/parties/ownership""", json_schema_extra = { "linkml_meta": {'domain_of': ['Party', 'PropertyProfile']} })
     property: Property = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
                        'PropertyIdentifier',
+                       'PropertyAddress',
                        'OwnershipPeriod',
                        'Structure',
                        'Site',
                        'Space',
+                       'PropertyStateSnapshot',
                        'PropertyAssociation',
                        'Transfer',
                        'SaleEvent',
@@ -3856,8 +5652,10 @@ class PropertyProfile(ConfiguredBaseModel):
                        'ForeclosureCase',
                        'Permit',
                        'OperatingStatement',
+                       'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
+    property_addresses: Optional[list[PropertyAddress]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     jurisdictions: Optional[list[Jurisdiction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcels: Optional[list[Parcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -3866,6 +5664,7 @@ class PropertyProfile(ConfiguredBaseModel):
     site: Optional[Site] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     structures: Optional[list[Structure]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     spaces: Optional[list[Space]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    property_state_snapshots: Optional[list[PropertyStateSnapshot]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     associations: Optional[list[PropertyAssociation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     assessments: Optional[list[Assessment]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     tax_bills: Optional[list[TaxBill]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -3874,6 +5673,7 @@ class PropertyProfile(ConfiguredBaseModel):
     listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     leases: Optional[list[LeaseEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     unit_rents: Optional[list[UnitRentObservation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    rent_rolls: Optional[list[RentRoll]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     loans: Optional[list[Loan]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     liens: Optional[list[Lien]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     foreclosure_cases: Optional[list[ForeclosureCase]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -3896,6 +5696,7 @@ class PropertyProfile(ConfiguredBaseModel):
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3913,6 +5714,7 @@ class PropertyProfile(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3924,9 +5726,7 @@ class AssessorObservation(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds'})
 
-    status: AssessorStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
+    status: AssessorStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
@@ -3948,9 +5748,11 @@ class AssessorObservation(ConfiguredBaseModel):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -3968,6 +5770,7 @@ class AssessorObservation(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -3979,9 +5782,7 @@ class ExtractionObservation(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds'})
 
-    status: ExtractionStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
-                       'ListingEvent',
-                       'Loan',
+    status: ExtractionStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
@@ -4005,9 +5806,11 @@ class ExtractionObservation(ConfiguredBaseModel):
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
+    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
+                       'VerificationAttribution',
                        'PartyAddress',
                        'PartyContact',
                        'OwnershipInterest',
@@ -4025,6 +5828,7 @@ class ExtractionObservation(ConfiguredBaseModel):
                        'LoanEvent',
                        'ForeclosureFiling',
                        'StatementLineItem',
+                       'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
                        'ExtractionObservation']} })
@@ -4037,6 +5841,8 @@ Area.model_rebuild()
 Length.model_rebuild()
 UnitRate.model_rebuild()
 CodeableConcept.model_rebuild()
+Classification.model_rebuild()
+Rating.model_rebuild()
 GeoPoint.model_rebuild()
 Geometry.model_rebuild()
 Provenance.model_rebuild()
@@ -4046,23 +5852,36 @@ RecordedInstrument.model_rebuild()
 TransactionParty.model_rebuild()
 Jurisdiction.model_rebuild()
 Address.model_rebuild()
+PropertyFacts.model_rebuild()
 Property.model_rebuild()
 Parcel.model_rebuild()
 PropertyParcel.model_rebuild()
 ParcelLineage.model_rebuild()
 PropertyIdentifier.model_rebuild()
 Party.model_rebuild()
+VerificationAttribution.model_rebuild()
+SourceArtifact.model_rebuild()
+AddressAssociation.model_rebuild()
 PartyAddress.model_rebuild()
+PropertyAddress.model_rebuild()
 PartyContact.model_rebuild()
 OwnershipPeriod.model_rebuild()
 OwnershipInterest.model_rebuild()
+StructureFacts.model_rebuild()
 Structure.model_rebuild()
 AreaMeasure.model_rebuild()
 ResidentialDetails.model_rebuild()
 CommercialDetails.model_rebuild()
 Renovation.model_rebuild()
+SiteFacts.model_rebuild()
 Site.model_rebuild()
+SpaceFacts.model_rebuild()
 Space.model_rebuild()
+PropertyState.model_rebuild()
+SiteState.model_rebuild()
+StructureState.model_rebuild()
+SpaceState.model_rebuild()
+PropertyStateSnapshot.model_rebuild()
 PropertyAssociation.model_rebuild()
 Assessment.model_rebuild()
 TaxExemption.model_rebuild()
@@ -4094,6 +5913,8 @@ ForeclosureCaseParty.model_rebuild()
 Permit.model_rebuild()
 OperatingStatement.model_rebuild()
 StatementLineItem.model_rebuild()
+RentRoll.model_rebuild()
+RentRollLine.model_rebuild()
 Valuation.model_rebuild()
 PropertyProfile.model_rebuild()
 AssessorObservation.model_rebuild()

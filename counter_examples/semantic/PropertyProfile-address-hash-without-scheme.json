@@ -1,0 +1,12 @@
+{
+  "property": {
+    "id": "https://example.org/properties/address-hash-without-scheme"
+  },
+  "addresses": [
+    {
+      "id": "https://example.org/addresses/address-hash-without-scheme",
+      "country": "CA",
+      "address_hash": "producer-specific-hash"
+    }
+  ]
+}

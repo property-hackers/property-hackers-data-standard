@@ -1,0 +1,18 @@
+id: https://example.org/phds/tests/optional-rating-patterns
+name: optional_rating_patterns
+prefixes:
+  linkml: https://w3id.org/linkml/
+  test: https://example.org/phds/tests/
+default_prefix: test
+default_range: string
+imports:
+  - linkml:types
+  - physical_state_patterns
+enums:
+  OptionalConditionCode:
+    permissible_values: {good: {}, fair: {}, poor: {}}
+classes:
+  OptionalStructureState:
+    is_a: StructureState
+    slot_usage:
+      condition: {range: OptionalConditionCode, required: true}

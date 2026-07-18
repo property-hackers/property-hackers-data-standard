@@ -4,7 +4,7 @@
 // rewrites src/, Cargo.toml, pyproject.toml) never touches it.
 //
 // The exhaustive test below enumerates every permissible value of every
-// vocabulary enum in phds.schema.json (147 variants across 25 enums);
+// vocabulary enum in phds.schema.json (135 variants across 24 enums);
 // tests/test_generated_contract.py census-checks that this stays in sync
 // with the schema.
 #![cfg(feature = "serde")]
@@ -40,6 +40,7 @@ fn all_enum_variants_round_trip_canonical_wire_values() {
     assert_round_trip(CaptureMethod::Manual, "manual");
     assert_round_trip(CaptureMethod::Bulk, "bulk");
     assert_round_trip(EstateType::FeeSimple, "fee_simple");
+    assert_round_trip(EstateType::LeasedFee, "leased_fee");
     assert_round_trip(EstateType::Leasehold, "leasehold");
     assert_round_trip(EstateType::LifeEstate, "life_estate");
     assert_round_trip(EstateType::CooperativeShares, "cooperative_shares");
@@ -97,25 +98,6 @@ fn all_enum_variants_round_trip_canonical_wire_values() {
     assert_round_trip(LoanEventKind::Default, "default");
     assert_round_trip(LoanEventKind::Reinstatement, "reinstatement");
     assert_round_trip(LoanEventKind::Other, "other");
-    assert_round_trip(LoanStatus::Active, "active");
-    assert_round_trip(LoanStatus::Satisfied, "satisfied");
-    assert_round_trip(LoanStatus::Assigned, "assigned");
-    assert_round_trip(LoanStatus::Foreclosure, "foreclosure");
-    assert_round_trip(LoanStatus::Released, "released");
-    assert_round_trip(LoanStatus::Unknown, "unknown");
-    assert_round_trip(OrganizationKind::Llc, "llc");
-    assert_round_trip(OrganizationKind::Corporation, "corporation");
-    assert_round_trip(OrganizationKind::Partnership, "partnership");
-    assert_round_trip(OrganizationKind::Trust, "trust");
-    assert_round_trip(OrganizationKind::Estate, "estate");
-    assert_round_trip(OrganizationKind::Government, "government");
-    assert_round_trip(OrganizationKind::Nonprofit, "nonprofit");
-    assert_round_trip(OrganizationKind::Reit, "reit");
-    assert_round_trip(OrganizationKind::Fund, "fund");
-    assert_round_trip(OrganizationKind::Lender, "lender");
-    assert_round_trip(OrganizationKind::Brokerage, "brokerage");
-    assert_round_trip(OrganizationKind::Hoa, "hoa");
-    assert_round_trip(OrganizationKind::Other, "other");
     assert_round_trip(ParcelLineageKind::Split, "split");
     assert_round_trip(ParcelLineageKind::Merge, "merge");
     assert_round_trip(ParcelLineageKind::Renumber, "renumber");
@@ -137,8 +119,14 @@ fn all_enum_variants_round_trip_canonical_wire_values() {
     assert_round_trip(RateBasis::PerPad, "per_pad");
     assert_round_trip(RateBasis::Other, "other");
     assert_round_trip(RateType::Asking, "asking");
+    assert_round_trip(RateType::Market, "market");
     assert_round_trip(RateType::Effective, "effective");
     assert_round_trip(RateType::Contract, "contract");
+    assert_round_trip(RatingScope::Overall, "overall");
+    assert_round_trip(RatingScope::Exterior, "exterior");
+    assert_round_trip(RatingScope::Interior, "interior");
+    assert_round_trip(RatingScope::Component, "component");
+    assert_round_trip(RatingScope::Other, "other");
     assert_round_trip(RentPeriod::Daily, "daily");
     assert_round_trip(RentPeriod::Monthly, "monthly");
     assert_round_trip(RentPeriod::Annual, "annual");
@@ -170,4 +158,219 @@ fn all_enum_variants_round_trip_canonical_wire_values() {
     assert_round_trip(VerificationStatus::Verified, "verified");
     assert_round_trip(VerificationStatus::Disputed, "disputed");
     assert_round_trip(VerificationStatus::Rejected, "rejected");
+}
+
+fn assert_boundary_rejected<T>(document: &str)
+where
+    T: serde::de::DeserializeOwned + core::fmt::Debug,
+{
+    let error = serde_yml::from_str::<T>(document)
+        .expect_err("boundary-constrained string must be rejected");
+    assert!(
+        error.to_string().contains("nonblank"),
+        "{document}: {error}"
+    );
+}
+
+#[test]
+fn boundary_constrained_strings_reject_invalid_wire_values() {
+    for value in ["", " ", "\tactor", " actor", "actor ", "\u{feff}actor", "actor\u{3000}"] {
+        assert_boundary_rejected::<Property>(&format!("id: '{value}'\n"));
+    }
+    assert_boundary_rejected::<Party>("id: party-1\nkind: person\nname: ' actor'\n");
+    assert_boundary_rejected::<TransferParty>("role: grantor\nparty: 'actor ' \n");
+    assert_boundary_rejected::<Classification>("system: ' urn:test'\ncode: code\n");
+    assert_boundary_rejected::<Classification>("system: urn:test\ncode: 'code ' \n");
+    assert_boundary_rejected::<Rating>("system: ' urn:rating'\ncode: A\n");
+    assert_boundary_rejected::<Rating>("system: urn:rating\ncode: ' A'\n");
+    assert_boundary_rejected::<VerificationAttribution>("verifier: ' party-1'\nverified_at: 2026-07-18T12:00:00Z\n");
+    for field in ["uri", "storage_reference", "content_hash", "hash_scheme"] {
+        let document = format!("id: artifact-1\n{field}: ' value'\n");
+        assert_boundary_rejected::<SourceArtifact>(&document);
+    }
+    assert_boundary_rejected::<Address>(
+        "id: address-1
+country: CA
+address_hash: ' hash'
+address_hash_scheme: producer.scheme
+",
+    );
+    assert_boundary_rejected::<Address>(
+        "id: address-1
+country: CA
+address_hash: hash
+address_hash_scheme: 'producer.scheme '
+",
+    );
+}
+
+#[test]
+fn boundary_constrained_strings_accept_international_values() {
+    serde_yml::from_str::<Property>("id: 物件-1\n").expect("international id");
+    serde_yml::from_str::<Party>("id: party-1\nkind: person\nname: Мария Иванова\n")
+        .expect("international party name");
+    serde_yml::from_str::<TransferParty>("role: grantee\nparty: 山田-1\n")
+        .expect("international party reference");
+    serde_yml::from_str::<Classification>("system: urn:分類\ncode: качество\n")
+        .expect("international classification");
+    serde_yml::from_str::<Rating>("system: urn:評価\ncode: 良好\n")
+        .expect("international rating");
+    serde_yml::from_str::<VerificationAttribution>("verifier: 検証者-1\nverified_at: 2026-07-18T12:00:00Z\n")
+        .expect("international verifier");
+    serde_yml::from_str::<SourceArtifact>(
+        "id: artifact-1\nstorage_reference: 資料/評価書\ncontent_hash: ハッシュ値\nhash_scheme: 方式.sha256\n",
+    )
+    .expect("international artifact boundaries");
+    serde_yml::from_str::<Address>(
+        "id: address-1
+country: JP
+address_hash: 住所ハッシュ
+address_hash_scheme: 方式.sha256
+",
+    )
+    .expect("international address hash boundaries");
+}
+
+#[test]
+fn property_profile_extras_round_trip_losslessly() {
+    let document = r#"
+property:
+  id: property-1
+  extras:
+    nested_object:
+      nested_list:
+        - text
+        - true
+        - 42
+        - null
+    string_value: retained
+    boolean_value: false
+    numeric_value: 3.5
+    null_value: null
+rent_rolls:
+  - id: rent-roll-1
+    property: property-1
+    as_of_date: 2026-01-01
+    lines:
+      - extras:
+          nested_object:
+            nested_list:
+              - line text
+              - false
+              - 7
+              - null
+"#;
+    let expected: serde_yml::Value = serde_yml::from_str(document).expect("fixture YAML");
+    let profile: PropertyProfile = serde_yml::from_str(document).expect("deserialize profile");
+    let encoded = serde_yml::to_string(&profile).expect("reserialize profile");
+    let actual: serde_yml::Value = serde_yml::from_str(&encoded).expect("encoded YAML");
+
+    assert_eq!(actual["property"]["extras"], expected["property"]["extras"]);
+    assert_eq!(
+        actual["rent_rolls"]["rent-roll-1"]["lines"][0]["extras"],
+        expected["rent_rolls"][0]["lines"][0]["extras"]
+    );
+}
+
+#[test]
+fn every_shipped_core_example_round_trips() {
+    let examples = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
+        .join("examples");
+    let mut paths = std::fs::read_dir(&examples)
+        .expect("repository examples directory")
+        .map(|entry| entry.expect("example entry").path())
+        .filter(|path| {
+            path.file_name()
+                .and_then(|name| name.to_str())
+                .is_some_and(|name| {
+                    name.starts_with("PropertyProfile-") && name.ends_with(".json")
+                })
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    assert!(!paths.is_empty(), "no shipped core examples found");
+
+    for path in paths {
+        let document = std::fs::read_to_string(&path).expect("read example");
+        let decoded: PropertyProfile = serde_yml::from_str(&document)
+            .unwrap_or_else(|error| panic!("{}: {error}", path.display()));
+        let encoded = serde_yml::to_string(&decoded).expect("serialize example");
+        let reparsed: PropertyProfile = serde_yml::from_str(&encoded)
+            .unwrap_or_else(|error| panic!("{} reparse: {error}", path.display()));
+        let reencoded = serde_yml::to_string(&reparsed).expect("reserialize example");
+        assert_eq!(reencoded, encoded, "{} canonical round trip", path.display());
+    }
+}
+
+
+#[test]
+fn generic_unknown_fields_are_rejected() {
+    let document = r#"{"id":"property-1","unexpected":true}"#;
+    assert!(serde_yml::from_str::<Property>(document).is_err());
+}
+
+#[test]
+fn generic_patterned_strings_are_rejected() {
+    for document in [
+        r#"{"amount":"12,500","currency":"USD"}"#,
+        r#"{"amount":"١٢٣.٤٥","currency":"USD"}"#,
+        "amount: \"125000.00\\n\"\ncurrency: USD\n",
+        r#"{"amount":"125000.00","currency":"usd"}"#,
+    ] {
+        assert!(serde_yml::from_str::<Money>(document).is_err(), "{document}");
+    }
+    for country in ["usa", "USA", "us", "U1"] {
+        let document = format!(r#"{{"id":"address-1","country":"{country}"}}"#);
+        assert!(serde_yml::from_str::<Address>(&document).is_err(), "{document}");
+    }
+}
+
+#[test]
+fn generic_patterned_strings_accept_canonical_values() {
+    for amount in ["0", "-0", "01", "1.0", "-125000.25"] {
+        let document = format!(r#"{{"amount":"{amount}","currency":"USD"}}"#);
+        serde_yml::from_str::<Money>(&document).expect("canonical money");
+    }
+    for country in ["CA", "JP", "US"] {
+        let document = format!(r#"{{"id":"address-1","country":"{country}"}}"#);
+        serde_yml::from_str::<Address>(&document).expect("canonical country");
+    }
+}
+
+#[test]
+fn generic_geometry_uses_canonical_type_wire_name() {
+    let document = r#"{"type":"Point","coordinates":[1,2]}"#;
+    let geometry: Geometry = serde_yml::from_str(document).expect("canonical geometry");
+    let encoded = serde_yml::to_string(&geometry).expect("serialize geometry");
+    assert!(encoded.contains("type: Point"), "{encoded}");
+    assert!(!encoded.contains("type_:"), "{encoded}");
+    assert!(serde_yml::from_str::<Geometry>(r#"{"type_":"Point"}"#).is_err());
+}
+
+#[test]
+fn generic_datetime_uses_explicit_rfc3339_offset() {
+    for verified_at in ["2026-07-18T12:00:00Z", "2026-07-18T17:30:00+05:30"] {
+        let document = format!(
+            r#"{{"verifier":"party-1","verified_at":"{verified_at}"}}"#
+        );
+        let attribution: VerificationAttribution =
+            serde_yml::from_str(&document).expect("RFC 3339 datetime");
+        let encoded = serde_yml::to_string(&attribution).expect("serialize datetime");
+        let expected_offset = if verified_at.ends_with('Z') {
+            "Z"
+        } else {
+            &verified_at[19..]
+        };
+        assert!(
+            encoded.contains(expected_offset),
+            "serialized datetime needs explicit offset: {encoded}"
+        );
+    }
+    assert!(serde_yml::from_str::<VerificationAttribution>(
+        r#"{"verifier":"party-1","verified_at":"2026-07-18T12:00:00"}"#
+    )
+    .is_err());
 }

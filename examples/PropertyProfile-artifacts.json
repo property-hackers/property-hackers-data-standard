@@ -1,0 +1,54 @@
+{
+  "property": {
+    "id": "property-jp-tokyo-1",
+    "name": "International evidence example"
+  },
+  "parties": [
+    {
+      "id": "party-jp-verifier-1",
+      "kind": "organization",
+      "name": "東京不動産評価株式会社"
+    }
+  ],
+  "artifacts": [
+    {
+      "id": "artifact-jp-valuation-report-1",
+      "uri": "https://example.jp/reports/valuation-2026-07.pdf",
+      "media_type": "application/pdf",
+      "kind": {
+        "system": "https://example.jp/codes/artifact-kind",
+        "code": "valuation_report",
+        "display": "Valuation report"
+      },
+      "title": "Property valuation report",
+      "original_filename": "valuation-2026-07.pdf",
+      "content_hash": "4d967f923f7d745c708f0a9f92d7d87f47a09a3fae3a63fd22b90a40f2f8e4f1",
+      "hash_scheme": "urn:ietf:params:hash:sha-256",
+      "page_count": 18,
+      "captured_on": "2026-07-18T12:00:00Z"
+    }
+  ],
+  "valuations": [
+    {
+      "id": "valuation-jp-2026-07",
+      "property": "property-jp-tokyo-1",
+      "kind": "appraisal",
+      "value": {
+        "amount": "125000000",
+        "currency": "JPY"
+      },
+      "as_of_date": "2026-07-01",
+      "performed_by_party": "party-jp-verifier-1",
+      "artifacts": [
+        "artifact-jp-valuation-report-1"
+      ],
+      "verifications": [
+        {
+          "verifier": "party-jp-verifier-1",
+          "verified_at": "2026-07-18T13:00:00Z",
+          "note": "Report identity and effective date checked."
+        }
+      ]
+    }
+  ]
+}

@@ -5,7 +5,7 @@ id: https://example.org/phds/core
 name: phds_core
 title: PHDS Core Types
 license: MIT
-version: 0.1.0
+version: 0.2.0
 
 prefixes:
   linkml: https://w3id.org/linkml/
@@ -44,21 +44,6 @@ enums:
       rejected: {}
   PartyKind:
     permissible_values: {person: {}, organization: {}}
-  OrganizationKind:
-    permissible_values:
-      llc: {}
-      corporation: {}
-      partnership: {}
-      trust: {}
-      estate: {}
-      government: {}
-      nonprofit: {}
-      reit: {}
-      fund: {}
-      lender: {}
-      brokerage: {}
-      hoa: {}
-      other: {}
   SaleTypeEnum:
     permissible_values:
       arms_length: {}
@@ -111,7 +96,7 @@ enums:
       per_pad: {}
       other: {}
   RateType:
-    permissible_values: {asking: {}, effective: {}, contract: {}}
+    permissible_values: {asking: {}, market: {}, effective: {}, contract: {}}
   ListingKind:
     permissible_values: {for_sale: {}, for_lease: {}}
   ListingStatus:
@@ -126,14 +111,6 @@ enums:
       other: {}
   ValuationKind:
     permissible_values: {avm: {}, appraisal: {}, bpo: {}, broker_opinion: {}, internal: {}}
-  LoanStatus:
-    permissible_values:
-      active: {}
-      satisfied: {}
-      assigned: {}
-      foreclosure: {}
-      released: {}
-      unknown: {}
   LoanEventKind:
     permissible_values:
       origination: {}
@@ -151,9 +128,17 @@ enums:
   EstateType:
     permissible_values:
       fee_simple: {}
+      leased_fee: {}
       leasehold: {}
       life_estate: {}
       cooperative_shares: {}
+      other: {}
+  RatingScope:
+    permissible_values:
+      overall: {}
+      exterior: {}
+      interior: {}
+      component: {}
       other: {}
   StatementBasis:
     description: What an operating statement represents.
@@ -221,6 +206,26 @@ classes:
       code: {}
       display: {}
 
+  Classification:
+    is_a: CodeableConcept
+    description: >-
+      An open-vocabulary classification qualified by the system that defines
+      its code. Codes from different systems are not assumed equivalent.
+    attributes:
+      system: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      code: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+
+  Rating:
+    is_a: CodeableConcept
+    description: >-
+      A rating qualified by the system that defines its code. PHDS does not
+      assume codes from different systems are ordinally or semantically equal.
+    attributes:
+      system: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      code: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      description: {}
+      scope: {range: RatingScope}
+
   GeoPoint:
     description: WGS84 coordinate.
     attributes:
@@ -243,5 +248,9 @@ classes:
       source_url: {range: uri}
       retrieved_at: {range: datetime}
       method: {range: CaptureMethod}
-      confidence: {range: float, minimum_value: 0, maximum_value: 1}
+      confidence:
+        range: float
+        minimum_value: 0
+        maximum_value: 1
+        description: Fraction from 0 through 1; 0.8 means 80 percent confidence.
       verification: {range: VerificationStatus}

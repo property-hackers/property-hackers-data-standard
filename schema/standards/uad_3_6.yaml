@@ -1,0 +1,79 @@
+id: https://example.org/phds/standards/uad-3-6
+name: phds_uad_3_6
+title: PHDS UAD 3.6 Rating Profile
+license: MIT
+version: 0.2.0
+prefixes:
+  linkml: https://w3id.org/linkml/
+  phds: https://example.org/phds/
+default_prefix: phds
+default_range: string
+imports: [linkml:types, ../capture]
+
+enums:
+  Uad36ConditionSystem:
+    permissible_values:
+      "urn:phds:standard:uad:3.6:condition": {}
+  Uad36QualitySystem:
+    permissible_values:
+      "urn:phds:standard:uad:3.6:quality": {}
+  Uad36ConditionCode:
+    permissible_values: {C1: {}, C2: {}, C3: {}, C4: {}, C5: {}, C6: {}}
+  Uad36QualityCode:
+    permissible_values: {Q1: {}, Q2: {}, Q3: {}, Q4: {}, Q5: {}, Q6: {}}
+  Uad36RatingScope:
+    description: >-
+      UAD rating scope. Interior means the appraised dwelling or unit
+      represented by the containing Structure or StructureState; Space-level
+      UAD mapping is not implied.
+    permissible_values:
+      overall: {}
+      exterior: {}
+      interior:
+        description: >-
+          The appraised dwelling or unit represented by the containing
+          Structure or StructureState. Space-level UAD mapping is not implied.
+
+classes:
+  Uad36ConditionRating:
+    is_a: Rating
+    description: UAD 3.6 physical condition rating with an explicit scope.
+    slot_usage:
+      system: {range: Uad36ConditionSystem}
+      code: {range: Uad36ConditionCode}
+      scope: {range: Uad36RatingScope, required: true}
+
+  Uad36QualityRating:
+    is_a: Rating
+    description: UAD 3.6 construction quality rating with an explicit scope.
+    slot_usage:
+      system: {range: Uad36QualitySystem}
+      code: {range: Uad36QualityCode}
+      scope: {range: Uad36RatingScope, required: true}
+
+  Uad36Structure:
+    is_a: Structure
+    slot_usage:
+      condition_ratings: {range: Uad36ConditionRating}
+      quality_ratings: {range: Uad36QualityRating}
+
+  Uad36StructureState:
+    is_a: StructureState
+    slot_usage:
+      condition_ratings: {range: Uad36ConditionRating}
+      quality_ratings: {range: Uad36QualityRating}
+
+  Uad36PropertyStateSnapshot:
+    is_a: PropertyStateSnapshot
+    slot_usage:
+      structure_states: {range: Uad36StructureState}
+
+  Uad36PropertyProfile:
+    is_a: PropertyProfile
+    tree_root: true
+    description: >-
+      Optional UAD 3.6-constrained PHDS interchange document. Core PHDS does
+      not depend on this profile.
+    slot_usage:
+      structures: {range: Uad36Structure}
+      property_state_snapshots: {range: Uad36PropertyStateSnapshot}

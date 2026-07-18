@@ -1,0 +1,21 @@
+{
+  "property": {"id": "property-duplicate-rating"},
+  "structures": [
+    {
+      "id": "structure-duplicate-rating",
+      "property": "property-duplicate-rating",
+      "condition_ratings": [
+        {
+          "system": "urn:example:condition",
+          "code": "average",
+          "scope": "overall"
+        },
+        {
+          "system": "urn:example:condition",
+          "code": "good",
+          "scope": "overall"
+        }
+      ]
+    }
+  ]
+}

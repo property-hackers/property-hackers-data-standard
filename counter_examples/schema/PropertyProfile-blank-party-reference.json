@@ -1,0 +1,16 @@
+{
+  "property": {"id": "property-1"},
+  "parties": [
+    {"id": "party-1", "kind": "person", "name": "Valid Name"}
+  ],
+  "transfers": [
+    {
+      "id": "transfer-1",
+      "property": "property-1",
+      "transfer_kind": "deed",
+      "parties": [
+        {"role": "grantor", "party": " "}
+      ]
+    }
+  ]
+}
