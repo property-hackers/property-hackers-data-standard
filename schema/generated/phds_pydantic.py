@@ -107,6 +107,19 @@ class VerificationStatus(str, Enum):
     rejected = "rejected"
 
 
+class AssessorStatus(str, Enum):
+    """
+    Outcome of an assessor or public-records lookup.
+    """
+    success = "success"
+    not_found = "not_found"
+    timeout = "timeout"
+    api_error = "api_error"
+    parse_error = "parse_error"
+    invalid_address = "invalid_address"
+    ambiguous = "ambiguous"
+
+
 class PartyKind(str, Enum):
     person = "person"
     organization = "organization"
@@ -302,6 +315,19 @@ class Money(ConfiguredBaseModel):
                        'StatementLineItem']} })
     currency: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Money', 'UnitRate']} })
 
+    @field_validator('amount')
+    def pattern_amount(cls, v):
+        pattern=re.compile(r"^-?\d+(\.\d+)?$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid amount format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid amount format: {v}"
+            raise ValueError(err_msg)
+        return v
+
     @field_validator('currency')
     def pattern_currency(cls, v):
         pattern=re.compile(r"^[A-Z]{3}$")
@@ -361,6 +387,19 @@ class UnitRate(ConfiguredBaseModel):
                        'StatementLineItem']} })
     currency: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Money', 'UnitRate']} })
     denominator: str = Field(default=..., description="""sqft | sqm | unit | bed | key | month | sqft_month | 1000_sqft | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRate']} })
+
+    @field_validator('amount')
+    def pattern_amount(cls, v):
+        pattern=re.compile(r"^-?\d+(\.\d+)?$")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid amount format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid amount format: {v}"
+            raise ValueError(err_msg)
+        return v
 
     @field_validator('currency')
     def pattern_currency(cls, v):
@@ -3844,7 +3883,7 @@ class AssessorObservation(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/profiles'})
 
-    status: str = Field(default=..., description="""success | not_found | timeout | api_error | parse_error | invalid_address | ambiguous""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
+    status: AssessorStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
                        'ListingEvent',
                        'Loan',
                        'ForeclosureFiling',

@@ -1,0 +1,28 @@
+name: conformance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: "3.12"
+      - name: Install just
+        uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
+      - name: Install pinned LinkML toolchain
+        run: just venv
+      - name: Regenerate and validate contracts
+        run: just check
+      - name: Test Rust assessor-status wire format
+        run: cargo test --manifest-path schema/generated/phds-rust/Cargo.toml --features serde canonical_wire_values_round_trip
+      - name: Verify committed generated artifacts
+        run: git diff --exit-code

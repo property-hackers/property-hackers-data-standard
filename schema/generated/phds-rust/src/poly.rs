@@ -5233,9 +5233,9 @@ impl PropertyProfile for crate::PropertyProfile {
 
 pub trait AssessorObservation   {
 
-    fn status<'a>(&'a self) -> &'a str;
-    // fn status_mut(&mut self) -> &mut &'a str;
-    // fn set_status(&mut self, value: String);
+    fn status<'a>(&'a self) -> &'a crate::AssessorStatus;
+    // fn status_mut(&mut self) -> &mut &'a crate::AssessorStatus;
+    // fn set_status(&mut self, value: AssessorStatus);
 
     fn query_address<'a>(&'a self) -> Option<&'a str>;
     // fn query_address_mut(&mut self) -> &mut Option<&'a str>;
@@ -5269,8 +5269,8 @@ pub trait AssessorObservation   {
 }
 
 impl AssessorObservation for crate::AssessorObservation {
-        fn status<'a>(&'a self) -> &'a str {
-        return &self.status[..];
+        fn status<'a>(&'a self) -> &'a crate::AssessorStatus {
+        return &self.status;
     }
         fn query_address<'a>(&'a self) -> Option<&'a str> {
         return self.query_address.as_deref();

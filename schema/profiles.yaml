@@ -61,7 +61,7 @@ classes:
       fetch. The payload is a partial
       PropertyProfile; status reports the fetch outcome.
     attributes:
-      status: {required: true, description: success | not_found | timeout | api_error | parse_error | invalid_address | ambiguous}
+      status: {range: AssessorStatus, required: true}
       query_address: {}
       query_parcel_number: {}
       assessor_url: {range: uri}

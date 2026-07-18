@@ -60,6 +60,18 @@ export enum VerificationStatus {
     disputed = "disputed",
     rejected = "rejected",
 };
+/**
+* Outcome of an assessor or public-records lookup.
+*/
+export enum AssessorStatus {
+    success = "success",
+    not_found = "not_found",
+    timeout = "timeout",
+    api_error = "api_error",
+    parse_error = "parse_error",
+    invalid_address = "invalid_address",
+    ambiguous = "ambiguous",
+};
 
 export enum PartyKind {
     
@@ -1333,8 +1345,7 @@ export interface PropertyProfile {
  * Thin capture envelope for a county assessor / public-records fetch. The payload is a partial PropertyProfile; status reports the fetch outcome.
  */
 export interface AssessorObservation {
-    /** success | not_found | timeout | api_error | parse_error | invalid_address | ambiguous */
-    status: string,
+    status: AssessorStatus,
     query_address?: string,
     query_parcel_number?: string,
     assessor_url?: string,
