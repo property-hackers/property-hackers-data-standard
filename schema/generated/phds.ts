@@ -252,9 +252,36 @@ export enum GeocodeAccuracy {
     unknown = "unknown",
 };
 /**
+* Outcome of an extraction attempt over already-fetched content. Fetch-level failures (timeout, api_error) belong to the envelope that did the fetching, e.g. AssessorStatus.
+*/
+export enum ExtractionStatus {
+    
+    success = "success",
+    /** Content was retrieved but extraction failed */
+    parse_error = "parse_error",
+    /** Content contains no extractable property data */
+    irrelevant_page = "irrelevant_page",
+    /** The extraction model or tooling failed */
+    model_error = "model_error",
+};
+/**
+* What kind of property content an extraction produced. This is a content axis only — where the content came from (public record, vendor, scrape) is Provenance's job. Precedence: when the primary extracted content is a transaction, listing, or lease, use that value even if the page is also a record of property facts. `other` means successfully classified but outside this taxonomy; put the producer's raw label in source_category.
+*/
+export enum ExtractionCategory {
+    
+    sales_transaction = "sales_transaction",
+    sale_listing = "sale_listing",
+    lease_listing = "lease_listing",
+    in_place_lease = "in_place_lease",
+    /** Property characteristics, assessment, or tax facts with no primary transaction/listing/lease content */
+    property_facts = "property_facts",
+    other = "other",
+};
+/**
 * Outcome of an assessor or public-records lookup.
 */
 export enum AssessorStatus {
+    
     success = "success",
     not_found = "not_found",
     timeout = "timeout",
@@ -277,6 +304,7 @@ export interface Any {
  */
 export interface Money {
     amount: string,
+    /** ISO-4217 currency code */
     currency: string,
 }
 
@@ -286,7 +314,7 @@ export interface Money {
  */
 export interface Area {
     value: string,
-    unit: string,
+    unit: AreaUnit,
 }
 
 
@@ -295,7 +323,7 @@ export interface Area {
  */
 export interface Length {
     value: string,
-    unit: string,
+    unit: LengthUnit,
 }
 
 
@@ -304,6 +332,7 @@ export interface Length {
  */
 export interface UnitRate {
     amount: string,
+    /** ISO-4217 currency code */
     currency: string,
     /** sqft | sqm | unit | bed | key | month | sqft_month | 1000_sqft | ... */
     denominator: string,
@@ -346,9 +375,9 @@ export interface Provenance {
     provider?: string,
     source_url?: string,
     retrieved_at?: string,
-    method?: string,
+    method?: CaptureMethod,
     confidence?: number,
-    verification?: string,
+    verification?: VerificationStatus,
 }
 
 
@@ -446,7 +475,7 @@ export interface Address extends Entity {
     /** App-computed dedup key */
     address_hash: string,
     location?: GeoPoint,
-    location_accuracy?: string,
+    location_accuracy?: GeocodeAccuracy,
 }
 
 
@@ -461,7 +490,7 @@ export interface Property extends Entity {
     property_use_subtype?: string,
     /** 'pucs_1_0' | local system; REQUIRED when use fields are set (no default) */
     property_use_system?: string,
-    estate_type?: string,
+    estate_type?: EstateType,
     situs_address?: AddressId,
     location?: GeoPoint,
     /** Vendor summary when structures are not enumerated */
@@ -505,7 +534,7 @@ export interface PropertyParcel extends Entity {
 export interface ParcelLineage extends Entity {
     predecessor_parcel: ParcelId,
     successor_parcel: ParcelId,
-    kind: string,
+    kind: ParcelLineageKind,
     effective_on?: date,
 }
 
@@ -525,8 +554,8 @@ export interface PropertyIdentifier extends Entity {
  * One model for every actor — owners, buyers, borrowers, lenders, brokers, trustees, claimants, contractors, HOAs.
  */
 export interface Party extends Entity {
-    kind: string,
-    organization_kind?: string,
+    kind: PartyKind,
+    organization_kind?: OrganizationKind,
     /** Display name as recorded */
     name: string,
     normalized_name?: string,
@@ -798,7 +827,7 @@ export interface PropertyAssociation extends Entity {
     party?: PartyId,
     name?: string,
     fee?: Money,
-    fee_period?: string,
+    fee_period?: RentPeriod,
 }
 
 
@@ -889,7 +918,7 @@ export interface Transfer extends Entity, RecordedInstrument {
     consideration?: Money,
     /** Doc stamps; price-inference basis in many places */
     transfer_tax?: Money,
-    price_disclosure?: string,
+    price_disclosure?: PriceDisclosure,
     price_code?: CodeableConcept,
     partial_interest_pct?: string,
     is_inter_family?: boolean,
@@ -913,9 +942,9 @@ export interface SaleEvent extends Entity {
     transfer?: TransferId,
     sale_date: date,
     sale_price?: Money,
-    price_disclosure?: string,
+    price_disclosure?: PriceDisclosure,
     price_code?: CodeableConcept,
-    sale_type?: string,
+    sale_type?: SaleTypeEnum,
     price_per_area?: UnitRate,
     price_per_unit?: Money,
     /** cash | conventional | seller | assumption | other (coarse; loans carry detail) */
@@ -944,14 +973,14 @@ export interface SaleEventParty extends TransactionParty {
  */
 export interface Listing extends Entity {
     property: PropertyId,
-    kind: string,
+    kind: ListingKind,
     /** mls | fsbo | auction | pocket */
     listing_type?: string,
-    status?: string,
+    status?: ListingStatus,
     original_list_price?: Money,
     list_price?: Money,
     list_rent?: Money,
-    list_rent_period?: string,
+    list_rent_period?: RentPeriod,
     listed_on?: date,
     closed_on?: date,
     close_price?: Money,
@@ -966,7 +995,7 @@ export interface ListingEvent {
     occurred_on: date,
     /** listed | price_change | status_change | relisted | closed */
     event_kind: string,
-    status?: string,
+    status?: ListingStatus,
     list_price?: Money,
     extras?: Any,
     provenance?: Provenance,
@@ -986,14 +1015,14 @@ export interface ListingParticipant extends TransactionParty {
 export interface LeaseEvent extends Entity {
     property: PropertyId,
     space?: SpaceId,
-    lease_type?: string,
+    lease_type?: LeaseTypeEnum,
     execution_date?: date,
     commencement_date?: date,
     expiration_date?: date,
     term_months?: number,
     leased_area?: Area,
     rent?: Money,
-    rent_period?: string,
+    rent_period?: RentPeriod,
     starting_rent_per_area?: UnitRate,
     effective_rent_per_area?: UnitRate,
     net_effective_rent_per_area?: UnitRate,
@@ -1079,9 +1108,9 @@ export interface UnitRentObservation extends Entity {
     unit_count?: number,
     units_available?: number,
     rate: Money,
-    rate_period?: string,
-    rate_basis?: string,
-    rate_type?: string,
+    rate_period?: RentPeriod,
+    rate_basis?: RateBasis,
+    rate_type?: RateType,
     observed_on: date,
     concessions_note?: string,
 }
@@ -1113,7 +1142,7 @@ export interface Loan extends Entity, RecordedInstrument {
     term_months?: number,
     due_date?: date,
     lien_position?: number,
-    status?: string,
+    status?: LoanStatus,
     satisfied_on?: date,
     parties?: LoanParty[],
     events?: LoanEvent[],
@@ -1131,7 +1160,7 @@ export interface LoanParty extends TransactionParty {
  * Dated loan lifecycle — assignments, modifications, satisfactions. Recording fields apply when the event is a recorded instrument; they stay null for unrecorded servicing events.
  */
 export interface LoanEvent extends RecordedInstrument {
-    event_kind: string,
+    event_kind: LoanEventKind,
     occurred_on?: date,
     amount?: Money,
     /** Assignee lender name (assignments) */
@@ -1147,7 +1176,7 @@ export interface LoanEvent extends RecordedInstrument {
  */
 export interface Lien extends Entity, RecordedInstrument {
     property: PropertyId,
-    kind: string,
+    kind: LienKind,
     amount?: Money,
     released_on?: date,
     parties?: LienParty[],
@@ -1239,7 +1268,7 @@ export interface OperatingStatement extends Entity {
     /** For fiscal-year, trailing-12, or partial periods. period_start and period_end must be provided together; omit both for calendar-year statements. */
     period_start?: date,
     period_end?: date,
-    statement_basis?: string,
+    statement_basis?: StatementBasis,
     /** Potential gross income */
     pgi?: Money,
     vacancy_loss?: Money,
@@ -1276,7 +1305,7 @@ export interface StatementLineItem {
  */
 export interface Valuation extends Entity {
     property: PropertyId,
-    kind: string,
+    kind: ValuationKind,
     /** desktop | exterior | hybrid | traditional */
     valuation_method?: string,
     /** market_value | liquidation | insurable | land | ... (open) */
@@ -1342,7 +1371,7 @@ export interface PropertyProfile {
 
 
 /**
- * Thin capture envelope for a county assessor / public-records fetch. The payload is a partial PropertyProfile; status reports the fetch outcome.
+ * Thin capture envelope for a county assessor / public-records fetch. The payload is a sparse PropertyProfile (only the sections the source provides; a valid profile still requires its `property` section); status reports the fetch outcome. By convention profile accompanies success and error accompanies failure statuses — validators deliberately do not enforce this pairing, so consumers must branch on status, not on field presence.
  */
 export interface AssessorObservation {
     status: AssessorStatus,
@@ -1357,11 +1386,15 @@ export interface AssessorObservation {
 
 
 /**
- * Capture envelope for LLM or scrape extraction (suitable as an LLM structured-output target). The payload is a partial PropertyProfile; category classifies the source page.
+ * Capture envelope for LLM or scrape extraction (suitable as an LLM structured-output target). The payload is a sparse PropertyProfile (only the sections the source provides; a valid profile still requires its `property` section); status reports the extraction outcome. By convention profile and category accompany success and error accompanies failure statuses — validators deliberately do not enforce this pairing (LinkML rules would materialize in only some generated validators, diverging the contracts), so consumers must branch on status, not on field presence.
  */
 export interface ExtractionObservation {
-    /** sales_transaction | sale_listing | lease_listing | in_place_lease | public_data | other */
-    category: string,
+    status: ExtractionStatus,
+    /** Content classification; expected when status is success */
+    category?: ExtractionCategory,
+    /** Raw or more specific producer classification, especially when category is `other` */
+    source_category?: string,
+    error?: string,
     source_url?: string,
     extracted_at?: string,
     /** Extraction model identifier */
@@ -1370,6 +1403,5 @@ export interface ExtractionObservation {
     provenance: Provenance,
     extras?: Any,
 }
-
 
 

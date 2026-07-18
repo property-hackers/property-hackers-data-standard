@@ -1,10 +1,10 @@
 #[cfg(feature = "stubgen")]
-use phds_profiles::stub_utils;
+use phds::stub_utils;
 
 #[cfg(feature = "stubgen")]
 fn main() -> pyo3_stub_gen::Result<()> {
     let check_only = std::env::args().skip(1).any(|arg| arg == "--check");
-    let stub = phds_profiles::stub_info()?;
+    let stub = phds::stub_info()?;
 
     if check_only {
         check_stubs(&stub)

@@ -68,16 +68,16 @@ class LinkMLMeta(RootModel):
 
 linkml_meta = LinkMLMeta({'default_prefix': 'phds',
      'default_range': 'string',
-     'id': 'https://example.org/phds/profiles',
-     'imports': ['linkml:types', 'core', 'entities'],
+     'id': 'https://example.org/phds',
+     'imports': ['linkml:types', 'profiles'],
      'license': 'MIT',
-     'name': 'phds_profiles',
+     'name': 'phds',
      'prefixes': {'linkml': {'prefix_prefix': 'linkml',
                              'prefix_reference': 'https://w3id.org/linkml/'},
                   'phds': {'prefix_prefix': 'phds',
                            'prefix_reference': 'https://example.org/phds/'}},
-     'source_file': 'schema/profiles.yaml',
-     'title': 'PHDS Profiles'} )
+     'source_file': 'schema/capture.yaml',
+     'title': 'PHDS'} )
 
 class AreaUnit(str, Enum):
     sqft = "sqft"
@@ -284,6 +284,40 @@ class GeocodeAccuracy(str, Enum):
     unknown = "unknown"
 
 
+class ExtractionStatus(str, Enum):
+    """
+    Outcome of an extraction attempt over already-fetched content. Fetch-level failures (timeout, api_error) belong to the envelope that did the fetching, e.g. AssessorStatus.
+    """
+    success = "success"
+    parse_error = "parse_error"
+    """
+    Content was retrieved but extraction failed
+    """
+    irrelevant_page = "irrelevant_page"
+    """
+    Content contains no extractable property data
+    """
+    model_error = "model_error"
+    """
+    The extraction model or tooling failed
+    """
+
+
+class ExtractionCategory(str, Enum):
+    """
+    What kind of property content an extraction produced. This is a content axis only — where the content came from (public record, vendor, scrape) is Provenance's job. Precedence: when the primary extracted content is a transaction, listing, or lease, use that value even if the page is also a record of property facts. `other` means successfully classified but outside this taxonomy; put the producer's raw label in source_category.
+    """
+    sales_transaction = "sales_transaction"
+    sale_listing = "sale_listing"
+    lease_listing = "lease_listing"
+    in_place_lease = "in_place_lease"
+    property_facts = "property_facts"
+    """
+    Property characteristics, assessment, or tax facts with no primary transaction/listing/lease content
+    """
+    other = "other"
+
+
 class AssessorStatus(str, Enum):
     """
     Outcome of an assessor or public-records lookup.
@@ -312,8 +346,9 @@ class Money(ConfiguredBaseModel):
                        'RentStep',
                        'LoanEvent',
                        'Lien',
-                       'StatementLineItem']} })
-    currency: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Money', 'UnitRate']} })
+                       'StatementLineItem'],
+         'slot_uri': 'phds:decimal_amount'} })
+    currency: str = Field(default=..., description="""ISO-4217 currency code""", json_schema_extra = { "linkml_meta": {'domain_of': ['Money', 'UnitRate']} })
 
     @field_validator('amount')
     def pattern_amount(cls, v):
@@ -384,8 +419,9 @@ class UnitRate(ConfiguredBaseModel):
                        'RentStep',
                        'LoanEvent',
                        'Lien',
-                       'StatementLineItem']} })
-    currency: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Money', 'UnitRate']} })
+                       'StatementLineItem'],
+         'slot_uri': 'phds:decimal_amount'} })
+    currency: str = Field(default=..., description="""ISO-4217 currency code""", json_schema_extra = { "linkml_meta": {'domain_of': ['Money', 'UnitRate']} })
     denominator: str = Field(default=..., description="""sqft | sqm | unit | bed | key | month | sqft_month | 1000_sqft | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRate']} })
 
     @field_validator('amount')
@@ -2471,7 +2507,8 @@ class Listing(Entity):
                        'Loan',
                        'ForeclosureFiling',
                        'Permit',
-                       'AssessorObservation']} })
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
     original_list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
     list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'ListingEvent']} })
     list_rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
@@ -2530,7 +2567,8 @@ class ListingEvent(ConfiguredBaseModel):
                        'Loan',
                        'ForeclosureFiling',
                        'Permit',
-                       'AssessorObservation']} })
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
     list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'ListingEvent']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -2983,7 +3021,8 @@ class Loan(RecordedInstrument, Entity):
                        'Loan',
                        'ForeclosureFiling',
                        'Permit',
-                       'AssessorObservation']} })
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
     satisfied_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     parties: Optional[list[LoanParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
                        'SaleEvent',
@@ -3382,7 +3421,8 @@ class ForeclosureFiling(RecordedInstrument):
                        'Loan',
                        'ForeclosureFiling',
                        'Permit',
-                       'AssessorObservation']} })
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
     auction_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureFiling']} })
     auction_at_time: Optional[str] = Field(default=None, description="""Time-of-day as published""", json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureFiling']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
@@ -3517,7 +3557,8 @@ class Permit(Entity):
                        'Loan',
                        'ForeclosureFiling',
                        'Permit',
-                       'AssessorObservation']} })
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation', 'Permit']} })
     applied_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     issued_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
@@ -3879,21 +3920,22 @@ class PropertyProfile(ConfiguredBaseModel):
 
 class AssessorObservation(ConfiguredBaseModel):
     """
-    Thin capture envelope for a county assessor / public-records fetch. The payload is a partial PropertyProfile; status reports the fetch outcome.
+    Thin capture envelope for a county assessor / public-records fetch. The payload is a sparse PropertyProfile (only the sections the source provides; a valid profile still requires its `property` section); status reports the fetch outcome. By convention profile accompanies success and error accompanies failure statuses — validators deliberately do not enforce this pairing, so consumers must branch on status, not on field presence.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/profiles'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds'})
 
     status: AssessorStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
                        'ListingEvent',
                        'Loan',
                        'ForeclosureFiling',
                        'Permit',
-                       'AssessorObservation']} })
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
     query_address: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
     query_parcel_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
     assessor_url: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
     profile: Optional[PropertyProfile] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
-    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
+    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
     provenance: Provenance = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
@@ -3933,11 +3975,20 @@ class AssessorObservation(ConfiguredBaseModel):
 
 class ExtractionObservation(ConfiguredBaseModel):
     """
-    Capture envelope for LLM or scrape extraction (suitable as an LLM structured-output target). The payload is a partial PropertyProfile; category classifies the source page.
+    Capture envelope for LLM or scrape extraction (suitable as an LLM structured-output target). The payload is a sparse PropertyProfile (only the sections the source provides; a valid profile still requires its `property` section); status reports the extraction outcome. By convention profile and category accompany success and error accompanies failure statuses — validators deliberately do not enforce this pairing (LinkML rules would materialize in only some generated validators, diverging the contracts), so consumers must branch on status, not on field presence.
     """
-    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/profiles'})
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds'})
 
-    category: str = Field(default=..., description="""sales_transaction | sale_listing | lease_listing | in_place_lease | public_data | other""", json_schema_extra = { "linkml_meta": {'domain_of': ['StatementLineItem', 'ExtractionObservation']} })
+    status: ExtractionStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Listing',
+                       'ListingEvent',
+                       'Loan',
+                       'ForeclosureFiling',
+                       'Permit',
+                       'AssessorObservation',
+                       'ExtractionObservation']} })
+    category: Optional[ExtractionCategory] = Field(default=None, description="""Content classification; expected when status is success""", json_schema_extra = { "linkml_meta": {'domain_of': ['StatementLineItem', 'ExtractionObservation']} })
+    source_category: Optional[str] = Field(default=None, description="""Raw or more specific producer classification, especially when category is `other`""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionObservation']} })
+    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
     source_url: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance', 'ExtractionObservation']} })
     extracted_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionObservation']} })
     model: Optional[str] = Field(default=None, description="""Extraction model identifier""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionObservation']} })

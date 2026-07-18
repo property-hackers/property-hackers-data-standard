@@ -7,7 +7,7 @@ real estate.
 
 > Status: early draft (0.1), published as an RFC. Everything is open for discussion; issues and pull requests are welcome.
 
-The schema itself: [`schema/entities.yaml`](schema/entities.yaml) (the entities), with [`schema/core.yaml`](schema/core.yaml) (value types and enums) and [`schema/profiles.yaml`](schema/profiles.yaml) (document bundles, the generator entry point).
+The schema itself: [`schema/entities.yaml`](schema/entities.yaml) (the entities), with [`schema/core.yaml`](schema/core.yaml) (value types and enums), [`schema/profiles.yaml`](schema/profiles.yaml) (the PropertyProfile interchange document), and [`schema/capture.yaml`](schema/capture.yaml) (capture envelopes; the generator entry point, since its import closure is the full standard).
 
 ## Why
 
@@ -63,8 +63,9 @@ BOMA, and OSCRE.
 schema/
   core.yaml           value types, enums, provenance
   entities.yaml       normalized canonical entities
-  profiles.yaml       PropertyProfile and capture envelopes
-  generated/          JSON Schema, Pydantic, and TypeScript (regenerate with `just gen`)
+  profiles.yaml       the PropertyProfile interchange document
+  capture.yaml        capture envelopes (fetch/extraction outcomes; generator entry point)
+  generated/          JSON Schema, Pydantic, TypeScript, and Rust (regenerate with `just gen`)
 examples/             real-world-derived, pseudonymized fixtures that must validate
 counter_examples/     fixtures that must fail validation
 docs/crosswalks/      standards alignment, including UAD 3.6
@@ -72,13 +73,14 @@ docs/crosswalks/      standards alignment, including UAD 3.6
 
 ## Quickstart
 
-Requires Python 3.10+ and [just](https://github.com/casey/just).
+Requires Python 3.10+, [just](https://github.com/casey/just), and a Rust
+toolchain (`cargo`) for the Rust wire-format tests.
 
 ```sh
 just venv       # create .venv and install the LinkML toolchain
-just gen        # regenerate JSON Schema / pydantic / TypeScript from the LinkML
+just gen        # regenerate JSON Schema / pydantic / TypeScript / Rust from the LinkML
 just validate   # examples must pass, counter_examples must fail
-just check      # gen + validate
+just check      # gen + validate + generated-contract tests + Rust wire-format tests
 ```
 
 ## Fixtures

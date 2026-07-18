@@ -7,22 +7,22 @@ venv:
 
 # regenerate all artifacts from the LinkML source of truth
 gen:
-    .venv/bin/gen-json-schema schema/profiles.yaml > schema/generated/phds.schema.json
-    .venv/bin/gen-pydantic    schema/profiles.yaml > schema/generated/phds_pydantic.py
-    .venv/bin/gen-typescript  schema/profiles.yaml > schema/generated/phds.ts.tmp
+    .venv/bin/gen-json-schema schema/capture.yaml > schema/generated/phds.schema.json
+    .venv/bin/gen-pydantic    schema/capture.yaml > schema/generated/phds_pydantic.py
+    .venv/bin/python tools/gen_typescript.py schema/capture.yaml > schema/generated/phds.ts.tmp
     printf '// ISO 8601 date string (shim: gen-typescript emits the LinkML type name verbatim)\ntype date = string;\n\n' | cat - schema/generated/phds.ts.tmp > schema/generated/phds.ts
     rm schema/generated/phds.ts.tmp
     mkdir -p schema/generated/phds-rust
-    .venv/bin/gen-rust schema/profiles.yaml --output schema/generated/phds-rust --force --serde
-    .venv/bin/python tools/postprocess_generated.py
+    .venv/bin/gen-rust schema/capture.yaml --output schema/generated/phds-rust --force --serde
+    .venv/bin/python tools/gen_wire_format_test.py
 
 # examples must validate; counter_examples must fail
 validate:
     for f in examples/*.json; do \
-      .venv/bin/linkml-validate -s schema/profiles.yaml -C PropertyProfile "$f" && echo "PASS $f"; \
+      .venv/bin/linkml-validate -s schema/capture.yaml -C PropertyProfile "$f" && echo "PASS $f"; \
     done
     for f in counter_examples/*.json; do \
-      if .venv/bin/linkml-validate -s schema/profiles.yaml -C PropertyProfile "$f" > /dev/null 2>&1; \
+      if .venv/bin/linkml-validate -s schema/capture.yaml -C PropertyProfile "$f" > /dev/null 2>&1; \
       then echo "FAIL (should not validate): $f"; exit 1; \
       else echo "PASS (correctly rejected) $f"; fi; \
     done

@@ -466,6 +466,7 @@ pub type query_parcel_number = String;
 pub type assessor_url = uri;
 pub type profile = String;
 pub type error = String;
+pub type source_category = String;
 pub type extracted_at = NaiveDateTime;
 pub type model = String;
 
@@ -2217,6 +2218,156 @@ impl ::pyo3_stub_gen::PyStubType for GeocodeAccuracy {
     fn type_output() -> ::pyo3_stub_gen::TypeInfo {
         ::pyo3_stub_gen::TypeInfo::with_module(
             "typing.Literal['rooftop', 'parcel', 'street', 'postal_centroid', 'locality_centroid', 'manual', 'unknown']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ExtractionStatus {
+#[cfg_attr(feature = "serde", serde(rename = "success"))]
+    Success,
+#[cfg_attr(feature = "serde", serde(rename = "parse_error"))]
+    ParseError,
+#[cfg_attr(feature = "serde", serde(rename = "irrelevant_page"))]
+    IrrelevantPage,
+#[cfg_attr(feature = "serde", serde(rename = "model_error"))]
+    ModelError,
+}
+
+impl core::fmt::Display for ExtractionStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ExtractionStatus::Success => f.write_str("success"),
+            ExtractionStatus::ParseError => f.write_str("parse_error"),
+            ExtractionStatus::IrrelevantPage => f.write_str("irrelevant_page"),
+            ExtractionStatus::ModelError => f.write_str("model_error"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for ExtractionStatus {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            ExtractionStatus::Success => "success",
+            ExtractionStatus::ParseError => "parse_error",
+            ExtractionStatus::IrrelevantPage => "irrelevant_page",
+            ExtractionStatus::ModelError => "model_error",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for ExtractionStatus {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "success" | "Success" => Ok(ExtractionStatus::Success),
+                "parse_error" | "ParseError" => Ok(ExtractionStatus::ParseError),
+                "irrelevant_page" | "IrrelevantPage" => Ok(ExtractionStatus::IrrelevantPage),
+                "model_error" | "ModelError" => Ok(ExtractionStatus::ModelError),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for ExtractionStatus: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(ExtractionStatus)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for ExtractionStatus {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['success', 'parse_error', 'irrelevant_page', 'model_error']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ExtractionCategory {
+#[cfg_attr(feature = "serde", serde(rename = "sales_transaction"))]
+    SalesTransaction,
+#[cfg_attr(feature = "serde", serde(rename = "sale_listing"))]
+    SaleListing,
+#[cfg_attr(feature = "serde", serde(rename = "lease_listing"))]
+    LeaseListing,
+#[cfg_attr(feature = "serde", serde(rename = "in_place_lease"))]
+    InPlaceLease,
+#[cfg_attr(feature = "serde", serde(rename = "property_facts"))]
+    PropertyFacts,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
+    Other,
+}
+
+impl core::fmt::Display for ExtractionCategory {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ExtractionCategory::SalesTransaction => f.write_str("sales_transaction"),
+            ExtractionCategory::SaleListing => f.write_str("sale_listing"),
+            ExtractionCategory::LeaseListing => f.write_str("lease_listing"),
+            ExtractionCategory::InPlaceLease => f.write_str("in_place_lease"),
+            ExtractionCategory::PropertyFacts => f.write_str("property_facts"),
+            ExtractionCategory::Other => f.write_str("other"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for ExtractionCategory {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            ExtractionCategory::SalesTransaction => "sales_transaction",
+            ExtractionCategory::SaleListing => "sale_listing",
+            ExtractionCategory::LeaseListing => "lease_listing",
+            ExtractionCategory::InPlaceLease => "in_place_lease",
+            ExtractionCategory::PropertyFacts => "property_facts",
+            ExtractionCategory::Other => "other",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for ExtractionCategory {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "sales_transaction" | "SalesTransaction" => Ok(ExtractionCategory::SalesTransaction),
+                "sale_listing" | "SaleListing" => Ok(ExtractionCategory::SaleListing),
+                "lease_listing" | "LeaseListing" => Ok(ExtractionCategory::LeaseListing),
+                "in_place_lease" | "InPlaceLease" => Ok(ExtractionCategory::InPlaceLease),
+                "property_facts" | "PropertyFacts" => Ok(ExtractionCategory::PropertyFacts),
+                "other" | "Other" => Ok(ExtractionCategory::Other),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for ExtractionCategory: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(ExtractionCategory)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for ExtractionCategory {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['sales_transaction', 'sale_listing', 'lease_listing', 'in_place_lease', 'property_facts', 'other']",
             "typing".into(),
         )
     }
@@ -8496,7 +8647,13 @@ impl<'py> FromPyObject<'py> for Box<AssessorObservation> {
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ExtractionObservation {
-    pub category: String,
+    pub status: ExtractionStatus,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub category: Option<ExtractionCategory>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub source_category: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub error: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub source_url: Option<uri>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -8514,12 +8671,12 @@ pub struct ExtractionObservation {
 #[pymethods]
 impl ExtractionObservation {
     #[new]
-    #[pyo3(signature = (category, provenance, source_url=None, extracted_at=None, model=None, profile=None, extras=None))]
-    pub fn new(category: String, provenance: serde_utils::PyValue<Provenance>, source_url: Option<uri>, extracted_at: Option<NaiveDateTime>, model: Option<String>, profile: Option<serde_utils::PyValue<PropertyProfile>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (status, provenance, category=None, source_category=None, error=None, source_url=None, extracted_at=None, model=None, profile=None, extras=None))]
+    pub fn new(status: ExtractionStatus, provenance: serde_utils::PyValue<Provenance>, category: Option<ExtractionCategory>, source_category: Option<String>, error: Option<String>, source_url: Option<uri>, extracted_at: Option<NaiveDateTime>, model: Option<String>, profile: Option<serde_utils::PyValue<PropertyProfile>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let provenance = provenance.into_inner();
         let profile = profile.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
-        ExtractionObservation{category, provenance, source_url, extracted_at, model, profile, extras}
+        ExtractionObservation{status, provenance, category, source_category, error, source_url, extracted_at, model, profile, extras}
     }
 }
 
