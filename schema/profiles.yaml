@@ -54,32 +54,3 @@ classes:
       valuations: {range: Valuation, multivalued: true, inlined: true, inlined_as_list: true}
       provenance: {range: Provenance}
       extras: {range: Any}
-
-  AssessorObservation:
-    description: >-
-      Thin capture envelope for a county assessor / public-records
-      fetch. The payload is a partial
-      PropertyProfile; status reports the fetch outcome.
-    attributes:
-      status: {range: AssessorStatus, required: true}
-      query_address: {}
-      query_parcel_number: {}
-      assessor_url: {range: uri}
-      profile: {range: PropertyProfile, inlined: true}
-      error: {}
-      provenance: {range: Provenance, required: true}
-      extras: {range: Any}
-
-  ExtractionObservation:
-    description: >-
-      Capture envelope for LLM or scrape extraction (suitable as an LLM
-      structured-output target). The payload is a partial
-      PropertyProfile; category classifies the source page.
-    attributes:
-      category: {required: true, description: sales_transaction | sale_listing | lease_listing | in_place_lease | public_data | other}
-      source_url: {range: uri}
-      extracted_at: {range: datetime}
-      model: {description: Extraction model identifier}
-      profile: {range: PropertyProfile, inlined: true}
-      provenance: {range: Provenance, required: true}
-      extras: {range: Any}

@@ -1,10 +1,10 @@
 [package]
-name = "phds_profiles"
+name = "phds"
 version = "0.1.0"
 edition = "2021"
 
 [lib]
-name = "phds_profiles"
+name = "phds"
 crate-type = ["lib"]
 
 [dependencies]
@@ -18,7 +18,7 @@ chrono = { version = "0.4.41", features = ["serde"]  }
 
 
 [features]
-default = []
+default = ["serde"]
 pyo3 = ["dep:pyo3"]
 serde = ["dep:serde", "dep:serde_yml", "dep:serde_path_to_error"]
 stubgen = ["dep:pyo3-stub-gen", "pyo3"]

@@ -466,6 +466,7 @@ pub type query_parcel_number = String;
 pub type assessor_url = uri;
 pub type profile = String;
 pub type error = String;
+pub type source_category = String;
 pub type extracted_at = NaiveDateTime;
 pub type model = String;
 
@@ -474,9 +475,13 @@ pub type model = String;
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum AreaUnit {
+#[cfg_attr(feature = "serde", serde(rename = "sqft"))]
     Sqft,
+#[cfg_attr(feature = "serde", serde(rename = "sqm"))]
     Sqm,
+#[cfg_attr(feature = "serde", serde(rename = "acre"))]
     Acre,
+#[cfg_attr(feature = "serde", serde(rename = "hectare"))]
     Hectare,
 }
 
@@ -540,7 +545,9 @@ impl ::pyo3_stub_gen::PyStubType for AreaUnit {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LengthUnit {
+#[cfg_attr(feature = "serde", serde(rename = "ft"))]
     Ft,
+#[cfg_attr(feature = "serde", serde(rename = "m"))]
     M,
 }
 
@@ -598,10 +605,15 @@ impl ::pyo3_stub_gen::PyStubType for LengthUnit {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum CaptureMethod {
+#[cfg_attr(feature = "serde", serde(rename = "api"))]
     Api,
+#[cfg_attr(feature = "serde", serde(rename = "scrape"))]
     Scrape,
+#[cfg_attr(feature = "serde", serde(rename = "llm_extraction"))]
     LlmExtraction,
+#[cfg_attr(feature = "serde", serde(rename = "manual"))]
     Manual,
+#[cfg_attr(feature = "serde", serde(rename = "bulk"))]
     Bulk,
 }
 
@@ -668,10 +680,15 @@ impl ::pyo3_stub_gen::PyStubType for CaptureMethod {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum VerificationStatus {
+#[cfg_attr(feature = "serde", serde(rename = "unverified"))]
     Unverified,
+#[cfg_attr(feature = "serde", serde(rename = "pending_review"))]
     PendingReview,
+#[cfg_attr(feature = "serde", serde(rename = "verified"))]
     Verified,
+#[cfg_attr(feature = "serde", serde(rename = "disputed"))]
     Disputed,
+#[cfg_attr(feature = "serde", serde(rename = "rejected"))]
     Rejected,
 }
 
@@ -737,87 +754,10 @@ impl ::pyo3_stub_gen::PyStubType for VerificationStatus {
 }
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
-#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
-pub enum AssessorStatus {
-    Success,
-    NotFound,
-    Timeout,
-    ApiError,
-    ParseError,
-    InvalidAddress,
-    Ambiguous,
-}
-
-impl core::fmt::Display for AssessorStatus {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            AssessorStatus::Success => f.write_str("success"),
-            AssessorStatus::NotFound => f.write_str("not_found"),
-            AssessorStatus::Timeout => f.write_str("timeout"),
-            AssessorStatus::ApiError => f.write_str("api_error"),
-            AssessorStatus::ParseError => f.write_str("parse_error"),
-            AssessorStatus::InvalidAddress => f.write_str("invalid_address"),
-            AssessorStatus::Ambiguous => f.write_str("ambiguous"),
-        }
-    }
-}
-
-#[cfg(feature = "pyo3")]
-impl<'py> IntoPyObject<'py> for AssessorStatus {
-    type Target = PyAny;
-    type Output = Bound<'py, Self::Target>;
-    type Error = PyErr;
-    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
-        let s: &str = match self {
-            AssessorStatus::Success => "success",
-            AssessorStatus::NotFound => "not_found",
-            AssessorStatus::Timeout => "timeout",
-            AssessorStatus::ApiError => "api_error",
-            AssessorStatus::ParseError => "parse_error",
-            AssessorStatus::InvalidAddress => "invalid_address",
-            AssessorStatus::Ambiguous => "ambiguous",
-        };
-        Ok(pyo3::types::PyString::new(py, s).into_any())
-    }
-}
-
-#[cfg(feature = "pyo3")]
-impl<'py> FromPyObject<'py> for AssessorStatus {
-    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
-        if let Ok(s) = ob.extract::<&str>() {
-            match s {
-                "success" | "Success" => Ok(AssessorStatus::Success),
-                "not_found" | "NotFound" => Ok(AssessorStatus::NotFound),
-                "timeout" | "Timeout" => Ok(AssessorStatus::Timeout),
-                "api_error" | "ApiError" => Ok(AssessorStatus::ApiError),
-                "parse_error" | "ParseError" => Ok(AssessorStatus::ParseError),
-                "invalid_address" | "InvalidAddress" => Ok(AssessorStatus::InvalidAddress),
-                "ambiguous" | "Ambiguous" => Ok(AssessorStatus::Ambiguous),
-                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
-                    format!("invalid value for AssessorStatus: {}", s),
-                )),
-            }
-        } else {
-            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
-                concat!("expected str for ", stringify!(AssessorStatus)),
-            ))
-        }
-    }
-}
-
-#[cfg(feature = "stubgen")]
-impl ::pyo3_stub_gen::PyStubType for AssessorStatus {
-    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
-        ::pyo3_stub_gen::TypeInfo::with_module(
-            "typing.Literal['success', 'not_found', 'timeout', 'api_error', 'parse_error', 'invalid_address', 'ambiguous']",
-            "typing".into(),
-        )
-    }
-}
-#[derive(Debug, Clone, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PartyKind {
+#[cfg_attr(feature = "serde", serde(rename = "person"))]
     Person,
+#[cfg_attr(feature = "serde", serde(rename = "organization"))]
     Organization,
 }
 
@@ -875,18 +815,31 @@ impl ::pyo3_stub_gen::PyStubType for PartyKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum OrganizationKind {
+#[cfg_attr(feature = "serde", serde(rename = "llc"))]
     Llc,
+#[cfg_attr(feature = "serde", serde(rename = "corporation"))]
     Corporation,
+#[cfg_attr(feature = "serde", serde(rename = "partnership"))]
     Partnership,
+#[cfg_attr(feature = "serde", serde(rename = "trust"))]
     Trust,
+#[cfg_attr(feature = "serde", serde(rename = "estate"))]
     Estate,
+#[cfg_attr(feature = "serde", serde(rename = "government"))]
     Government,
+#[cfg_attr(feature = "serde", serde(rename = "nonprofit"))]
     Nonprofit,
+#[cfg_attr(feature = "serde", serde(rename = "reit"))]
     Reit,
+#[cfg_attr(feature = "serde", serde(rename = "fund"))]
     Fund,
+#[cfg_attr(feature = "serde", serde(rename = "lender"))]
     Lender,
+#[cfg_attr(feature = "serde", serde(rename = "brokerage"))]
     Brokerage,
+#[cfg_attr(feature = "serde", serde(rename = "hoa"))]
     Hoa,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -977,15 +930,25 @@ impl ::pyo3_stub_gen::PyStubType for OrganizationKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum SaleTypeEnum {
+#[cfg_attr(feature = "serde", serde(rename = "arms_length"))]
     ArmsLength,
+#[cfg_attr(feature = "serde", serde(rename = "reo"))]
     Reo,
+#[cfg_attr(feature = "serde", serde(rename = "short_sale"))]
     ShortSale,
+#[cfg_attr(feature = "serde", serde(rename = "auction"))]
     Auction,
+#[cfg_attr(feature = "serde", serde(rename = "related_party"))]
     RelatedParty,
+#[cfg_attr(feature = "serde", serde(rename = "portfolio"))]
     Portfolio,
+#[cfg_attr(feature = "serde", serde(rename = "partial_interest"))]
     PartialInterest,
+#[cfg_attr(feature = "serde", serde(rename = "land_contract"))]
     LandContract,
+#[cfg_attr(feature = "serde", serde(rename = "new_construction"))]
     NewConstruction,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -1067,11 +1030,17 @@ impl ::pyo3_stub_gen::PyStubType for SaleTypeEnum {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum PriceDisclosure {
+#[cfg_attr(feature = "serde", serde(rename = "full"))]
     Full,
+#[cfg_attr(feature = "serde", serde(rename = "partial"))]
     Partial,
+#[cfg_attr(feature = "serde", serde(rename = "estimated"))]
     Estimated,
+#[cfg_attr(feature = "serde", serde(rename = "nominal"))]
     Nominal,
+#[cfg_attr(feature = "serde", serde(rename = "non_disclosure"))]
     NonDisclosure,
+#[cfg_attr(feature = "serde", serde(rename = "unknown"))]
     Unknown,
 }
 
@@ -1141,15 +1110,25 @@ impl ::pyo3_stub_gen::PyStubType for PriceDisclosure {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LeaseTypeEnum {
+#[cfg_attr(feature = "serde", serde(rename = "gross"))]
     Gross,
+#[cfg_attr(feature = "serde", serde(rename = "modified_gross"))]
     ModifiedGross,
+#[cfg_attr(feature = "serde", serde(rename = "triple_net"))]
     TripleNet,
+#[cfg_attr(feature = "serde", serde(rename = "double_net"))]
     DoubleNet,
+#[cfg_attr(feature = "serde", serde(rename = "single_net"))]
     SingleNet,
+#[cfg_attr(feature = "serde", serde(rename = "absolute_net"))]
     AbsoluteNet,
+#[cfg_attr(feature = "serde", serde(rename = "percentage"))]
     Percentage,
+#[cfg_attr(feature = "serde", serde(rename = "ground"))]
     Ground,
+#[cfg_attr(feature = "serde", serde(rename = "residential"))]
     Residential,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -1231,10 +1210,15 @@ impl ::pyo3_stub_gen::PyStubType for LeaseTypeEnum {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RentPeriod {
+#[cfg_attr(feature = "serde", serde(rename = "daily"))]
     Daily,
+#[cfg_attr(feature = "serde", serde(rename = "monthly"))]
     Monthly,
+#[cfg_attr(feature = "serde", serde(rename = "annual"))]
     Annual,
+#[cfg_attr(feature = "serde", serde(rename = "per_area_annual"))]
     PerAreaAnnual,
+#[cfg_attr(feature = "serde", serde(rename = "per_area_monthly"))]
     PerAreaMonthly,
 }
 
@@ -1301,14 +1285,23 @@ impl ::pyo3_stub_gen::PyStubType for RentPeriod {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RateBasis {
+#[cfg_attr(feature = "serde", serde(rename = "per_unit"))]
     PerUnit,
+#[cfg_attr(feature = "serde", serde(rename = "per_bed"))]
     PerBed,
+#[cfg_attr(feature = "serde", serde(rename = "per_area"))]
     PerArea,
+#[cfg_attr(feature = "serde", serde(rename = "per_room"))]
     PerRoom,
+#[cfg_attr(feature = "serde", serde(rename = "per_key"))]
     PerKey,
+#[cfg_attr(feature = "serde", serde(rename = "per_slip"))]
     PerSlip,
+#[cfg_attr(feature = "serde", serde(rename = "per_stall"))]
     PerStall,
+#[cfg_attr(feature = "serde", serde(rename = "per_pad"))]
     PerPad,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -1387,8 +1380,11 @@ impl ::pyo3_stub_gen::PyStubType for RateBasis {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum RateType {
+#[cfg_attr(feature = "serde", serde(rename = "asking"))]
     Asking,
+#[cfg_attr(feature = "serde", serde(rename = "effective"))]
     Effective,
+#[cfg_attr(feature = "serde", serde(rename = "contract"))]
     Contract,
 }
 
@@ -1449,7 +1445,9 @@ impl ::pyo3_stub_gen::PyStubType for RateType {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ListingKind {
+#[cfg_attr(feature = "serde", serde(rename = "for_sale"))]
     ForSale,
+#[cfg_attr(feature = "serde", serde(rename = "for_lease"))]
     ForLease,
 }
 
@@ -1507,13 +1505,21 @@ impl ::pyo3_stub_gen::PyStubType for ListingKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ListingStatus {
+#[cfg_attr(feature = "serde", serde(rename = "active"))]
     Active,
+#[cfg_attr(feature = "serde", serde(rename = "pending"))]
     Pending,
+#[cfg_attr(feature = "serde", serde(rename = "sold"))]
     Sold,
+#[cfg_attr(feature = "serde", serde(rename = "leased"))]
     Leased,
+#[cfg_attr(feature = "serde", serde(rename = "withdrawn"))]
     Withdrawn,
+#[cfg_attr(feature = "serde", serde(rename = "expired"))]
     Expired,
+#[cfg_attr(feature = "serde", serde(rename = "coming_soon"))]
     ComingSoon,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -1589,10 +1595,15 @@ impl ::pyo3_stub_gen::PyStubType for ListingStatus {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ValuationKind {
+#[cfg_attr(feature = "serde", serde(rename = "avm"))]
     Avm,
+#[cfg_attr(feature = "serde", serde(rename = "appraisal"))]
     Appraisal,
+#[cfg_attr(feature = "serde", serde(rename = "bpo"))]
     Bpo,
+#[cfg_attr(feature = "serde", serde(rename = "broker_opinion"))]
     BrokerOpinion,
+#[cfg_attr(feature = "serde", serde(rename = "internal"))]
     Internal,
 }
 
@@ -1659,11 +1670,17 @@ impl ::pyo3_stub_gen::PyStubType for ValuationKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LoanStatus {
+#[cfg_attr(feature = "serde", serde(rename = "active"))]
     Active,
+#[cfg_attr(feature = "serde", serde(rename = "satisfied"))]
     Satisfied,
+#[cfg_attr(feature = "serde", serde(rename = "assigned"))]
     Assigned,
+#[cfg_attr(feature = "serde", serde(rename = "foreclosure"))]
     Foreclosure,
+#[cfg_attr(feature = "serde", serde(rename = "released"))]
     Released,
+#[cfg_attr(feature = "serde", serde(rename = "unknown"))]
     Unknown,
 }
 
@@ -1733,13 +1750,21 @@ impl ::pyo3_stub_gen::PyStubType for LoanStatus {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LoanEventKind {
+#[cfg_attr(feature = "serde", serde(rename = "origination"))]
     Origination,
+#[cfg_attr(feature = "serde", serde(rename = "assignment"))]
     Assignment,
+#[cfg_attr(feature = "serde", serde(rename = "modification"))]
     Modification,
+#[cfg_attr(feature = "serde", serde(rename = "satisfaction"))]
     Satisfaction,
+#[cfg_attr(feature = "serde", serde(rename = "release"))]
     Release,
+#[cfg_attr(feature = "serde", serde(rename = "default"))]
     Default,
+#[cfg_attr(feature = "serde", serde(rename = "reinstatement"))]
     Reinstatement,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -1815,11 +1840,17 @@ impl ::pyo3_stub_gen::PyStubType for LoanEventKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum LienKind {
+#[cfg_attr(feature = "serde", serde(rename = "tax"))]
     Tax,
+#[cfg_attr(feature = "serde", serde(rename = "judgment"))]
     Judgment,
+#[cfg_attr(feature = "serde", serde(rename = "hoa"))]
     Hoa,
+#[cfg_attr(feature = "serde", serde(rename = "mechanics"))]
     Mechanics,
+#[cfg_attr(feature = "serde", serde(rename = "municipal"))]
     Municipal,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -1889,8 +1920,11 @@ impl ::pyo3_stub_gen::PyStubType for LienKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum ParcelLineageKind {
+#[cfg_attr(feature = "serde", serde(rename = "split"))]
     Split,
+#[cfg_attr(feature = "serde", serde(rename = "merge"))]
     Merge,
+#[cfg_attr(feature = "serde", serde(rename = "renumber"))]
     Renumber,
 }
 
@@ -1951,10 +1985,15 @@ impl ::pyo3_stub_gen::PyStubType for ParcelLineageKind {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum EstateType {
+#[cfg_attr(feature = "serde", serde(rename = "fee_simple"))]
     FeeSimple,
+#[cfg_attr(feature = "serde", serde(rename = "leasehold"))]
     Leasehold,
+#[cfg_attr(feature = "serde", serde(rename = "life_estate"))]
     LifeEstate,
+#[cfg_attr(feature = "serde", serde(rename = "cooperative_shares"))]
     CooperativeShares,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -2021,11 +2060,17 @@ impl ::pyo3_stub_gen::PyStubType for EstateType {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum StatementBasis {
+#[cfg_attr(feature = "serde", serde(rename = "actual"))]
     Actual,
+#[cfg_attr(feature = "serde", serde(rename = "budget"))]
     Budget,
+#[cfg_attr(feature = "serde", serde(rename = "pro_forma"))]
     ProForma,
+#[cfg_attr(feature = "serde", serde(rename = "stabilized"))]
     Stabilized,
+#[cfg_attr(feature = "serde", serde(rename = "projected"))]
     Projected,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
     Other,
 }
 
@@ -2095,12 +2140,19 @@ impl ::pyo3_stub_gen::PyStubType for StatementBasis {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub enum GeocodeAccuracy {
+#[cfg_attr(feature = "serde", serde(rename = "rooftop"))]
     Rooftop,
+#[cfg_attr(feature = "serde", serde(rename = "parcel"))]
     Parcel,
+#[cfg_attr(feature = "serde", serde(rename = "street"))]
     Street,
+#[cfg_attr(feature = "serde", serde(rename = "postal_centroid"))]
     PostalCentroid,
+#[cfg_attr(feature = "serde", serde(rename = "locality_centroid"))]
     LocalityCentroid,
+#[cfg_attr(feature = "serde", serde(rename = "manual"))]
     Manual,
+#[cfg_attr(feature = "serde", serde(rename = "unknown"))]
     Unknown,
 }
 
@@ -2166,6 +2218,241 @@ impl ::pyo3_stub_gen::PyStubType for GeocodeAccuracy {
     fn type_output() -> ::pyo3_stub_gen::TypeInfo {
         ::pyo3_stub_gen::TypeInfo::with_module(
             "typing.Literal['rooftop', 'parcel', 'street', 'postal_centroid', 'locality_centroid', 'manual', 'unknown']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ExtractionStatus {
+#[cfg_attr(feature = "serde", serde(rename = "success"))]
+    Success,
+#[cfg_attr(feature = "serde", serde(rename = "parse_error"))]
+    ParseError,
+#[cfg_attr(feature = "serde", serde(rename = "irrelevant_page"))]
+    IrrelevantPage,
+#[cfg_attr(feature = "serde", serde(rename = "model_error"))]
+    ModelError,
+}
+
+impl core::fmt::Display for ExtractionStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ExtractionStatus::Success => f.write_str("success"),
+            ExtractionStatus::ParseError => f.write_str("parse_error"),
+            ExtractionStatus::IrrelevantPage => f.write_str("irrelevant_page"),
+            ExtractionStatus::ModelError => f.write_str("model_error"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for ExtractionStatus {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            ExtractionStatus::Success => "success",
+            ExtractionStatus::ParseError => "parse_error",
+            ExtractionStatus::IrrelevantPage => "irrelevant_page",
+            ExtractionStatus::ModelError => "model_error",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for ExtractionStatus {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "success" | "Success" => Ok(ExtractionStatus::Success),
+                "parse_error" | "ParseError" => Ok(ExtractionStatus::ParseError),
+                "irrelevant_page" | "IrrelevantPage" => Ok(ExtractionStatus::IrrelevantPage),
+                "model_error" | "ModelError" => Ok(ExtractionStatus::ModelError),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for ExtractionStatus: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(ExtractionStatus)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for ExtractionStatus {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['success', 'parse_error', 'irrelevant_page', 'model_error']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum ExtractionCategory {
+#[cfg_attr(feature = "serde", serde(rename = "sales_transaction"))]
+    SalesTransaction,
+#[cfg_attr(feature = "serde", serde(rename = "sale_listing"))]
+    SaleListing,
+#[cfg_attr(feature = "serde", serde(rename = "lease_listing"))]
+    LeaseListing,
+#[cfg_attr(feature = "serde", serde(rename = "in_place_lease"))]
+    InPlaceLease,
+#[cfg_attr(feature = "serde", serde(rename = "property_facts"))]
+    PropertyFacts,
+#[cfg_attr(feature = "serde", serde(rename = "other"))]
+    Other,
+}
+
+impl core::fmt::Display for ExtractionCategory {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ExtractionCategory::SalesTransaction => f.write_str("sales_transaction"),
+            ExtractionCategory::SaleListing => f.write_str("sale_listing"),
+            ExtractionCategory::LeaseListing => f.write_str("lease_listing"),
+            ExtractionCategory::InPlaceLease => f.write_str("in_place_lease"),
+            ExtractionCategory::PropertyFacts => f.write_str("property_facts"),
+            ExtractionCategory::Other => f.write_str("other"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for ExtractionCategory {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            ExtractionCategory::SalesTransaction => "sales_transaction",
+            ExtractionCategory::SaleListing => "sale_listing",
+            ExtractionCategory::LeaseListing => "lease_listing",
+            ExtractionCategory::InPlaceLease => "in_place_lease",
+            ExtractionCategory::PropertyFacts => "property_facts",
+            ExtractionCategory::Other => "other",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for ExtractionCategory {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "sales_transaction" | "SalesTransaction" => Ok(ExtractionCategory::SalesTransaction),
+                "sale_listing" | "SaleListing" => Ok(ExtractionCategory::SaleListing),
+                "lease_listing" | "LeaseListing" => Ok(ExtractionCategory::LeaseListing),
+                "in_place_lease" | "InPlaceLease" => Ok(ExtractionCategory::InPlaceLease),
+                "property_facts" | "PropertyFacts" => Ok(ExtractionCategory::PropertyFacts),
+                "other" | "Other" => Ok(ExtractionCategory::Other),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for ExtractionCategory: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(ExtractionCategory)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for ExtractionCategory {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['sales_transaction', 'sale_listing', 'lease_listing', 'in_place_lease', 'property_facts', 'other']",
+            "typing".into(),
+        )
+    }
+}
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+pub enum AssessorStatus {
+#[cfg_attr(feature = "serde", serde(rename = "success"))]
+    Success,
+#[cfg_attr(feature = "serde", serde(rename = "not_found"))]
+    NotFound,
+#[cfg_attr(feature = "serde", serde(rename = "timeout"))]
+    Timeout,
+#[cfg_attr(feature = "serde", serde(rename = "api_error"))]
+    ApiError,
+#[cfg_attr(feature = "serde", serde(rename = "parse_error"))]
+    ParseError,
+#[cfg_attr(feature = "serde", serde(rename = "invalid_address"))]
+    InvalidAddress,
+#[cfg_attr(feature = "serde", serde(rename = "ambiguous"))]
+    Ambiguous,
+}
+
+impl core::fmt::Display for AssessorStatus {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            AssessorStatus::Success => f.write_str("success"),
+            AssessorStatus::NotFound => f.write_str("not_found"),
+            AssessorStatus::Timeout => f.write_str("timeout"),
+            AssessorStatus::ApiError => f.write_str("api_error"),
+            AssessorStatus::ParseError => f.write_str("parse_error"),
+            AssessorStatus::InvalidAddress => f.write_str("invalid_address"),
+            AssessorStatus::Ambiguous => f.write_str("ambiguous"),
+        }
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> IntoPyObject<'py> for AssessorStatus {
+    type Target = PyAny;
+    type Output = Bound<'py, Self::Target>;
+    type Error = PyErr;
+    fn into_pyobject(self, py: Python<'py>) -> Result<Self::Output, Self::Error> {
+        let s: &str = match self {
+            AssessorStatus::Success => "success",
+            AssessorStatus::NotFound => "not_found",
+            AssessorStatus::Timeout => "timeout",
+            AssessorStatus::ApiError => "api_error",
+            AssessorStatus::ParseError => "parse_error",
+            AssessorStatus::InvalidAddress => "invalid_address",
+            AssessorStatus::Ambiguous => "ambiguous",
+        };
+        Ok(pyo3::types::PyString::new(py, s).into_any())
+    }
+}
+
+#[cfg(feature = "pyo3")]
+impl<'py> FromPyObject<'py> for AssessorStatus {
+    fn extract_bound(ob: &pyo3::Bound<'py, pyo3::types::PyAny>) -> pyo3::PyResult<Self> {
+        if let Ok(s) = ob.extract::<&str>() {
+            match s {
+                "success" | "Success" => Ok(AssessorStatus::Success),
+                "not_found" | "NotFound" => Ok(AssessorStatus::NotFound),
+                "timeout" | "Timeout" => Ok(AssessorStatus::Timeout),
+                "api_error" | "ApiError" => Ok(AssessorStatus::ApiError),
+                "parse_error" | "ParseError" => Ok(AssessorStatus::ParseError),
+                "invalid_address" | "InvalidAddress" => Ok(AssessorStatus::InvalidAddress),
+                "ambiguous" | "Ambiguous" => Ok(AssessorStatus::Ambiguous),
+                _ => Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+                    format!("invalid value for AssessorStatus: {}", s),
+                )),
+            }
+        } else {
+            Err(PyErr::new::<pyo3::exceptions::PyTypeError, _>(
+                concat!("expected str for ", stringify!(AssessorStatus)),
+            ))
+        }
+    }
+}
+
+#[cfg(feature = "stubgen")]
+impl ::pyo3_stub_gen::PyStubType for AssessorStatus {
+    fn type_output() -> ::pyo3_stub_gen::TypeInfo {
+        ::pyo3_stub_gen::TypeInfo::with_module(
+            "typing.Literal['success', 'not_found', 'timeout', 'api_error', 'parse_error', 'invalid_address', 'ambiguous']",
             "typing".into(),
         )
     }
@@ -8360,7 +8647,13 @@ impl<'py> FromPyObject<'py> for Box<AssessorObservation> {
 #[cfg_attr(feature = "stubgen", gen_stub_pyclass)]
 #[cfg_attr(feature = "pyo3", pyclass(subclass, get_all, set_all))]
 pub struct ExtractionObservation {
-    pub category: String,
+    pub status: ExtractionStatus,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub category: Option<ExtractionCategory>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub source_category: Option<String>,
+    #[cfg_attr(feature = "serde", serde(default))]
+    pub error: Option<String>,
     #[cfg_attr(feature = "serde", serde(default))]
     pub source_url: Option<uri>,
     #[cfg_attr(feature = "serde", serde(default))]
@@ -8378,12 +8671,12 @@ pub struct ExtractionObservation {
 #[pymethods]
 impl ExtractionObservation {
     #[new]
-    #[pyo3(signature = (category, provenance, source_url=None, extracted_at=None, model=None, profile=None, extras=None))]
-    pub fn new(category: String, provenance: serde_utils::PyValue<Provenance>, source_url: Option<uri>, extracted_at: Option<NaiveDateTime>, model: Option<String>, profile: Option<serde_utils::PyValue<PropertyProfile>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
+    #[pyo3(signature = (status, provenance, category=None, source_category=None, error=None, source_url=None, extracted_at=None, model=None, profile=None, extras=None))]
+    pub fn new(status: ExtractionStatus, provenance: serde_utils::PyValue<Provenance>, category: Option<ExtractionCategory>, source_category: Option<String>, error: Option<String>, source_url: Option<uri>, extracted_at: Option<NaiveDateTime>, model: Option<String>, profile: Option<serde_utils::PyValue<PropertyProfile>>, extras: Option<serde_utils::PyValue<Any>>) -> Self {
         let provenance = provenance.into_inner();
         let profile = profile.map(|v| v.into_inner());
         let extras = extras.map(|v| v.into_inner());
-        ExtractionObservation{category, provenance, source_url, extracted_at, model, profile, extras}
+        ExtractionObservation{status, provenance, category, source_category, error, source_url, extracted_at, model, profile, extras}
     }
 }
 
@@ -8417,30 +8710,3 @@ impl<'py> FromPyObject<'py> for Box<ExtractionObservation> {
 
 #[cfg(feature = "stubgen")]
 define_stub_info_gatherer!(stub_info);
-
-
-#[cfg(all(test, feature = "serde"))]
-mod assessor_status_serde_tests {
-    use super::AssessorStatus;
-
-    #[test]
-    fn canonical_wire_values_round_trip() {
-        let cases = [
-            (AssessorStatus::Success, "success"),
-            (AssessorStatus::NotFound, "not_found"),
-            (AssessorStatus::Timeout, "timeout"),
-            (AssessorStatus::ApiError, "api_error"),
-            (AssessorStatus::ParseError, "parse_error"),
-            (AssessorStatus::InvalidAddress, "invalid_address"),
-            (AssessorStatus::Ambiguous, "ambiguous"),
-        ];
-
-        for (value, wire) in cases {
-            let encoded = serde_yml::to_string(&value).expect("serialize assessor status");
-            assert_eq!(encoded.trim(), wire);
-            let decoded: AssessorStatus =
-                serde_yml::from_str(wire).expect("deserialize assessor status");
-            assert_eq!(decoded, value);
-        }
-    }
-}

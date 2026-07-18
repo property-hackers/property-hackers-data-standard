@@ -5298,9 +5298,21 @@ impl AssessorObservation for crate::AssessorObservation {
 
 pub trait ExtractionObservation   {
 
-    fn category<'a>(&'a self) -> &'a str;
-    // fn category_mut(&mut self) -> &mut &'a str;
-    // fn set_category(&mut self, value: String);
+    fn status<'a>(&'a self) -> &'a crate::ExtractionStatus;
+    // fn status_mut(&mut self) -> &mut &'a crate::ExtractionStatus;
+    // fn set_status(&mut self, value: ExtractionStatus);
+
+    fn category<'a>(&'a self) -> Option<&'a crate::ExtractionCategory>;
+    // fn category_mut(&mut self) -> &mut Option<&'a crate::ExtractionCategory>;
+    // fn set_category(&mut self, value: Option<&'a ExtractionCategory>);
+
+    fn source_category<'a>(&'a self) -> Option<&'a str>;
+    // fn source_category_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_source_category(&mut self, value: Option<&'a str>);
+
+    fn error<'a>(&'a self) -> Option<&'a str>;
+    // fn error_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_error(&mut self, value: Option<&'a str>);
 
     fn source_url<'a>(&'a self) -> Option<&'a crate::uri>;
     // fn source_url_mut(&mut self) -> &mut Option<&'a crate::uri>;
@@ -5330,8 +5342,17 @@ pub trait ExtractionObservation   {
 }
 
 impl ExtractionObservation for crate::ExtractionObservation {
-        fn category<'a>(&'a self) -> &'a str {
-        return &self.category[..];
+        fn status<'a>(&'a self) -> &'a crate::ExtractionStatus {
+        return &self.status;
+    }
+        fn category<'a>(&'a self) -> Option<&'a crate::ExtractionCategory> {
+        return self.category.as_ref();
+    }
+        fn source_category<'a>(&'a self) -> Option<&'a str> {
+        return self.source_category.as_deref();
+    }
+        fn error<'a>(&'a self) -> Option<&'a str> {
+        return self.error.as_deref();
     }
         fn source_url<'a>(&'a self) -> Option<&'a crate::uri> {
         return self.source_url.as_ref();

@@ -1,0 +1,106 @@
+# PHDS capture — envelopes for capture attempts, outcomes, and source
+# classification. These describe operations that *produce* property data
+# (fetches, scrapes, LLM extraction), not facts about real property; they
+# live above profiles so the property model never depends on them.
+# Dependency direction: core -> entities -> profiles -> capture.
+# This file is the generator entry point (its import closure is the full
+# standard).
+# Named `phds` (not phds_capture): generators derive artifact names — the
+# Rust crate, pydantic module header — from this schema's name, and since
+# its import closure is the entire standard, the artifacts are "phds".
+id: https://example.org/phds
+name: phds
+title: PHDS
+license: MIT
+version: 0.1.0
+
+prefixes:
+  linkml: https://w3id.org/linkml/
+  phds: https://example.org/phds/
+default_prefix: phds
+default_range: string
+
+imports:
+  - linkml:types
+  - profiles
+
+enums:
+  ExtractionStatus:
+    description: >-
+      Outcome of an extraction attempt over already-fetched content.
+      Fetch-level failures (timeout, api_error) belong to the envelope that
+      did the fetching, e.g. AssessorStatus.
+    permissible_values:
+      success: {}
+      parse_error: {description: Content was retrieved but extraction failed}
+      irrelevant_page: {description: Content contains no extractable property data}
+      model_error: {description: The extraction model or tooling failed}
+  ExtractionCategory:
+    description: >-
+      What kind of property content an extraction produced. This is a
+      content axis only — where the content came from (public record,
+      vendor, scrape) is Provenance's job. Precedence: when the primary
+      extracted content is a transaction, listing, or lease, use that
+      value even if the page is also a record of property facts.
+      `other` means successfully classified but outside this taxonomy;
+      put the producer's raw label in source_category.
+    permissible_values:
+      sales_transaction: {}
+      sale_listing: {}
+      lease_listing: {}
+      in_place_lease: {}
+      property_facts: {description: "Property characteristics, assessment, or tax facts with no primary transaction/listing/lease content"}
+      other: {}
+  AssessorStatus:
+    description: Outcome of an assessor or public-records lookup.
+    permissible_values:
+      success: {}
+      not_found: {}
+      timeout: {}
+      api_error: {}
+      parse_error: {}
+      invalid_address: {}
+      ambiguous: {}
+
+classes:
+  AssessorObservation:
+    description: >-
+      Thin capture envelope for a county assessor / public-records
+      fetch. The payload is a sparse PropertyProfile (only the sections the
+      source provides; a valid profile still requires its `property`
+      section); status reports the fetch outcome. By convention profile
+      accompanies success and error accompanies failure statuses —
+      validators deliberately do not enforce this pairing, so consumers
+      must branch on status, not on field presence.
+    attributes:
+      status: {range: AssessorStatus, required: true}
+      query_address: {}
+      query_parcel_number: {}
+      assessor_url: {range: uri}
+      profile: {range: PropertyProfile, inlined: true}
+      error: {}
+      provenance: {range: Provenance, required: true}
+      extras: {range: Any}
+
+  ExtractionObservation:
+    description: >-
+      Capture envelope for LLM or scrape extraction (suitable as an LLM
+      structured-output target). The payload is a sparse PropertyProfile
+      (only the sections the source provides; a valid profile still
+      requires its `property` section); status reports the extraction
+      outcome. By convention profile and category accompany success and
+      error accompanies failure statuses — validators deliberately do not
+      enforce this pairing (LinkML rules would materialize in only some
+      generated validators, diverging the contracts), so consumers must
+      branch on status, not on field presence.
+    attributes:
+      status: {range: ExtractionStatus, required: true}
+      category: {range: ExtractionCategory, description: Content classification; expected when status is success}
+      source_category: {description: "Raw or more specific producer classification, especially when category is `other`"}
+      error: {}
+      source_url: {range: uri}
+      extracted_at: {range: datetime}
+      model: {description: Extraction model identifier}
+      profile: {range: PropertyProfile, inlined: true}
+      provenance: {range: Provenance, required: true}
+      extras: {range: Any}
