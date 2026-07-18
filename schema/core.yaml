@@ -26,7 +26,7 @@ types:
       (avoids IEEE-754 float corruption in JS et al.). Clients map to
       language-native decimals (Python Decimal, Elixir Decimal, Ruby
       BigDecimal, JS string/big.js).
-    pattern: "^-?\\d+(\\.\\d+)?$"
+    pattern: "^-?[0-9]+(\\.[0-9]+)?(?![\\s\\S])"
 
 enums:
   AreaUnit:
@@ -42,16 +42,6 @@ enums:
       verified: {}
       disputed: {}
       rejected: {}
-  AssessorStatus:
-    description: Outcome of an assessor or public-records lookup.
-    permissible_values:
-      success: {}
-      not_found: {}
-      timeout: {}
-      api_error: {}
-      parse_error: {}
-      invalid_address: {}
-      ambiguous: {}
   PartyKind:
     permissible_values: {person: {}, organization: {}}
   OrganizationKind:
@@ -195,8 +185,8 @@ classes:
       # Repeat the named type's pattern at the slot boundary because LinkML's
       # Pydantic generator does not currently carry custom-type patterns into
       # generated field validators.
-      amount: {range: DecimalString, required: true, pattern: "^-?\\d+(\\.\\d+)?$"}
-      currency: {range: string, required: true, pattern: "^[A-Z]{3}$"}
+      amount: {range: DecimalString, required: true, pattern: "^-?[0-9]+(\\.[0-9]+)?(?![\\s\\S])"}
+      currency: {range: string, required: true, pattern: "^[A-Z]{3}(?![\\s\\S])"}
 
   Area:
     description: Area measurement with explicit unit.
@@ -213,8 +203,8 @@ classes:
   UnitRate:
     description: Money per explicit denominator (price/sqft, rent/sqm/month, spaces/1000 sqft).
     attributes:
-      amount: {range: DecimalString, required: true, pattern: "^-?\\d+(\\.\\d+)?$"}
-      currency: {range: string, required: true, pattern: "^[A-Z]{3}$"}
+      amount: {range: DecimalString, required: true, pattern: "^-?[0-9]+(\\.[0-9]+)?(?![\\s\\S])"}
+      currency: {range: string, required: true, pattern: "^[A-Z]{3}(?![\\s\\S])"}
       denominator: {range: string, required: true, description: "sqft | sqm | unit | bed | key | month | sqft_month | 1000_sqft | ..."}
 
   CodeableConcept:

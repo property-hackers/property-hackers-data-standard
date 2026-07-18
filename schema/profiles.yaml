@@ -16,6 +16,20 @@ imports:
   - core
   - entities
 
+# Capture-envelope vocabulary lives here, next to the envelope classes, not in
+# core: these are operational outcomes of a fetch, not facts about property.
+enums:
+  AssessorStatus:
+    description: Outcome of an assessor or public-records lookup.
+    permissible_values:
+      success: {}
+      not_found: {}
+      timeout: {}
+      api_error: {}
+      parse_error: {}
+      invalid_address: {}
+      ambiguous: {}
+
 classes:
   PropertyProfile:
     tree_root: true

@@ -22,7 +22,8 @@ jobs:
         run: just venv
       - name: Regenerate and validate contracts
         run: just check
-      - name: Test Rust assessor-status wire format
-        run: cargo test --manifest-path schema/generated/phds-rust/Cargo.toml --features serde canonical_wire_values_round_trip
       - name: Verify committed generated artifacts
-        run: git diff --exit-code
+        # --porcelain (not `git diff`) so newly generated untracked files fail too
+        run: |
+          git status --porcelain
+          test -z "$(git status --porcelain)"

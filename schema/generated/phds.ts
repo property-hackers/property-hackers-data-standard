@@ -60,18 +60,6 @@ export enum VerificationStatus {
     disputed = "disputed",
     rejected = "rejected",
 };
-/**
-* Outcome of an assessor or public-records lookup.
-*/
-export enum AssessorStatus {
-    success = "success",
-    not_found = "not_found",
-    timeout = "timeout",
-    api_error = "api_error",
-    parse_error = "parse_error",
-    invalid_address = "invalid_address",
-    ambiguous = "ambiguous",
-};
 
 export enum PartyKind {
     
@@ -262,6 +250,18 @@ export enum GeocodeAccuracy {
     locality_centroid = "locality_centroid",
     manual = "manual",
     unknown = "unknown",
+};
+/**
+* Outcome of an assessor or public-records lookup.
+*/
+export enum AssessorStatus {
+    success = "success",
+    not_found = "not_found",
+    timeout = "timeout",
+    api_error = "api_error",
+    parse_error = "parse_error",
+    invalid_address = "invalid_address",
+    ambiguous = "ambiguous",
 };
 
 

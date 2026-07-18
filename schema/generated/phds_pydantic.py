@@ -107,19 +107,6 @@ class VerificationStatus(str, Enum):
     rejected = "rejected"
 
 
-class AssessorStatus(str, Enum):
-    """
-    Outcome of an assessor or public-records lookup.
-    """
-    success = "success"
-    not_found = "not_found"
-    timeout = "timeout"
-    api_error = "api_error"
-    parse_error = "parse_error"
-    invalid_address = "invalid_address"
-    ambiguous = "ambiguous"
-
-
 class PartyKind(str, Enum):
     person = "person"
     organization = "organization"
@@ -297,6 +284,19 @@ class GeocodeAccuracy(str, Enum):
     unknown = "unknown"
 
 
+class AssessorStatus(str, Enum):
+    """
+    Outcome of an assessor or public-records lookup.
+    """
+    success = "success"
+    not_found = "not_found"
+    timeout = "timeout"
+    api_error = "api_error"
+    parse_error = "parse_error"
+    invalid_address = "invalid_address"
+    ambiguous = "ambiguous"
+
+
 
 class Money(ConfiguredBaseModel):
     """
@@ -317,7 +317,7 @@ class Money(ConfiguredBaseModel):
 
     @field_validator('amount')
     def pattern_amount(cls, v):
-        pattern=re.compile(r"^-?\d+(\.\d+)?$")
+        pattern=re.compile(r"^-?[0-9]+(\.[0-9]+)?(?![\s\S])")
         if isinstance(v, list):
             for element in v:
                 if isinstance(element, str) and not pattern.match(element):
@@ -330,7 +330,7 @@ class Money(ConfiguredBaseModel):
 
     @field_validator('currency')
     def pattern_currency(cls, v):
-        pattern=re.compile(r"^[A-Z]{3}$")
+        pattern=re.compile(r"^[A-Z]{3}(?![\s\S])")
         if isinstance(v, list):
             for element in v:
                 if isinstance(element, str) and not pattern.match(element):
@@ -390,7 +390,7 @@ class UnitRate(ConfiguredBaseModel):
 
     @field_validator('amount')
     def pattern_amount(cls, v):
-        pattern=re.compile(r"^-?\d+(\.\d+)?$")
+        pattern=re.compile(r"^-?[0-9]+(\.[0-9]+)?(?![\s\S])")
         if isinstance(v, list):
             for element in v:
                 if isinstance(element, str) and not pattern.match(element):
@@ -403,7 +403,7 @@ class UnitRate(ConfiguredBaseModel):
 
     @field_validator('currency')
     def pattern_currency(cls, v):
-        pattern=re.compile(r"^[A-Z]{3}$")
+        pattern=re.compile(r"^[A-Z]{3}(?![\s\S])")
         if isinstance(v, list):
             for element in v:
                 if isinstance(element, str) and not pattern.match(element):
@@ -659,7 +659,7 @@ class Jurisdiction(Entity):
 
     @field_validator('country')
     def pattern_country(cls, v):
-        pattern=re.compile(r"^[A-Z]{2}$")
+        pattern=re.compile(r"^[A-Z]{2}(?![\s\S])")
         if isinstance(v, list):
             for element in v:
                 if isinstance(element, str) and not pattern.match(element):
@@ -732,7 +732,7 @@ class Address(Entity):
 
     @field_validator('country')
     def pattern_country(cls, v):
-        pattern=re.compile(r"^[A-Z]{2}$")
+        pattern=re.compile(r"^[A-Z]{2}(?![\s\S])")
         if isinstance(v, list):
             for element in v:
                 if isinstance(element, str) and not pattern.match(element):

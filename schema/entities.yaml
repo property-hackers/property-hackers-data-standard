@@ -72,7 +72,7 @@ classes:
   Jurisdiction:
     is_a: Entity
     attributes:
-      country: {required: true, pattern: "^[A-Z]{2}$", description: ISO 3166-1 alpha-2 (no default — i18n)}
+      country: {required: true, pattern: "^[A-Z]{2}(?![\\s\\S])", description: ISO 3166-1 alpha-2 (no default — i18n)}
       region: {}
       name: {required: true}
       kind: {required: true, description: "county | municipality | taxing_district | ... (open vocab)"}
@@ -83,7 +83,7 @@ classes:
   Address:
     is_a: Entity
     attributes:
-      country: {required: true, pattern: "^[A-Z]{2}$"}
+      country: {required: true, pattern: "^[A-Z]{2}(?![\\s\\S])"}
       unformatted_address: {description: Fallback when components don't parse}
       street_number: {}
       street_pre_direction: {}
