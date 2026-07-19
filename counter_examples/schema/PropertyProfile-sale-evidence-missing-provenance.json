@@ -1,0 +1,11 @@
+{
+  "property": {"id": "prop-1"},
+  "sales": [{"id": "sale-1", "property": "prop-1", "close_date": "2026-04-01"}],
+  "sale_evidence": [
+    {
+      "id": "ev-1",
+      "sale": "sale-1",
+      "close_price": {"amount": "400000", "currency": "USD"}
+    }
+  ]
+}

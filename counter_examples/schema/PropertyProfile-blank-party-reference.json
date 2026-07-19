@@ -7,7 +7,7 @@
     {
       "id": "transfer-1",
       "property": "property-1",
-      "transfer_kind": "deed",
+      "transfer_type": "deed",
       "parties": [
         {"role": "grantor", "party": " "}
       ]

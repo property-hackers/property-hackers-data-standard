@@ -359,18 +359,25 @@ class SchemaPatternDialectTests(unittest.TestCase):
         self.assertTrue(events.get("list_elements_ordered"))
 
         event_attributes = listing_event["attributes"]
-        self.assertTrue(event_attributes["occurred_on"]["required"])
-        self.assertTrue(event_attributes["event_kind"]["required"])
+        self.assertTrue(event_attributes["effective_date"]["required"])
+        self.assertTrue(event_attributes["event_type"]["required"])
+        self.assertEqual("datetime", event_attributes["effective_at"]["range"])
+        self.assertEqual("datetime", event_attributes["observed_at"]["range"])
         self.assertEqual("ListingStatus", event_attributes["status"]["range"])
-        self.assertEqual("Money", event_attributes["asking_price"]["range"])
+        self.assertEqual("Money", event_attributes["list_price"]["range"])
+        self.assertEqual("Money", event_attributes["list_price_low"]["range"])
         self.assertEqual("RentPeriod", event_attributes["rent_period"]["range"])
         self.assertEqual("Money", event_attributes["close_price"]["range"])
 
         lifecycle_assertions = {
-            "occurred_on",
-            "event_kind",
+            "effective_date",
+            "effective_at",
+            "observed_at",
+            "event_type",
             "status",
-            "asking_price",
+            "source_status",
+            "list_price",
+            "list_price_low",
             "rent_period",
             "close_price",
         }
@@ -378,9 +385,9 @@ class SchemaPatternDialectTests(unittest.TestCase):
 
         description = listing["description"].casefold()
         for rule in (
-            "occurred_on ascending",
+            "effective_date ascending",
             "array order",
-            "status, asking_price, and rent_period",
+            "status, list_price, and rent_period",
             "forward independently",
             "earliest event",
             "latest closed event",
@@ -397,8 +404,8 @@ class SchemaPatternDialectTests(unittest.TestCase):
         self.assertTrue(events["multivalued"])
         self.assertTrue(events["inlined"])
         self.assertTrue(events["inlined_as_list"])
-        self.assertEqual("LoanEventKind", loan_event["attributes"]["event_kind"]["range"])
-        self.assertTrue(loan_event["attributes"]["event_kind"]["required"])
+        self.assertEqual("LoanEventType", loan_event["attributes"]["event_type"]["range"])
+        self.assertTrue(loan_event["attributes"]["event_type"]["required"])
         self.assertIn("lifecycle", loan["description"].casefold())
 
     def test_foreclosure_roles_cover_mortgage_and_lien_proceedings(self):
@@ -455,7 +462,7 @@ class SchemaPatternDialectTests(unittest.TestCase):
             "References to SourceArtifact IDs in the nested profile.artifacts "
             "bundle; invalid when profile or profile.artifacts is absent."
         )
-        for envelope in ("AssessorObservation", "ExtractionObservation"):
+        for envelope in ("AssessorObservation", "ExtractionObservation", "MlsObservation"):
             with self.subTest(envelope=envelope):
                 self.assertEqual(
                     reference_description,
@@ -584,6 +591,7 @@ class DocumentationContractTests(unittest.TestCase):
         normalized = " ".join(section.split()).casefold()
         for url in (
             "https://www.reso.org/data-dictionary/",
+            "https://www.reso.org/universal-parcel-identifier/",
             "https://selling-guide.fanniemae.com/sel/b4-1.3-06/property-condition-and-quality-construction-improvements",
             "https://sf.freddiemac.com/faqs/uad-and-forms-redesign",
             "https://www.mismo.org/",

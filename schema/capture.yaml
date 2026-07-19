@@ -61,6 +61,14 @@ enums:
       parse_error: {}
       invalid_address: {}
       ambiguous: {}
+  MlsObservationStatus:
+    description: Outcome of an MLS / listing-feed record capture.
+    permissible_values:
+      success: {}
+      not_found: {}
+      api_error: {}
+      parse_error: {}
+      ambiguous: {}
 
 classes:
   AssessorObservation:
@@ -103,6 +111,34 @@ classes:
       extracted_at: {range: datetime}
       model: {description: Extraction model identifier}
       profile: {range: PropertyProfile, inlined: true}
+      provenance: {range: Provenance, required: true}
+      artifact_refs: {range: SourceArtifact, multivalued: true, inlined: false, description: "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent."}
+      extras: {range: Any}
+
+  MlsObservation:
+    description: >-
+      Capture envelope for an MLS / RESO Web API / feed record. The payload
+      is a sparse PropertyProfile (a valid profile still requires its
+      `property` section); listing-centric property characteristics belong on
+      the profile's state snapshots, not on timeless entities. By convention
+      profile accompanies success and error accompanies failure statuses —
+      validators deliberately do not enforce this pairing, so consumers must
+      branch on status, not on field presence. Source fields the profile
+      does not model may be preserved under extras with producer-namespaced
+      keys; the namespace and field naming are the producer's choice.
+      original_entry_at and
+      source_modified_at are the feed record's clocks (RESO
+      OriginalEntryTimestamp / ModificationTimestamp); they duplicate
+      provenance source clocks so they survive when the profile is detached
+      from the envelope, and should agree with them.
+    attributes:
+      status: {range: MlsObservationStatus, required: true}
+      query: {description: Listing id/key or address queried}
+      source_record_key: {description: The feed's ListingKey for this record}
+      original_entry_at: {range: datetime, close_mappings: [reso:OriginalEntryTimestamp]}
+      source_modified_at: {range: datetime, close_mappings: [reso:ModificationTimestamp]}
+      profile: {range: PropertyProfile, inlined: true}
+      error: {}
       provenance: {range: Provenance, required: true}
       artifact_refs: {range: SourceArtifact, multivalued: true, inlined: false, description: "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent."}
       extras: {range: Any}

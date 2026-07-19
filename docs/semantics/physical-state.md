@@ -26,7 +26,7 @@ bundle when present:
     {
       "id": "sale-1",
       "property": "property-1",
-      "sale_date": "2025-06-30",
+      "close_date": "2025-06-30",
       "property_state": "state-at-sale"
     }
   ]

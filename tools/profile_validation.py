@@ -36,12 +36,14 @@ REFERENCE_TARGET_COLLECTIONS: dict[str, str] = {
     "Address": "addresses",
     "Jurisdiction": "jurisdictions",
     "LeaseEvent": "leases",
+    "Listing": "listings",
     "Loan": "loans",
     "OperatingStatement": "operating_statements",
     "Parcel": "parcels",
     "Party": "parties",
     "Property": "property",
     "PropertyStateSnapshot": "property_state_snapshots",
+    "SaleEvent": "sales",
     "Site": "site",
     "SourceArtifact": "artifacts",
     "Space": "spaces",
@@ -61,17 +63,17 @@ DUPLICATE_LABELS = {
 }
 
 DATE_INTERVAL_RULES: dict[str, tuple[tuple[str, str], ...]] = {
-    "PropertyParcel": (("started_on", "ended_on"),),
-    "OwnershipPeriod": (("started_on", "ended_on"),),
+    "PropertyParcel": (("start_date", "end_date"),),
+    "OwnershipPeriod": (("start_date", "end_date"),),
     "LeaseEvent": (("commencement_date", "expiration_date"),),
     "LeaseEscalation": (("effective_from", "effective_until"),),
-    "ForeclosureCase": (("opened_on", "resolved_on"),),
+    "ForeclosureCase": (("opened_date", "resolved_date"),),
     "Permit": (
-        ("applied_on", "issued_on"),
-        ("applied_on", "finaled_on"),
-        ("applied_on", "expires_on"),
-        ("issued_on", "finaled_on"),
-        ("issued_on", "expires_on"),
+        ("applied_date", "issued_date"),
+        ("applied_date", "finaled_date"),
+        ("applied_date", "expiration_date"),
+        ("issued_date", "finaled_date"),
+        ("issued_date", "expiration_date"),
     ),
     "OperatingStatement": (("period_start", "period_end"),),
 }
@@ -405,6 +407,142 @@ def _validate_rent_rolls(
             )
 
 
+def _validate_listing_identifiers(
+    listings: list[dict[str, Any]], issues: list[ValidationIssue]
+) -> None:
+    for listing_index, listing in enumerate(listings):
+        seen: Counter[tuple[Any, Any, Any]] = Counter()
+        primaries: Counter[str] = Counter()
+        for identifier_index, identifier in enumerate(
+            _items(listing.get("identifiers"))
+        ):
+            path = f"listings[{listing_index}].identifiers[{identifier_index}]"
+            key = (
+                identifier.get("scheme"),
+                identifier.get("namespace"),
+                identifier.get("value"),
+            )
+            seen[key] += 1
+            if seen[key] > 1:
+                issues.append(
+                    ValidationIssue(
+                        path,
+                        "duplicate listing identifier (scheme, namespace, value)",
+                    )
+                )
+            if identifier.get("is_primary"):
+                namespace = identifier.get("namespace") or ""
+                primaries[namespace] += 1
+                if primaries[namespace] > 1:
+                    issues.append(
+                        ValidationIssue(
+                            path,
+                            "multiple primary listing identifiers in one namespace",
+                        )
+                    )
+
+
+def _validate_identifier_bundles(
+    profile: dict[str, Any], issues: list[ValidationIssue]
+) -> None:
+    """Enforce the (scheme, namespace, value) unique keys declared on
+    PropertyIdentifier and ParcelIdentifier."""
+    for collection, label in (
+        ("identifiers", "property identifier"),
+        ("parcel_identifiers", "parcel identifier"),
+    ):
+        seen: Counter[tuple[Any, Any, Any]] = Counter()
+        for index, identifier in enumerate(_items(profile.get(collection))):
+            key = (
+                identifier.get("scheme"),
+                identifier.get("namespace"),
+                identifier.get("value"),
+            )
+            seen[key] += 1
+            if seen[key] > 1:
+                issues.append(
+                    ValidationIssue(
+                        f"{collection}[{index}]",
+                        f"duplicate {label} (scheme, namespace, value)",
+                    )
+                )
+
+
+def _validate_listing_events(
+    listings: list[dict[str, Any]], issues: list[ValidationIssue]
+) -> None:
+    for listing_index, listing in enumerate(listings):
+        offering_type = listing.get("offering_type")
+        for event_index, event in enumerate(_items(listing.get("events"))):
+            path = f"listings[{listing_index}].events[{event_index}]"
+            effective_at = event.get("effective_at")
+            effective_date = event.get("effective_date")
+            if effective_at and effective_date:
+                if str(effective_at)[:10] != str(effective_date):
+                    issues.append(
+                        ValidationIssue(
+                            path,
+                            "effective_at lexical date does not match effective_date",
+                        )
+                    )
+            if (
+                event.get("close_price") is not None
+                and event.get("event_type") != "closed"
+            ):
+                issues.append(
+                    ValidationIssue(path, "close_price is only valid on a closed event")
+                )
+            if (
+                offering_type == "for_lease"
+                and event.get("list_price") is not None
+                and event.get("rent_period") is None
+            ):
+                issues.append(
+                    ValidationIssue(
+                        path,
+                        "for_lease list_price requires rent_period",
+                    )
+                )
+
+
+def _validate_sale_coherence(
+    profile: dict[str, Any], issues: list[ValidationIssue]
+) -> None:
+    listings_by_id = {
+        listing.get("id"): listing for listing in _items(profile.get("listings"))
+    }
+    transfers_by_id = {
+        transfer.get("id"): transfer for transfer in _items(profile.get("transfers"))
+    }
+    sales_by_id = {sale.get("id"): sale for sale in _items(profile.get("sales"))}
+
+    for sale_index, sale in enumerate(_items(profile.get("sales"))):
+        for relationship_index, relationship in enumerate(_items(sale.get("listings"))):
+            target = listings_by_id.get(relationship.get("listing"))
+            if target and target.get("property") != sale.get("property"):
+                issues.append(
+                    ValidationIssue(
+                        f"sales[{sale_index}].listings[{relationship_index}].listing",
+                        "listing refers to a different property than the sale",
+                    )
+                )
+
+    for evidence_index, evidence in enumerate(_items(profile.get("sale_evidence"))):
+        sale = sales_by_id.get(evidence.get("sale"))
+        if not sale:
+            continue
+        sale_property = sale.get("property")
+        for slot, index in (("listing", listings_by_id), ("transfer", transfers_by_id)):
+            target = index.get(evidence.get(slot))
+            if target and target.get("property") != sale_property:
+                issues.append(
+                    ValidationIssue(
+                        f"sale_evidence[{evidence_index}].{slot}",
+                        f"{slot} refers to a different property than the evidenced sale",
+                    )
+                )
+
+
 def _validate_artifacts(
     profile: dict[str, Any], issues: list[ValidationIssue]
 ) -> None:
@@ -519,6 +657,10 @@ def validate_profile(profile: dict[str, Any]) -> list[ValidationIssue]:
     _validate_date_intervals(profile, issues)
     _validate_structure_ratings(profile, issues)
     _validate_rent_rolls(profile, issues, indexes["Space"], indexes["LeaseEvent"])
+    _validate_identifier_bundles(profile, issues)
+    _validate_listing_identifiers(_items(profile.get("listings")), issues)
+    _validate_listing_events(_items(profile.get("listings")), issues)
+    _validate_sale_coherence(profile, issues)
     _validate_artifacts(profile, issues)
     return sorted(issues)
 

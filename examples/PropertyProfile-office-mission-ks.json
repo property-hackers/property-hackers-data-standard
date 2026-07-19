@@ -135,6 +135,14 @@
       }
     }
   ],
+  "parcel_identifiers": [
+    {
+      "id": "pident-upi",
+      "parcel": "parcel-np24200000",
+      "scheme": "upi",
+      "value": "urn:reso:upi:2.0:US:20091:NP24200000-0003A"
+    }
+  ],
   "property_parcels": [
     {
       "id": "pp-ks-1",

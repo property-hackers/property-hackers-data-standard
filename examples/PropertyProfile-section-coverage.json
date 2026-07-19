@@ -35,7 +35,7 @@
       "predecessor_parcel": "parcel-predecessor",
       "successor_parcel": "parcel-successor",
       "kind": "renumber",
-      "effective_on": "2025-01-01"
+      "effective_date": "2025-01-01"
     }
   ],
   "associations": [
@@ -54,13 +54,13 @@
     {
       "id": "listing-1",
       "property": "property-section-coverage",
-      "kind": "for_lease",
+      "offering_type": "for_lease",
       "events": [
         {
-          "occurred_on": "2026-01-01",
-          "event_kind": "listed",
+          "effective_date": "2026-01-01",
+          "event_type": "listed",
           "status": "active",
-          "asking_price": {
+          "list_price": {
             "amount": "3200.00",
             "currency": "CAD"
           },
@@ -81,7 +81,7 @@
       "rate_period": "monthly",
       "rate_basis": "per_unit",
       "rate_type": "asking",
-      "observed_on": "2026-01-01"
+      "observed_date": "2026-01-01"
     }
   ],
   "permits": [
@@ -92,9 +92,9 @@
       "permit_number": "PERMIT-1",
       "kind": "renovation",
       "status": "issued",
-      "applied_on": "2025-12-01",
-      "issued_on": "2026-01-15",
-      "expires_on": "2027-01-15"
+      "applied_date": "2025-12-01",
+      "issued_date": "2026-01-15",
+      "expiration_date": "2027-01-15"
     }
   ]
 }

@@ -1,0 +1,63 @@
+{
+  "property": {"id": "prop-ll-1"},
+  "listings": [
+    {
+      "id": "lst-2024",
+      "property": "prop-ll-1",
+      "offering_type": "for_sale",
+      "identifiers": [
+        {"scheme": "listing_key", "namespace": "mls-alpha", "value": "A1001", "is_primary": true}
+      ],
+      "listing_contract_date": "2024-02-01",
+      "expiration_date": "2024-08-01",
+      "listing_agreement_type": "exclusive_right_to_sell",
+      "service_level": "full_service",
+      "marketing_channel": "mls",
+      "exposure_type": "public",
+      "events": [
+        {"effective_date": "2024-02-03", "event_type": "listed", "status": "active", "source_status": "ACT", "list_price": {"amount": "450000", "currency": "USD"}},
+        {"effective_date": "2024-04-15", "event_type": "price_change", "status": "active", "list_price": {"amount": "435000", "currency": "USD"}},
+        {"effective_date": "2024-07-20", "event_type": "withdrawn", "status": "withdrawn", "source_status": "WTH"}
+      ]
+    },
+    {
+      "id": "lst-2025",
+      "property": "prop-ll-1",
+      "offering_type": "for_sale",
+      "identifiers": [
+        {"scheme": "listing_key", "namespace": "mls-beta", "value": "B2002", "is_primary": true}
+      ],
+      "listing_contract_date": "2025-01-10",
+      "marketing_channel": "mls",
+      "events": [
+        {"effective_date": "2025-01-12", "event_type": "relisted", "status": "active", "list_price": {"amount": "429000", "currency": "USD"}, "list_price_low": {"amount": "415000", "currency": "USD"}},
+        {"effective_date": "2025-02-20", "effective_at": "2025-02-20T15:04:00-05:00", "event_type": "pending", "status": "pending"},
+        {"effective_date": "2025-03-28", "event_type": "closed", "status": "sold", "close_price": {"amount": "421000", "currency": "USD"}}
+      ]
+    },
+    {
+      "id": "lst-lease",
+      "property": "prop-ll-1",
+      "offering_type": "for_lease",
+      "identifiers": [
+        {"scheme": "listing_id", "namespace": "mls-alpha", "value": "L-88", "is_primary": true}
+      ],
+      "events": [
+        {"effective_date": "2025-06-01", "event_type": "listed", "status": "active", "list_price": {"amount": "2600", "currency": "USD"}, "rent_period": "monthly"},
+        {"effective_date": "2025-07-04", "event_type": "closed", "status": "leased", "close_price": {"amount": "2500", "currency": "USD"}, "rent_period": "monthly"}
+      ]
+    },
+    {
+      "id": "lst-active",
+      "property": "prop-ll-1",
+      "offering_type": "for_sale",
+      "identifiers": [
+        {"scheme": "listing_key", "namespace": "mls-alpha", "value": "A3003", "is_primary": true}
+      ],
+      "events": [
+        {"effective_date": "2026-06-01", "event_type": "listed", "status": "active", "list_price": {"amount": "350000", "currency": "USD"}, "list_price_low": {"amount": "335000", "currency": "USD"}}
+      ]
+    }
+  ],
+  "provenance": {"provider": "example", "retrieved_at": "2026-07-18T12:00:00Z"}
+}

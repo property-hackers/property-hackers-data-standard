@@ -1,0 +1,14 @@
+{
+  "property": {"id": "prop-1"},
+  "listings": [
+    {
+      "id": "lst-1",
+      "property": "prop-1",
+      "offering_type": "for_sale",
+      "identifiers": [
+        {"scheme": "listing_key", "namespace": "mls-x", "value": "K100"},
+        {"scheme": "listing_key", "namespace": "mls-x", "value": "K100"}
+      ]
+    }
+  ]
+}

@@ -129,12 +129,28 @@ synthetic or altered.
 - Typed, multi-authority Party credentials with issuer, jurisdiction, status,
   and validity periods
 
+## Cross-standard mappings
+
+Schema slots carry machine-readable mapping annotations
+(`exact_mappings` / `close_mappings` / `related_mappings`) pointing at
+terms in external data standards as CURIEs, e.g. `reso:ClosePrice`.
+Exact means same meaning and representation; close means same concept,
+wrapped or narrowed; related means associated but deliberately distinct
+(e.g. a reconciled price vs. a source's claim). They never appear in wire
+data — they are metadata for building importers/exporters and auditing
+coverage. Query them through `tools/standard_mappings.py`; prose
+crosswalks live in `docs/crosswalks/`, and `tests/test_standard_mappings.py`
+pins the annotation census and checks every mapped term is documented in
+the crosswalk. To map a new standard, declare its prefix in the schema
+and annotate the relevant slots.
+
 ## Referenced standards and independence
 
 PHDS is internationally neutral. These materials inform mappings, optional
 profiles, and design research; none is a globally preferred classification:
 
 - [RESO Data Dictionary](https://www.reso.org/data-dictionary/)
+- [RESO Universal Parcel Identifier (UPI)](https://www.reso.org/universal-parcel-identifier/)
 - [Fannie Mae condition and quality guidance](https://selling-guide.fanniemae.com/sel/b4-1.3-06/property-condition-and-quality-construction-improvements)
 - [Freddie Mac UAD and forms redesign](https://sf.freddiemac.com/faqs/uad-and-forms-redesign)
 - [MISMO](https://www.mismo.org/)

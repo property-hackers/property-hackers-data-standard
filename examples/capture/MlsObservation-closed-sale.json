@@ -1,0 +1,50 @@
+{
+  "status": "success",
+  "query": "K2400031",
+  "source_record_key": "K2400031",
+  "original_entry_at": "2026-01-05T14:02:11Z",
+  "source_modified_at": "2026-04-02T08:15:00Z",
+  "provenance": {
+    "provider": "Example Aggregator",
+    "originating_system": "Example MLS",
+    "source_system": "Example Aggregator Feed",
+    "source_record_id": "K2400031",
+    "source_modified_at": "2026-04-02T08:15:00Z",
+    "retrieved_at": "2026-04-02T09:00:00Z",
+    "method": "api"
+  },
+  "artifact_refs": ["art-photo-1"],
+  "profile": {
+    "property": {"id": "prop-mls-1"},
+    "artifacts": [
+      {
+        "id": "art-photo-1",
+        "uri": "https://photos.example.com/K2400031/1.jpg",
+        "media_type": "image/jpeg",
+        "kind": {"code": "photo"},
+        "order": 1,
+        "short_description": "Front elevation"
+      }
+    ],
+    "listings": [
+      {
+        "id": "lst-mls-1",
+        "property": "prop-mls-1",
+        "offering_type": "for_sale",
+        "identifiers": [
+          {"scheme": "listing_key", "namespace": "example-mls", "value": "K2400031", "is_primary": true},
+          {"scheme": "listing_id", "namespace": "example-mls", "value": "7654321"}
+        ],
+        "listing_contract_date": "2026-01-04",
+        "marketing_channel": "mls",
+        "artifacts": ["art-photo-1"],
+        "events": [
+          {"effective_date": "2026-01-05", "event_type": "listed", "status": "active", "source_status": "A", "list_price": {"amount": "415000", "currency": "USD"}},
+          {"effective_date": "2026-03-01", "event_type": "pending", "status": "pending", "source_status": "P"},
+          {"effective_date": "2026-04-01", "event_type": "closed", "status": "sold", "source_status": "C", "close_price": {"amount": "407500", "currency": "USD"}}
+        ]
+      }
+    ],
+    "extras": {"example-mls.lo1_board_code": "EX"}
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "property": {"id": "prop-se-1"},
+  "parties": [
+    {"id": "party-example-buyer", "kind": "person", "name": "Example Buyer"},
+    {"id": "party-example-seller", "kind": "person", "name": "Example Seller"}
+  ],
+  "listings": [
+    {
+      "id": "lst-se-1",
+      "property": "prop-se-1",
+      "offering_type": "for_sale",
+      "identifiers": [
+        {"scheme": "listing_key", "namespace": "mls-alpha", "value": "A9001", "is_primary": true}
+      ],
+      "events": [
+        {"effective_date": "2026-01-05", "event_type": "listed", "status": "active", "list_price": {"amount": "415000", "currency": "USD"}},
+        {"effective_date": "2026-04-01", "event_type": "closed", "status": "sold", "close_price": {"amount": "407500", "currency": "USD"}}
+      ]
+    }
+  ],
+  "transfers": [
+    {
+      "id": "xfer-se-1",
+      "property": "prop-se-1",
+      "transfer_type": "warranty_deed",
+      "instrument_date": "2026-04-01",
+      "recorded_date": "2026-04-09",
+      "consideration": {"amount": "407000", "currency": "USD"},
+      "parties": [
+        {"role": "grantee", "party": "party-example-buyer", "sequence": 1},
+        {"role": "grantor", "party": "party-example-seller", "sequence": 1}
+      ]
+    }
+  ],
+  "sales": [
+    {
+      "id": "sale-se-1",
+      "property": "prop-se-1",
+      "transfer": "xfer-se-1",
+      "close_date": "2026-04-01",
+      "sale_price": {"amount": "407500", "currency": "USD"},
+      "sale_type": "arms_length",
+      "buyer_financing": {"code": "conventional"},
+      "concessions_amount": {"amount": "5000", "currency": "USD"},
+      "concessions": [{"code": "closing_costs"}],
+      "concessions_comments": "Seller paid closing costs",
+      "listings": [{"listing": "lst-se-1", "relationship_type": "resulted_in_sale"}],
+      "parties": [
+        {"role": "buyer", "party": "party-example-buyer", "sequence": 1},
+        {"role": "seller", "party": "party-example-seller", "sequence": 1}
+      ]
+    },
+    {
+      "id": "sale-se-offmarket",
+      "property": "prop-se-1",
+      "close_date": "2020-09-15",
+      "sale_price": {"amount": "310000", "currency": "USD"},
+      "sale_type": "arms_length"
+    }
+  ],
+  "sale_evidence": [
+    {
+      "id": "ev-mls",
+      "sale": "sale-se-1",
+      "listing": "lst-se-1",
+      "close_date": "2026-04-01",
+      "close_price": {"amount": "407500", "currency": "USD"},
+      "concessions_amount": {"amount": "5000", "currency": "USD"},
+      "verification_method": {"code": "mls_record"},
+      "provenance": {"provider": "MLS Alpha", "source_system": "MLS Alpha", "retrieved_at": "2026-04-02T09:00:00Z"}
+    },
+    {
+      "id": "ev-deed",
+      "sale": "sale-se-1",
+      "transfer": "xfer-se-1",
+      "close_date": "2026-04-01",
+      "close_price": {"amount": "407000", "currency": "USD"},
+      "document_number": "2026-041234",
+      "verification_method": {"code": "deed"},
+      "provenance": {"provider": "Example County Recorder", "retrieved_at": "2026-04-20T09:00:00Z"}
+    }
+  ],
+  "provenance": {"provider": "example", "retrieved_at": "2026-07-18T12:00:00Z"}
+}

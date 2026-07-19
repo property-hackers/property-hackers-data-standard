@@ -157,7 +157,7 @@ class ProfileValidationTests(unittest.TestCase):
                 {
                     "id": "transfer-1",
                     "property": "property-1",
-                    "transfer_kind": "deed",
+                    "transfer_type": "deed",
                     "parcel": "missing-parcel",
                     "recording_authority": "missing-jurisdiction",
                     "related_instruments": [
@@ -169,7 +169,7 @@ class ProfileValidationTests(unittest.TestCase):
                 {
                     "id": "sale-1",
                     "property": "property-1",
-                    "sale_date": "2026-01-01",
+                    "close_date": "2026-01-01",
                     "transfer": "missing-transfer",
                     "supporting_operating_statement": "missing-statement",
                 }
@@ -205,7 +205,7 @@ class ProfileValidationTests(unittest.TestCase):
 
     def test_every_reachable_non_inlined_linkml_reference_has_a_target_bundle(self):
         rules = reachable_reference_rules()
-        self.assertEqual(84, len(rules))
+        self.assertEqual(90, len(rules))
         mapped_ranges = set(reference_target_collections())
         self.assertFalse(
             {rule.target_class for rule in rules} - mapped_ranges,
@@ -221,6 +221,8 @@ class ProfileValidationTests(unittest.TestCase):
                 ("InstrumentReference", "recording_authority", "Jurisdiction"),
                 ("RentRollLine", "tenant", "Party"),
                 ("VerificationAttribution", "verifier", "Party"),
+                ("SaleListingRelationship", "listing", "Listing"),
+                ("ParcelIdentifier", "parcel", "Parcel"),
             }.issubset(
                 {(rule.host_class, rule.slot, rule.target_class) for rule in rules}
             )
@@ -419,13 +421,13 @@ class ProfileValidationTests(unittest.TestCase):
                             "id": "property-parcel-1",
                             "property": "property-1",
                             "parcel": "parcel-1",
-                            "started_on": "2026-01-01",
-                            "ended_on": "2025-01-01",
+                            "start_date": "2026-01-01",
+                            "end_date": "2025-01-01",
                         }
                     ]
                 },
                 "property_parcels[0]",
-                "ended_on precedes started_on",
+                "end_date precedes start_date",
             ),
             (
                 "ownership",
@@ -434,13 +436,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "ownership-1",
                             "property": "property-1",
-                            "started_on": "2026-01-01",
-                            "ended_on": "2025-01-01",
+                            "start_date": "2026-01-01",
+                            "end_date": "2025-01-01",
                         }
                     ]
                 },
                 "ownership[0]",
-                "ended_on precedes started_on",
+                "end_date precedes start_date",
             ),
             (
                 "lease",
@@ -484,13 +486,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "foreclosure-1",
                             "property": "property-1",
-                            "opened_on": "2026-01-01",
-                            "resolved_on": "2025-01-01",
+                            "opened_date": "2026-01-01",
+                            "resolved_date": "2025-01-01",
                         }
                     ]
                 },
                 "foreclosure_cases[0]",
-                "resolved_on precedes opened_on",
+                "resolved_date precedes opened_date",
             ),
             (
                 "permit application to issue",
@@ -499,13 +501,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "permit-1",
                             "property": "property-1",
-                            "applied_on": "2026-01-01",
-                            "issued_on": "2025-01-01",
+                            "applied_date": "2026-01-01",
+                            "issued_date": "2025-01-01",
                         }
                     ]
                 },
                 "permits[0]",
-                "issued_on precedes applied_on",
+                "issued_date precedes applied_date",
             ),
             (
                 "permit issue to final",
@@ -514,13 +516,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "permit-1",
                             "property": "property-1",
-                            "issued_on": "2026-01-01",
-                            "finaled_on": "2025-01-01",
+                            "issued_date": "2026-01-01",
+                            "finaled_date": "2025-01-01",
                         }
                     ]
                 },
                 "permits[0]",
-                "finaled_on precedes issued_on",
+                "finaled_date precedes issued_date",
             ),
             (
                 "permit issue to expiration",
@@ -529,13 +531,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "permit-1",
                             "property": "property-1",
-                            "issued_on": "2026-01-01",
-                            "expires_on": "2025-01-01",
+                            "issued_date": "2026-01-01",
+                            "expiration_date": "2025-01-01",
                         }
                     ]
                 },
                 "permits[0]",
-                "expires_on precedes issued_on",
+                "expiration_date precedes issued_date",
             ),
             (
                 "permit application to final without issue date",
@@ -544,13 +546,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "permit-1",
                             "property": "property-1",
-                            "applied_on": "2026-01-01",
-                            "finaled_on": "2025-01-01",
+                            "applied_date": "2026-01-01",
+                            "finaled_date": "2025-01-01",
                         }
                     ]
                 },
                 "permits[0]",
-                "finaled_on precedes applied_on",
+                "finaled_date precedes applied_date",
             ),
             (
                 "permit application to expiration without issue date",
@@ -559,13 +561,13 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "permit-1",
                             "property": "property-1",
-                            "applied_on": "2026-01-01",
-                            "expires_on": "2025-01-01",
+                            "applied_date": "2026-01-01",
+                            "expiration_date": "2025-01-01",
                         }
                     ]
                 },
                 "permits[0]",
-                "expires_on precedes applied_on",
+                "expiration_date precedes applied_date",
             ),
             (
                 "operating statement",
@@ -1155,7 +1157,7 @@ class ProfileValidationTests(unittest.TestCase):
 
     def test_all_event_snapshot_references_must_resolve(self):
         required_fields = {
-            "sales": {"sale_date": "2025-01-01"},
+            "sales": {"close_date": "2025-01-01"},
             "leases": {},
             "listings": {"kind": "for_sale"},
             "valuations": {
@@ -1221,7 +1223,7 @@ class ProfileValidationTests(unittest.TestCase):
                         {
                             "id": "sale1",
                             "property": "p1",
-                            "sale_date": "2025-01-01",
+                            "close_date": "2025-01-01",
                             "property_state": "snapshot1",
                         }
                     ],
@@ -1622,7 +1624,7 @@ class ProfileValidationTests(unittest.TestCase):
                     "property": "p1",
                     "parties": [{"role": "lender", "party": "party1"}],
                     "events": [
-                        {"event_kind": "assignment", "to_party": "party1"}
+                        {"event_type": "assignment", "to_party": "party1"}
                     ],
                 }
             ],
@@ -2083,6 +2085,38 @@ class ProfileValidationTests(unittest.TestCase):
                 "structures[0].condition_ratings[1]",
                 "duplicate rating system and scope in condition_ratings",
             ),
+            "PropertyProfile-duplicate-listing-identifier.json": ValidationIssue(
+                "listings[0].identifiers[1]",
+                "duplicate listing identifier (scheme, namespace, value)",
+            ),
+            "PropertyProfile-two-primary-listing-identifiers.json": ValidationIssue(
+                "listings[0].identifiers[1]",
+                "multiple primary listing identifiers in one namespace",
+            ),
+            "PropertyProfile-listing-event-effective-at-mismatch.json": ValidationIssue(
+                "listings[0].events[0]",
+                "effective_at lexical date does not match effective_date",
+            ),
+            "PropertyProfile-close-price-on-active-event.json": ValidationIssue(
+                "listings[0].events[0]",
+                "close_price is only valid on a closed event",
+            ),
+            "PropertyProfile-lease-list-price-without-rent-period.json": ValidationIssue(
+                "listings[0].events[0]",
+                "for_lease list_price requires rent_period",
+            ),
+            "PropertyProfile-unresolved-sale-listing-relationship.json": ValidationIssue(
+                "sales[0].listings[0].listing",
+                "listing reference does not resolve",
+            ),
+            "PropertyProfile-unresolved-sale-evidence-sale.json": ValidationIssue(
+                "sale_evidence[0].sale",
+                "sale reference does not resolve",
+            ),
+            "PropertyProfile-unresolved-sale-evidence-artifact.json": ValidationIssue(
+                "sale_evidence[0].artifacts[0]",
+                "artifact reference does not resolve",
+            ),
         }
         self.assertEqual(
             set(expected),
@@ -2109,6 +2143,8 @@ class ProfileValidationTests(unittest.TestCase):
             "PropertyProfile-rating-missing-system.json",
             "PropertyProfile-rent-roll-missing-date.json",
             "PropertyProfile-state-missing-date.json",
+            "PropertyProfile-blank-listing-identifier-value.json",
+            "PropertyProfile-sale-evidence-missing-provenance.json",
         }
         semantic_names = {
             "PropertyProfile-address-hash-without-scheme.json",
@@ -2124,6 +2160,14 @@ class ProfileValidationTests(unittest.TestCase):
             "PropertyProfile-unresolved-tax-line-jurisdiction.json",
             "PropertyProfile-jsonld-entity-id-collision.json",
             "PropertyProfile-duplicate-rating-system-scope.json",
+            "PropertyProfile-duplicate-listing-identifier.json",
+            "PropertyProfile-two-primary-listing-identifiers.json",
+            "PropertyProfile-listing-event-effective-at-mismatch.json",
+            "PropertyProfile-close-price-on-active-event.json",
+            "PropertyProfile-lease-list-price-without-rent-period.json",
+            "PropertyProfile-unresolved-sale-listing-relationship.json",
+            "PropertyProfile-unresolved-sale-evidence-sale.json",
+            "PropertyProfile-unresolved-sale-evidence-artifact.json",
         }
         self.assertEqual(
             schema_names,
@@ -2152,6 +2196,302 @@ class ProfileValidationTests(unittest.TestCase):
         )
         self.assertIn(
             '${semantic_counterexamples[0]}', justfile
+        )
+
+
+def _listing_profile(identifiers):
+    return {
+        "property": {"id": "prop-1"},
+        "listings": [
+            {
+                "id": "lst-1",
+                "property": "prop-1",
+                "offering_type": "for_sale",
+                "identifiers": identifiers,
+            }
+        ],
+    }
+
+
+class ListingIdentifierRules(unittest.TestCase):
+    def test_duplicate_identifier_rejected(self):
+        issues = validate_profile(
+            _listing_profile(
+                [
+                    {"scheme": "listing_key", "namespace": "mls-x", "value": "K1"},
+                    {"scheme": "listing_key", "namespace": "mls-x", "value": "K1"},
+                ]
+            )
+        )
+        self.assertTrue(
+            any("duplicate listing identifier" in i.message for i in issues), issues
+        )
+
+    def test_two_primaries_in_namespace_rejected(self):
+        issues = validate_profile(
+            _listing_profile(
+                [
+                    {"scheme": "listing_key", "namespace": "mls-x", "value": "K1", "is_primary": True},
+                    {"scheme": "listing_id", "namespace": "mls-x", "value": "12345", "is_primary": True},
+                ]
+            )
+        )
+        self.assertTrue(
+            any("multiple primary" in i.message for i in issues), issues
+        )
+
+    def test_distinct_namespaces_each_primary_ok(self):
+        issues = validate_profile(
+            _listing_profile(
+                [
+                    {"scheme": "listing_key", "namespace": "mls-x", "value": "K1", "is_primary": True},
+                    {"scheme": "listing_key", "namespace": "mls-y", "value": "K9", "is_primary": True},
+                ]
+            )
+        )
+        self.assertFalse(
+            any("identifier" in i.message for i in issues), issues
+        )
+
+
+class IdentifierBundleRules(unittest.TestCase):
+    def _profile(self, collection, rows):
+        profile = {"property": {"id": "prop-1"}, collection: rows}
+        if collection == "parcel_identifiers":
+            profile["jurisdictions"] = [{"id": "jur-1", "country": "US"}]
+            profile["parcels"] = [
+                {"id": "parcel-1", "jurisdiction": "jur-1", "parcel_number": "P-1"}
+            ]
+        return profile
+
+    def test_duplicate_property_identifier_rejected(self):
+        row = {"id": "ident-1", "property": "prop-1", "scheme": "tax_account", "value": "R1"}
+        issues = validate_profile(
+            self._profile("identifiers", [row, {**row, "id": "ident-2"}])
+        )
+        self.assertEqual(
+            [
+                ValidationIssue(
+                    "identifiers[1]",
+                    "duplicate property identifier (scheme, namespace, value)",
+                )
+            ],
+            issues,
+        )
+
+    def test_duplicate_parcel_identifier_rejected(self):
+        row = {"id": "pident-1", "parcel": "parcel-1", "scheme": "upi", "value": "urn:reso:upi:2.0:US:20091:P-1"}
+        issues = validate_profile(
+            self._profile("parcel_identifiers", [row, {**row, "id": "pident-2"}])
+        )
+        self.assertEqual(
+            [
+                ValidationIssue(
+                    "parcel_identifiers[1]",
+                    "duplicate parcel identifier (scheme, namespace, value)",
+                )
+            ],
+            issues,
+        )
+
+    def test_distinct_identifiers_ok(self):
+        issues = validate_profile(
+            self._profile(
+                "parcel_identifiers",
+                [
+                    {"id": "pident-1", "parcel": "parcel-1", "scheme": "upi", "value": "urn:reso:upi:2.0:US:20091:P-1"},
+                    {"id": "pident-2", "parcel": "parcel-1", "scheme": "assessor_account", "value": "R96142"},
+                ],
+            )
+        )
+        self.assertEqual([], issues)
+
+
+def _event_profile(offering_type, event):
+    return {
+        "property": {"id": "prop-1"},
+        "listings": [
+            {
+                "id": "lst-1",
+                "property": "prop-1",
+                "offering_type": offering_type,
+                "events": [event],
+            }
+        ],
+    }
+
+
+class ListingEventRules(unittest.TestCase):
+    def test_effective_at_must_match_effective_date(self):
+        issues = validate_profile(
+            _event_profile(
+                "for_sale",
+                {
+                    "effective_date": "2026-03-01",
+                    "effective_at": "2026-03-02T09:00:00-05:00",
+                    "event_type": "listed",
+                },
+            )
+        )
+        self.assertTrue(
+            any("effective_at" in i.message for i in issues), issues
+        )
+
+    def test_close_price_only_on_closed_event(self):
+        issues = validate_profile(
+            _event_profile(
+                "for_sale",
+                {
+                    "effective_date": "2026-03-01",
+                    "event_type": "price_change",
+                    "close_price": {"amount": "400000", "currency": "USD"},
+                },
+            )
+        )
+        self.assertTrue(
+            any("close_price" in i.message for i in issues), issues
+        )
+
+    def test_lease_list_price_requires_rent_period(self):
+        issues = validate_profile(
+            _event_profile(
+                "for_lease",
+                {
+                    "effective_date": "2026-03-01",
+                    "event_type": "listed",
+                    "list_price": {"amount": "2500", "currency": "USD"},
+                },
+            )
+        )
+        self.assertTrue(
+            any("rent_period" in i.message for i in issues), issues
+        )
+
+    def test_valid_closed_event_passes(self):
+        issues = validate_profile(
+            _event_profile(
+                "for_sale",
+                {
+                    "effective_date": "2026-03-01",
+                    "effective_at": "2026-03-01T16:30:00-05:00",
+                    "event_type": "closed",
+                    "status": "sold",
+                    "close_price": {"amount": "400000", "currency": "USD"},
+                },
+            )
+        )
+        self.assertEqual(issues, [])
+
+
+class SaleListingRelationshipRules(unittest.TestCase):
+    @staticmethod
+    def _profile(listing_property="prop-1"):
+        return {
+            "property": {"id": "prop-1"},
+            "listings": [
+                {"id": "lst-1", "property": listing_property, "offering_type": "for_sale"}
+            ],
+            "sales": [
+                {
+                    "id": "sale-1",
+                    "property": "prop-1",
+                    "close_date": "2026-04-01",
+                    "listings": [
+                        {"listing": "lst-1", "relationship_type": "resulted_in_sale"}
+                    ],
+                }
+            ],
+        }
+
+    def test_resolved_same_property_ok(self):
+        self.assertEqual(validate_profile(self._profile()), [])
+
+    def test_unresolved_listing_reference(self):
+        profile = self._profile()
+        profile["sales"][0]["listings"][0]["listing"] = "lst-missing"
+        issues = validate_profile(profile)
+        self.assertTrue(
+            any("does not resolve" in i.message for i in issues), issues
+        )
+
+    def test_cross_property_listing_rejected(self):
+        profile = self._profile(listing_property="prop-other")
+        # prop-other must exist somewhere for the listing itself to resolve;
+        # the point is the sale and listing disagree about the property.
+        issues = validate_profile(profile)
+        self.assertTrue(
+            any("different property" in i.message for i in issues), issues
+        )
+
+
+class SaleEvidenceRules(unittest.TestCase):
+    @staticmethod
+    def _profile():
+        return {
+            "property": {"id": "prop-1"},
+            "sales": [
+                {"id": "sale-1", "property": "prop-1", "close_date": "2026-04-01"}
+            ],
+            "sale_evidence": [
+                {
+                    "id": "ev-1",
+                    "sale": "sale-1",
+                    "close_date": "2026-04-01",
+                    "close_price": {"amount": "400000", "currency": "USD"},
+                    "verification_method": {"code": "mls_record"},
+                    "provenance": {"provider": "MLS X"},
+                }
+            ],
+        }
+
+    def test_valid_evidence_passes(self):
+        self.assertEqual(validate_profile(self._profile()), [])
+
+    def test_unresolved_sale_rejected(self):
+        profile = self._profile()
+        profile["sale_evidence"][0]["sale"] = "sale-missing"
+        issues = validate_profile(profile)
+        self.assertTrue(
+            any("does not resolve" in i.message for i in issues), issues
+        )
+
+    def test_cross_property_listing_rejected(self):
+        profile = self._profile()
+        profile["listings"] = [
+            {"id": "lst-1", "property": "prop-other", "offering_type": "for_sale"}
+        ]
+        profile["sale_evidence"][0]["listing"] = "lst-1"
+        # prop-other need not exist as its own Property entity; the listing's
+        # own property reference may also fail to resolve, but the point of
+        # this test is that the sale and listing disagree about the property.
+        issues = validate_profile(profile)
+        self.assertTrue(
+            any(
+                "listing refers to a different property than the evidenced sale"
+                in i.message
+                for i in issues
+            ),
+            issues,
+        )
+
+    def test_cross_property_transfer_rejected(self):
+        profile = self._profile()
+        profile["transfers"] = [
+            {
+                "id": "trn-1",
+                "property": "prop-other",
+                "transfer_type": "warranty_deed",
+            }
+        ]
+        profile["sale_evidence"][0]["transfer"] = "trn-1"
+        issues = validate_profile(profile)
+        self.assertTrue(
+            any(
+                "transfer refers to a different property than the evidenced sale"
+                in i.message
+                for i in issues
+            ),
+            issues,
         )
 
 

@@ -346,14 +346,14 @@
       "id": "xfer-2017-06",
       "property": "prop-amazon-orl",
       "parcel": "parcel-1",
-      "transfer_kind": "deed",
+      "transfer_type": "deed",
       "document_type": {
         "system": "vendor",
         "code": "27",
         "display": "Deed"
       },
-      "recorded_on": "2017-06-01",
-      "effective_on": "2017-06-01",
+      "recorded_date": "2017-06-01",
+      "effective_date": "2017-06-01",
       "consideration": {
         "amount": "26900000",
         "currency": "USD"
@@ -370,14 +370,14 @@
       "id": "xfer-2017-07",
       "property": "prop-amazon-orl",
       "parcel": "parcel-1",
-      "transfer_kind": "special_warranty_deed",
+      "transfer_type": "special_warranty_deed",
       "document_type": {
         "system": "vendor",
         "code": "68",
         "display": "Special Warranty Deed"
       },
-      "recorded_on": "2017-07-11",
-      "effective_on": "2017-07-07",
+      "recorded_date": "2017-07-11",
+      "effective_date": "2017-07-07",
       "consideration": {
         "amount": "2690000",
         "currency": "USD"
@@ -400,14 +400,14 @@
       "id": "xfer-2018-09",
       "property": "prop-amazon-orl",
       "parcel": "parcel-1",
-      "transfer_kind": "special_warranty_deed",
+      "transfer_type": "special_warranty_deed",
       "document_type": {
         "system": "vendor",
         "code": "68",
         "display": "Special Warranty Deed"
       },
-      "recorded_on": "2018-09-21",
-      "effective_on": "2018-09-20",
+      "recorded_date": "2018-09-21",
+      "effective_date": "2018-09-20",
       "consideration": {
         "amount": "108000000",
         "currency": "USD"
@@ -432,7 +432,7 @@
       "id": "sale-2017",
       "property": "prop-amazon-orl",
       "transfer": "xfer-2017-07",
-      "sale_date": "2017-07-07",
+      "close_date": "2017-07-07",
       "sale_price": {
         "amount": "2690000",
         "currency": "USD"
@@ -466,7 +466,7 @@
       "id": "sale-2018",
       "property": "prop-amazon-orl",
       "transfer": "xfer-2018-09",
-      "sale_date": "2018-09-20",
+      "close_date": "2018-09-20",
       "sale_price": {
         "amount": "108000000",
         "currency": "USD"
@@ -497,6 +497,28 @@
       ]
     }
   ],
+  "sale_evidence": [
+    {
+      "id": "sale-evidence-2018-assessor",
+      "sale": "sale-2018",
+      "transfer": "xfer-2018-09",
+      "close_date": "2018-09-20",
+      "close_price": {
+        "amount": "108000000",
+        "currency": "USD"
+      },
+      "document_number": "2018.559335",
+      "verification_method": {
+        "system": "vendor",
+        "code": "assessor"
+      },
+      "provenance": {
+        "provider": "county-assessor",
+        "method": "bulk",
+        "verification": "verified"
+      }
+    }
+  ],
   "loans": [
     {
       "id": "loan-wf-2017",
@@ -504,7 +526,7 @@
       "parcel": "parcel-1",
       "transfer": "xfer-2017-07",
       "is_purchase_money": true,
-      "recorded_on": "2017-07-11",
+      "recorded_date": "2017-07-11",
       "document_number": "2017.380833",
       "loan_amount": {
         "amount": "45000",
@@ -536,7 +558,7 @@
         "amount": "13934",
         "currency": "USD"
       },
-      "recorded_on": "2021-10-06",
+      "recorded_date": "2021-10-06",
       "document_number": "20210609763",
       "document_type": {
         "system": "vendor",
@@ -564,7 +586,7 @@
     {
       "id": "fc-2021",
       "property": "prop-amazon-orl",
-      "opened_on": "2021-12-07",
+      "opened_date": "2021-12-07",
       "filings": [
         {
           "status": "lis_pendens",
@@ -573,7 +595,7 @@
             "code": "79",
             "display": "Notice of Lis Pendens"
           },
-          "recorded_on": "2021-12-07",
+          "recorded_date": "2021-12-07",
           "extras": {
             "example_vendor.transaction_id": "5109927168",
             "example_vendor.status_code": "LP",
@@ -599,7 +621,7 @@
     {
       "id": "own-2018",
       "property": "prop-amazon-orl",
-      "started_on": "2018-09-21",
+      "start_date": "2018-09-21",
       "mailing_address": "addr-mailing-atlanta",
       "acquired_via_transfer": "xfer-2018-09",
       "interests": [

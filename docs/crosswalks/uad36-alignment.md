@@ -73,7 +73,7 @@ condition ratings.
 |---|---|---|
 | `Transfer` | deed-transfer sales history | PHDS separates recorded conveyance from a comparable `SaleEvent`. |
 | `SaleEvent.sale_type` | arms-length and sale-characteristic assertions | Absence means the producer did not assert a sale type. |
-| `SaleEvent.concessions` | sales concession amount | Exact money remains a decimal string on the wire. |
+| `SaleEvent.concessions_amount` | sales concession amount | Exact money remains a decimal string on the wire. |
 | `Listing.events` | listing-information status and price observations | Each event carries its own effective date and event-level economics. |
 | `UnitRentObservation` | unit actual or market rent observation | `rate_type` distinguishes contract, market, asking, and effective rent. |
 | `LeaseEvent` | lease and rental information | PHDS also models commercial lease structure not supplied by UAD. |

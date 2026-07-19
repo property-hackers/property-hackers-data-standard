@@ -1009,7 +1009,7 @@
                         "null"
                     ]
                 },
-                "opened_on": {
+                "opened_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -1065,7 +1065,7 @@
                         "null"
                     ]
                 },
-                "resolved_on": {
+                "resolved_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -1155,7 +1155,7 @@
                         "null"
                     ]
                 },
-                "auction_on": {
+                "auction_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -1207,7 +1207,7 @@
                         }
                     ]
                 },
-                "recorded_on": {
+                "recorded_date": {
                     "description": "Date accepted, recorded, or registered by the authority",
                     "format": "date",
                     "type": [
@@ -1964,7 +1964,7 @@
                     ]
                 },
                 "kind": {
-                    "$ref": "#/$defs/LienKind"
+                    "$ref": "#/$defs/LienType"
                 },
                 "parties": {
                     "items": {
@@ -1988,7 +1988,7 @@
                         }
                     ]
                 },
-                "recorded_on": {
+                "recorded_date": {
                     "description": "Date accepted, recorded, or registered by the authority",
                     "format": "date",
                     "type": [
@@ -2031,7 +2031,7 @@
                         "null"
                     ]
                 },
-                "released_on": {
+                "released_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -2055,19 +2055,6 @@
             ],
             "title": "Lien",
             "type": "object"
-        },
-        "LienKind": {
-            "description": "",
-            "enum": [
-                "tax",
-                "judgment",
-                "hoa",
-                "mechanics",
-                "municipal",
-                "other"
-            ],
-            "title": "LienKind",
-            "type": "string"
         },
         "LienParty": {
             "additionalProperties": false,
@@ -2105,9 +2092,22 @@
             "title": "LienParty",
             "type": "object"
         },
+        "LienType": {
+            "description": "",
+            "enum": [
+                "tax",
+                "judgment",
+                "hoa",
+                "mechanics",
+                "municipal",
+                "other"
+            ],
+            "title": "LienType",
+            "type": "string"
+        },
         "Listing": {
             "additionalProperties": false,
-            "description": "Listing identity and non-lifecycle facts. Process events by occurred_on ascending; array order breaks same-date ties. Carry status, asking_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.",
+            "description": "Listing identity, header identifiers, and latest-observed agreement terms; process events by effective_date ascending; array order breaks same-date ties. Carry status, list_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.",
             "properties": {
                 "artifacts": {
                     "items": {
@@ -2127,6 +2127,20 @@
                         "null"
                     ]
                 },
+                "expiration_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "exposure_type": {
+                    "description": "public | office_exclusive | private | coming_soon | other (open)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "extras": {
                     "anyOf": [
                         {
@@ -2142,21 +2156,38 @@
                     "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
-                "kind": {
-                    "$ref": "#/$defs/ListingKind"
+                "identifiers": {
+                    "items": {
+                        "$ref": "#/$defs/ListingIdentifier"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
-                "listing_type": {
-                    "description": "mls | fsbo | auction | pocket",
+                "listing_agreement_type": {
+                    "description": "exclusive_right_to_sell | exclusive_agency | open | net | other (open)",
                     "type": [
                         "string",
                         "null"
                     ]
                 },
-                "mls_number": {
+                "listing_contract_date": {
+                    "format": "date",
                     "type": [
                         "string",
                         "null"
                     ]
+                },
+                "marketing_channel": {
+                    "description": "mls | private_network | public_portal | owner_direct | auction_platform | other (open)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "offering_type": {
+                    "$ref": "#/$defs/OfferingType"
                 },
                 "participants": {
                     "items": {
@@ -2193,6 +2224,22 @@
                         "null"
                     ]
                 },
+                "service_level": {
+                    "description": "full_service | limited_service | entry_only | other (open)",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "special_listing_conditions": {
+                    "items": {
+                        "$ref": "#/$defs/CodeableConcept"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "verifications": {
                     "items": {
                         "$ref": "#/$defs/VerificationAttribution"
@@ -2205,7 +2252,7 @@
             },
             "required": [
                 "property",
-                "kind",
+                "offering_type",
                 "id"
             ],
             "title": "Listing",
@@ -2213,18 +2260,8 @@
         },
         "ListingEvent": {
             "additionalProperties": false,
-            "description": "A dated listing assertion. asking_price is a sale price or periodic rent; rent_period states the period when asking_price is rent. close_price is asserted on a closed event.",
+            "description": "A dated listing assertion. effective_date is when the change took effect; effective_at adds optional precision and must fall on effective_date (compared on the timestamp's lexical date in its stated offset). observed_at is when the producer retrieved or detected the event. Order events by effective_date ascending, then effective_at when present, then array order. list_price is the asking sale price or periodic rent; rent_period states the period when it is rent. close_price is asserted only on a closed event and is the source's reported closing claim, not the reconciled SaleEvent.sale_price.",
             "properties": {
-                "asking_price": {
-                    "anyOf": [
-                        {
-                            "$ref": "#/$defs/Money"
-                        },
-                        {
-                            "type": "null"
-                        }
-                    ]
-                },
                 "close_price": {
                     "anyOf": [
                         {
@@ -2235,8 +2272,19 @@
                         }
                     ]
                 },
-                "event_kind": {
-                    "description": "listed | price_change | status_change | relisted | closed",
+                "effective_at": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "effective_date": {
+                    "format": "date",
+                    "type": "string"
+                },
+                "event_type": {
+                    "description": "listed | price_change | status_change | coming_soon | back_on_market | relisted | contingent | pending | closed | expired | withdrawn | canceled (open)",
                     "type": "string"
                 },
                 "extras": {
@@ -2249,9 +2297,33 @@
                         }
                     ]
                 },
-                "occurred_on": {
-                    "format": "date",
-                    "type": "string"
+                "list_price": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "list_price_low": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Lower bound for range-priced listings"
+                },
+                "observed_at": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
                 },
                 "provenance": {
                     "anyOf": [
@@ -2266,25 +2338,66 @@
                 "rent_period": {
                     "$ref": "#/$defs/RentPeriod"
                 },
+                "source_status": {
+                    "description": "Native source status verbatim",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "status": {
                     "$ref": "#/$defs/ListingStatus"
                 }
             },
             "required": [
-                "occurred_on",
-                "event_kind"
+                "effective_date",
+                "event_type"
             ],
             "title": "ListingEvent",
             "type": "object"
         },
-        "ListingKind": {
-            "description": "",
-            "enum": [
-                "for_sale",
-                "for_lease"
+        "ListingIdentifier": {
+            "additionalProperties": false,
+            "description": "Namespaced listing identifier mirroring PropertyIdentifier (scheme + namespace + value). RESO ListingKey and ListingId stay separately recoverable as distinct schemes; identity rule is (namespace, scheme=listing_key, value) with provider-specific fallback. At most one is_primary identifier per namespace.",
+            "properties": {
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "is_primary": {
+                    "type": [
+                        "boolean",
+                        "null"
+                    ]
+                },
+                "namespace": {
+                    "description": "Issuing system: MLS, aggregator, or portal",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "scheme": {
+                    "description": "listing_key | listing_id | source_system_id | other (open)",
+                    "type": "string"
+                },
+                "value": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "scheme",
+                "value"
             ],
-            "title": "ListingKind",
-            "type": "string"
+            "title": "ListingIdentifier",
+            "type": "object"
         },
         "ListingParticipant": {
             "additionalProperties": false,
@@ -2323,15 +2436,18 @@
             "type": "object"
         },
         "ListingStatus": {
-            "description": "",
+            "description": "PHDS-normalized listing status (close mapping to RESO StandardStatus). sold/leased replace RESO's ambiguous Closed; Incomplete and Delete are MLS record-management states that normalize to other with the raw value preserved in extras.",
             "enum": [
+                "coming_soon",
                 "active",
+                "active_under_contract",
                 "pending",
+                "hold",
                 "sold",
                 "leased",
                 "withdrawn",
+                "canceled",
                 "expired",
-                "coming_soon",
                 "other"
             ],
             "title": "ListingStatus",
@@ -2509,7 +2625,7 @@
                         "null"
                     ]
                 },
-                "recorded_on": {
+                "recorded_date": {
                     "description": "Date accepted, recorded, or registered by the authority",
                     "format": "date",
                     "type": [
@@ -2623,8 +2739,15 @@
                         }
                     ]
                 },
-                "event_kind": {
-                    "$ref": "#/$defs/LoanEventKind"
+                "effective_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "event_type": {
+                    "$ref": "#/$defs/LoanEventType"
                 },
                 "extras": {
                     "anyOf": [
@@ -2644,13 +2767,6 @@
                         "null"
                     ]
                 },
-                "occurred_on": {
-                    "format": "date",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "provenance": {
                     "anyOf": [
                         {
@@ -2661,7 +2777,7 @@
                         }
                     ]
                 },
-                "recorded_on": {
+                "recorded_date": {
                     "description": "Date accepted, recorded, or registered by the authority",
                     "format": "date",
                     "type": [
@@ -2714,12 +2830,12 @@
                 }
             },
             "required": [
-                "event_kind"
+                "event_type"
             ],
             "title": "LoanEvent",
             "type": "object"
         },
-        "LoanEventKind": {
+        "LoanEventType": {
             "description": "",
             "enum": [
                 "origination",
@@ -2731,7 +2847,7 @@
                 "reinstatement",
                 "other"
             ],
-            "title": "LoanEventKind",
+            "title": "LoanEventType",
             "type": "string"
         },
         "LoanParty": {
@@ -2770,6 +2886,100 @@
             "title": "LoanParty",
             "type": "object"
         },
+        "MlsObservation": {
+            "additionalProperties": false,
+            "description": "Capture envelope for an MLS / RESO Web API / feed record. The payload is a sparse PropertyProfile (a valid profile still requires its `property` section); listing-centric property characteristics belong on the profile's state snapshots, not on timeless entities. By convention profile accompanies success and error accompanies failure statuses \u2014 validators deliberately do not enforce this pairing, so consumers must branch on status, not on field presence. Source fields the profile does not model may be preserved under extras with producer-namespaced keys; the namespace and field naming are the producer's choice. original_entry_at and source_modified_at are the feed record's clocks (RESO OriginalEntryTimestamp / ModificationTimestamp); they duplicate provenance source clocks so they survive when the profile is detached from the envelope, and should agree with them.",
+            "properties": {
+                "artifact_refs": {
+                    "description": "References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "error": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "original_entry_at": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "profile": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/PropertyProfile"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "provenance": {
+                    "$ref": "#/$defs/Provenance"
+                },
+                "query": {
+                    "description": "Listing id/key or address queried",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_modified_at": {
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_record_key": {
+                    "description": "The feed's ListingKey for this record",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "status": {
+                    "$ref": "#/$defs/MlsObservationStatus"
+                }
+            },
+            "required": [
+                "status",
+                "provenance"
+            ],
+            "title": "MlsObservation",
+            "type": "object"
+        },
+        "MlsObservationStatus": {
+            "description": "Outcome of an MLS / listing-feed record capture.",
+            "enum": [
+                "success",
+                "not_found",
+                "api_error",
+                "parse_error",
+                "ambiguous"
+            ],
+            "title": "MlsObservationStatus",
+            "type": "string"
+        },
         "Money": {
             "additionalProperties": false,
             "description": "Monetary amount. JSON wire format is decimal-as-string. ISO-4217 currency.",
@@ -2790,6 +3000,15 @@
             ],
             "title": "Money",
             "type": "object"
+        },
+        "OfferingType": {
+            "description": "",
+            "enum": [
+                "for_sale",
+                "for_lease"
+            ],
+            "title": "OfferingType",
+            "type": "string"
         },
         "OperatingStatement": {
             "additionalProperties": false,
@@ -3039,7 +3258,7 @@
         },
         "OwnershipPeriod": {
             "additionalProperties": false,
-            "description": "One ownership regime; ended_on is end-exclusive, NULL = current.",
+            "description": "One ownership regime; end_date is end-exclusive, NULL = current.",
             "properties": {
                 "acquired_via_transfer": {
                     "type": [
@@ -3053,7 +3272,7 @@
                         "null"
                     ]
                 },
-                "ended_on": {
+                "end_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -3105,7 +3324,7 @@
                         }
                     ]
                 },
-                "started_on": {
+                "start_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -3206,14 +3425,7 @@
                         }
                     ]
                 },
-                "reso_upi": {
-                    "description": "urn:reso:upi:2.0:...",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
-                "retired_on": {
+                "retired_date": {
                     "description": "Set by lineage events",
                     "format": "date",
                     "type": [
@@ -3246,11 +3458,75 @@
             "title": "Parcel",
             "type": "object"
         },
+        "ParcelIdentifier": {
+            "additionalProperties": false,
+            "description": "Namespaced external parcel IDs \u2014 assessor account numbers, alternate APNs, Universal Parcel Identifier (UPI) URNs (scheme upi, value the full urn verbatim including any :sub: subcomponent). Mirrors PropertyIdentifier for identifiers scoped to a parcel rather than the property.",
+            "properties": {
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "parcel": {
+                    "type": "string"
+                },
+                "provenance": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Provenance"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "scheme": {
+                    "type": "string"
+                },
+                "value": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "parcel",
+                "scheme",
+                "value",
+                "id"
+            ],
+            "title": "ParcelIdentifier",
+            "type": "object"
+        },
         "ParcelLineage": {
             "additionalProperties": false,
             "description": "",
             "properties": {
-                "effective_on": {
+                "effective_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -3273,7 +3549,7 @@
                     "type": "string"
                 },
                 "kind": {
-                    "$ref": "#/$defs/ParcelLineageKind"
+                    "$ref": "#/$defs/ParcelLineageType"
                 },
                 "predecessor_parcel": {
                     "type": "string"
@@ -3310,14 +3586,14 @@
             "title": "ParcelLineage",
             "type": "object"
         },
-        "ParcelLineageKind": {
+        "ParcelLineageType": {
             "description": "",
             "enum": [
                 "split",
                 "merge",
                 "renumber"
             ],
-            "title": "ParcelLineageKind",
+            "title": "ParcelLineageType",
             "type": "string"
         },
         "Party": {
@@ -3368,7 +3644,7 @@
                     "type": "string"
                 },
                 "kind": {
-                    "$ref": "#/$defs/PartyKind"
+                    "$ref": "#/$defs/PartyType"
                 },
                 "legal_form": {
                     "anyOf": [
@@ -3565,20 +3841,20 @@
             "title": "PartyContact",
             "type": "object"
         },
-        "PartyKind": {
+        "PartyType": {
             "description": "",
             "enum": [
                 "person",
                 "organization"
             ],
-            "title": "PartyKind",
+            "title": "PartyType",
             "type": "string"
         },
         "Permit": {
             "additionalProperties": false,
             "description": "Building permits \u2014 header + lifecycle dates. Inspections/projects are extension.",
             "properties": {
-                "applied_on": {
+                "applied_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -3608,7 +3884,7 @@
                         "null"
                     ]
                 },
-                "expires_on": {
+                "expiration_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -3635,7 +3911,7 @@
                         }
                     ]
                 },
-                "finaled_on": {
+                "finaled_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -3647,7 +3923,7 @@
                     "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
-                "issued_on": {
+                "issued_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -4114,9 +4390,9 @@
         },
         "PropertyParcel": {
             "additionalProperties": false,
-            "description": "Property \u2194 parcel, many-to-many over time (splits/merges/condos). ended_on is end-exclusive.",
+            "description": "Property \u2194 parcel, many-to-many over time (splits/merges/condos). end_date is end-exclusive.",
             "properties": {
-                "ended_on": {
+                "end_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -4160,7 +4436,7 @@
                         }
                     ]
                 },
-                "started_on": {
+                "start_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -4317,6 +4593,15 @@
                         "null"
                     ]
                 },
+                "parcel_identifiers": {
+                    "items": {
+                        "$ref": "#/$defs/ParcelIdentifier"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "parcel_lineage": {
                     "items": {
                         "$ref": "#/$defs/ParcelLineage"
@@ -4396,6 +4681,15 @@
                 "rent_rolls": {
                     "items": {
                         "$ref": "#/$defs/RentRoll"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "sale_evidence": {
+                    "items": {
+                        "$ref": "#/$defs/SaleEvidence"
                     },
                     "type": [
                         "array",
@@ -4701,6 +4995,13 @@
                 "method": {
                     "$ref": "#/$defs/CaptureMethod"
                 },
+                "originating_system": {
+                    "description": "System where the record was born",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
                 "provider": {
                     "type": [
                         "string",
@@ -4709,6 +5010,36 @@
                 },
                 "retrieved_at": {
                     "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_created_at": {
+                    "description": "When the immediate source created the record",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_modified_at": {
+                    "description": "When the immediate source last modified the record",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_record_id": {
+                    "description": "The immediate source's record identifier",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_system": {
+                    "description": "Immediate system that supplied the record",
                     "type": [
                         "string",
                         "null"
@@ -4840,7 +5171,7 @@
                         "null"
                     ]
                 },
-                "recorded_on": {
+                "recorded_date": {
                     "description": "Date accepted, recorded, or registered by the authority",
                     "format": "date",
                     "type": [
@@ -4891,7 +5222,7 @@
             "additionalProperties": false,
             "description": "Repeatable events \u2014 never a flat year on the structure.",
             "properties": {
-                "completed_on": {
+                "completed_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -5321,6 +5652,17 @@
             "additionalProperties": false,
             "description": "A market sale referencing its recorded transfer. A quitclaim never becomes a comp.",
             "properties": {
+                "buyer_financing": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Financing the purchaser used to close"
+                },
                 "cap_rate": {
                     "description": "Capitalization rate in percentage points; 5.75 means 5.75 percent.",
                     "maximum": 100,
@@ -5330,7 +5672,21 @@
                         "null"
                     ]
                 },
+                "close_date": {
+                    "description": "Closing date of the market sale (reconciled layer)",
+                    "format": "date",
+                    "type": "string"
+                },
                 "concessions": {
+                    "items": {
+                        "$ref": "#/$defs/CodeableConcept"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "concessions_amount": {
                     "anyOf": [
                         {
                             "$ref": "#/$defs/Money"
@@ -5338,6 +5694,12 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "concessions_comments": {
+                    "type": [
+                        "string",
+                        "null"
                     ]
                 },
                 "extras": {
@@ -5350,17 +5712,20 @@
                         }
                     ]
                 },
-                "financing": {
-                    "description": "cash | conventional | seller | assumption | other (coarse; loans carry detail)",
-                    "type": [
-                        "string",
-                        "null"
-                    ]
-                },
                 "id": {
                     "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
                     "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
+                },
+                "listings": {
+                    "description": "Absent/empty for off-market sales",
+                    "items": {
+                        "$ref": "#/$defs/SaleListingRelationship"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
                 },
                 "noi_at_sale": {
                     "anyOf": [
@@ -5459,10 +5824,6 @@
                         "null"
                     ]
                 },
-                "sale_date": {
-                    "format": "date",
-                    "type": "string"
-                },
                 "sale_price": {
                     "anyOf": [
                         {
@@ -5471,7 +5832,8 @@
                         {
                             "type": "null"
                         }
-                    ]
+                    ],
+                    "description": "Reconciled market-sale amount \u2014 NOT the raw MLS ClosePrice claim (that is SaleEvidence.close_price)"
                 },
                 "sale_type": {
                     "$ref": "#/$defs/SaleTypeEnum"
@@ -5508,7 +5870,7 @@
             },
             "required": [
                 "property",
-                "sale_date",
+                "close_date",
                 "id"
             ],
             "title": "SaleEvent",
@@ -5548,6 +5910,151 @@
                 "party"
             ],
             "title": "SaleEventParty",
+            "type": "object"
+        },
+        "SaleEvidence": {
+            "additionalProperties": false,
+            "description": "One source's claims about a market sale. SaleEvent holds the reconciliation; evidence rows hold the disagreeing inputs (MLS close record, deed, assessor, broker or appraiser verification). One row = one source = one provenance. When an MLS-sourced row links a listing, its close_date/close_price should equal that listing's closed-event values (convention, deliberately unenforced).",
+            "properties": {
+                "artifacts": {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "close_date": {
+                    "format": "date",
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "close_price": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "concessions_amount": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Money"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "document_number": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "id": {
+                    "description": "Canonical identifier; nonblank with no leading or trailing whitespace",
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "listing": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "provenance": {
+                    "$ref": "#/$defs/Provenance"
+                },
+                "remarks": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "sale": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "transfer": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "verification_method": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/CodeableConcept"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "mls_record | deed | assessor | broker_confirmed | appraiser_verified | ... (open)"
+                },
+                "verifications": {
+                    "items": {
+                        "$ref": "#/$defs/VerificationAttribution"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                }
+            },
+            "required": [
+                "sale",
+                "provenance",
+                "id"
+            ],
+            "title": "SaleEvidence",
+            "type": "object"
+        },
+        "SaleListingRelationship": {
+            "additionalProperties": false,
+            "description": "Sale-to-listing relation. Vocabulary stays sale-oriented; relist chains are listing-to-listing facts and \"this MLS reported the sale\" is a SaleEvidence row with listing set \u2014 neither belongs here.",
+            "properties": {
+                "extras": {
+                    "anyOf": [
+                        {
+                            "$ref": "#/$defs/Any"
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ]
+                },
+                "listing": {
+                    "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
+                    "type": "string"
+                },
+                "relationship_type": {
+                    "description": "resulted_in_sale | prior_listing | other (open)",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "listing",
+                "relationship_type"
+            ],
+            "title": "SaleListingRelationship",
             "type": "object"
         },
         "SaleTypeEnum": {
@@ -6241,7 +6748,7 @@
             "additionalProperties": false,
             "description": "Source material that supports or preserves an assertion. Semantic validation requires at least one nonblank uri or storage_reference.",
             "properties": {
-                "captured_on": {
+                "captured_at": {
                     "format": "date-time",
                     "type": [
                         "string",
@@ -6295,6 +6802,14 @@
                         "null"
                     ]
                 },
+                "order": {
+                    "description": "Presentation order within the owning record's artifact list",
+                    "minimum": 0,
+                    "type": [
+                        "integer",
+                        "null"
+                    ]
+                },
                 "original_filename": {
                     "type": [
                         "string",
@@ -6316,6 +6831,20 @@
                         {
                             "type": "null"
                         }
+                    ]
+                },
+                "short_description": {
+                    "type": [
+                        "string",
+                        "null"
+                    ]
+                },
+                "source_modified_at": {
+                    "description": "When the source system last modified this media/document record",
+                    "format": "date-time",
+                    "type": [
+                        "string",
+                        "null"
                     ]
                 },
                 "storage_reference": {
@@ -7839,7 +8368,7 @@
                         }
                     ]
                 },
-                "due_on": {
+                "due_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -7868,7 +8397,7 @@
                         "null"
                     ]
                 },
-                "paid_on": {
+                "paid_date": {
                     "format": "date",
                     "type": [
                         "string",
@@ -7999,8 +8528,8 @@
                         }
                     ]
                 },
-                "effective_on": {
-                    "description": "Legal/economic effectiveness \u2014 may differ from instrument_date and recorded_on",
+                "effective_date": {
+                    "description": "Legal/economic effectiveness \u2014 may differ from instrument_date and recorded_date",
                     "format": "date",
                     "type": [
                         "string",
@@ -8103,7 +8632,7 @@
                         }
                     ]
                 },
-                "recorded_on": {
+                "recorded_date": {
                     "description": "Date accepted, recorded, or registered by the authority",
                     "format": "date",
                     "type": [
@@ -8146,10 +8675,6 @@
                         "null"
                     ]
                 },
-                "transfer_kind": {
-                    "description": "warranty_deed | quitclaim | foreclosure | tax_deed | ... (open)",
-                    "type": "string"
-                },
                 "transfer_tax": {
                     "anyOf": [
                         {
@@ -8160,6 +8685,10 @@
                         }
                     ],
                     "description": "Doc stamps; price-inference basis in many places"
+                },
+                "transfer_type": {
+                    "description": "warranty_deed | quitclaim | foreclosure | tax_deed | ... (open)",
+                    "type": "string"
                 },
                 "verifications": {
                     "items": {
@@ -8173,7 +8702,7 @@
             },
             "required": [
                 "property",
-                "transfer_kind",
+                "transfer_type",
                 "id"
             ],
             "title": "Transfer",
@@ -8404,6 +8933,15 @@
                         "null"
                     ]
                 },
+                "parcel_identifiers": {
+                    "items": {
+                        "$ref": "#/$defs/ParcelIdentifier"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
                 "parcel_lineage": {
                     "items": {
                         "$ref": "#/$defs/ParcelLineage"
@@ -8483,6 +9021,15 @@
                 "rent_rolls": {
                     "items": {
                         "$ref": "#/$defs/RentRoll"
+                    },
+                    "type": [
+                        "array",
+                        "null"
+                    ]
+                },
+                "sale_evidence": {
+                    "items": {
+                        "$ref": "#/$defs/SaleEvidence"
                     },
                     "type": [
                         "array",
@@ -9457,7 +10004,7 @@
                     "pattern": "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])",
                     "type": "string"
                 },
-                "observed_on": {
+                "observed_date": {
                     "format": "date",
                     "type": "string"
                 },
@@ -9527,7 +10074,7 @@
                 "property",
                 "unit_type",
                 "rate",
-                "observed_on",
+                "observed_date",
                 "id"
             ],
             "title": "UnitRentObservation",
@@ -9625,7 +10172,7 @@
                     ]
                 },
                 "kind": {
-                    "$ref": "#/$defs/ValuationKind"
+                    "$ref": "#/$defs/ValuationType"
                 },
                 "land_value": {
                     "anyOf": [
@@ -9746,7 +10293,7 @@
             "title": "Valuation",
             "type": "object"
         },
-        "ValuationKind": {
+        "ValuationType": {
             "description": "",
             "enum": [
                 "avm",
@@ -9755,7 +10302,7 @@
                 "broker_opinion",
                 "internal"
             ],
-            "title": "ValuationKind",
+            "title": "ValuationType",
             "type": "string"
         },
         "VerificationAttribution": {
@@ -9941,6 +10488,15 @@
                 "null"
             ]
         },
+        "parcel_identifiers": {
+            "items": {
+                "$ref": "#/$defs/ParcelIdentifier"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
         "parcel_lineage": {
             "items": {
                 "$ref": "#/$defs/ParcelLineage"
@@ -10020,6 +10576,15 @@
         "rent_rolls": {
             "items": {
                 "$ref": "#/$defs/RentRoll"
+            },
+            "type": [
+                "array",
+                "null"
+            ]
+        },
+        "sale_evidence": {
+            "items": {
+                "$ref": "#/$defs/SaleEvidence"
             },
             "type": [
                 "array",

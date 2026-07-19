@@ -108,7 +108,7 @@ class VerificationStatus(str, Enum):
     rejected = "rejected"
 
 
-class PartyKind(str, Enum):
+class PartyType(str, Enum):
     person = "person"
     organization = "organization"
 
@@ -181,23 +181,29 @@ class RateType(str, Enum):
     contract = "contract"
 
 
-class ListingKind(str, Enum):
+class OfferingType(str, Enum):
     for_sale = "for_sale"
     for_lease = "for_lease"
 
 
 class ListingStatus(str, Enum):
+    """
+    PHDS-normalized listing status (close mapping to RESO StandardStatus). sold/leased replace RESO's ambiguous Closed; Incomplete and Delete are MLS record-management states that normalize to other with the raw value preserved in extras.
+    """
+    coming_soon = "coming_soon"
     active = "active"
+    active_under_contract = "active_under_contract"
     pending = "pending"
+    hold = "hold"
     sold = "sold"
     leased = "leased"
     withdrawn = "withdrawn"
+    canceled = "canceled"
     expired = "expired"
-    coming_soon = "coming_soon"
     other = "other"
 
 
-class ValuationKind(str, Enum):
+class ValuationType(str, Enum):
     avm = "avm"
     appraisal = "appraisal"
     bpo = "bpo"
@@ -205,7 +211,7 @@ class ValuationKind(str, Enum):
     internal = "internal"
 
 
-class LoanEventKind(str, Enum):
+class LoanEventType(str, Enum):
     origination = "origination"
     assignment = "assignment"
     modification = "modification"
@@ -216,7 +222,7 @@ class LoanEventKind(str, Enum):
     other = "other"
 
 
-class LienKind(str, Enum):
+class LienType(str, Enum):
     tax = "tax"
     judgment = "judgment"
     hoa = "hoa"
@@ -225,7 +231,7 @@ class LienKind(str, Enum):
     other = "other"
 
 
-class ParcelLineageKind(str, Enum):
+class ParcelLineageType(str, Enum):
     split = "split"
     merge = "merge"
     renumber = "renumber"
@@ -314,6 +320,17 @@ class AssessorStatus(str, Enum):
     api_error = "api_error"
     parse_error = "parse_error"
     invalid_address = "invalid_address"
+    ambiguous = "ambiguous"
+
+
+class MlsObservationStatus(str, Enum):
+    """
+    Outcome of an MLS / listing-feed record capture.
+    """
+    success = "success"
+    not_found = "not_found"
+    api_error = "api_error"
+    parse_error = "parse_error"
     ambiguous = "ambiguous"
 
 
@@ -413,7 +430,9 @@ class Area(ConfiguredBaseModel):
     value: Decimal = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
                        'Length',
                        'PropertyIdentifier',
+                       'ParcelIdentifier',
                        'PartyContact',
+                       'ListingIdentifier',
                        'Valuation']} })
     unit: AreaUnit = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area', 'Length']} })
 
@@ -427,7 +446,9 @@ class Length(ConfiguredBaseModel):
     value: Decimal = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
                        'Length',
                        'PropertyIdentifier',
+                       'ParcelIdentifier',
                        'PartyContact',
+                       'ListingIdentifier',
                        'Valuation']} })
     unit: LengthUnit = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area', 'Length']} })
 
@@ -597,6 +618,11 @@ class Provenance(ConfiguredBaseModel):
     method: Optional[CaptureMethod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
     confidence: Optional[float] = Field(default=None, description="""Fraction from 0 through 1; 0.8 means 80 percent confidence.""", ge=0, le=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
     verification: Optional[VerificationStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
+    originating_system: Optional[str] = Field(default=None, description="""System where the record was born""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:OriginatingSystemName'], 'domain_of': ['Provenance']} })
+    source_system: Optional[str] = Field(default=None, description="""Immediate system that supplied the record""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:SourceSystemName'], 'domain_of': ['Provenance']} })
+    source_record_id: Optional[str] = Field(default=None, description="""The immediate source's record identifier""", json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
+    source_created_at: Optional[datetime ] = Field(default=None, description="""When the immediate source created the record""", json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance']} })
+    source_modified_at: Optional[datetime ] = Field(default=None, description="""When the immediate source last modified the record""", json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance', 'SourceArtifact', 'MlsObservation']} })
 
 
 class Entity(ConfiguredBaseModel):
@@ -617,6 +643,8 @@ class Entity(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -627,19 +655,22 @@ class Entity(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -662,8 +693,8 @@ class InstrumentReference(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    relationship_type: Optional[CodeableConcept] = Field(default=None, description="""re_records | corrects | releases | assigns | modifies | subordinates | refers_to""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference']} })
-    document_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+    relationship_type: Optional[CodeableConcept] = Field(default=None, description="""re_records | corrects | releases | assigns | modifies | subordinates | refers_to""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'SaleListingRelationship']} })
+    document_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     registry_reference: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
@@ -680,6 +711,8 @@ class InstrumentReference(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -690,7 +723,8 @@ class InstrumentReference(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class RecordedInstrument(ConfiguredBaseModel):
@@ -699,16 +733,17 @@ class RecordedInstrument(ConfiguredBaseModel):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities', 'mixin': True})
 
-    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     recording_book: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_page: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    recorded_on: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    recorded_date: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     instrument_date: Optional[date] = Field(default=None, description="""Date executed/signed as dated on the instrument""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     document_type: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -738,6 +773,8 @@ class TransactionParty(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -748,7 +785,8 @@ class TransactionParty(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -779,7 +817,6 @@ class Jurisdiction(Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -801,6 +838,8 @@ class Jurisdiction(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -811,19 +850,22 @@ class Jurisdiction(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('country')
@@ -891,6 +933,8 @@ class Address(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -901,19 +945,22 @@ class Address(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('country')
@@ -1012,6 +1059,8 @@ class Property(PropertyFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1022,19 +1071,22 @@ class Property(PropertyFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -1057,17 +1109,16 @@ class Parcel(Entity):
                                              'unique_key_slots': ['jurisdiction',
                                                                   'parcel_number',
                                                                   'unit_designator',
-                                                                  'retired_on']}}})
+                                                                  'retired_date']}}})
 
     jurisdiction: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
     parcel_number: str = Field(default=..., description="""RAW as issued (RESO UPI rule)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel'], 'exact_mappings': ['reso:ParcelNumber']} })
     normalized_parcel_number: Optional[str] = Field(default=None, description="""Matching only, never identity""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     unit_designator: Optional[str] = Field(default=None, description="""Condo sub-parcel discriminator""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
-    reso_upi: Optional[str] = Field(default=None, description="""urn:reso:upi:2.0:...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     legal_description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     land_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     boundary: Optional[Geometry] = Field(default=None, description="""GeoJSON MultiPolygon (optional)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction', 'Parcel']} })
-    retired_on: Optional[date] = Field(default=None, description="""Set by lineage events""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
+    retired_date: Optional[date] = Field(default=None, description="""Set by lineage events""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -1083,6 +1134,8 @@ class Parcel(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1093,19 +1146,22 @@ class Parcel(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -1124,7 +1180,7 @@ class Parcel(Entity):
 
 class PropertyParcel(Entity):
     """
-    Property ↔ parcel, many-to-many over time (splits/merges/condos). ended_on is end-exclusive.
+    Property ↔ parcel, many-to-many over time (splits/merges/condos). end_date is end-exclusive.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
          'unique_keys': {'property_parcel_pair': {'unique_key_name': 'property_parcel_pair',
@@ -1153,10 +1209,18 @@ class PropertyParcel(Entity):
                        'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
-    started_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
-    ended_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
+    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'ParcelIdentifier',
+                       'Assessment',
+                       'TaxBill',
+                       'Transfer',
+                       'Loan']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'AddressAssociation',
+                       'PartyContact',
+                       'ListingIdentifier']} })
+    start_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
+    end_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -1172,6 +1236,8 @@ class PropertyParcel(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1182,19 +1248,22 @@ class PropertyParcel(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -1216,7 +1285,7 @@ class ParcelLineage(Entity):
 
     predecessor_parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage']} })
     successor_parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage']} })
-    kind: ParcelLineageKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+    kind: ParcelLineageType = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
                        'SourceArtifact',
@@ -1225,11 +1294,10 @@ class ParcelLineage(Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
-    effective_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer']} })
+    effective_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer', 'ListingEvent', 'LoanEvent']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -1245,6 +1313,8 @@ class ParcelLineage(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1255,19 +1325,22 @@ class ParcelLineage(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -1316,12 +1389,14 @@ class PropertyIdentifier(Entity):
                        'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    scheme: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier']} })
-    namespace: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier']} })
+    scheme: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier', 'ParcelIdentifier', 'ListingIdentifier']} })
+    namespace: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier', 'ParcelIdentifier', 'ListingIdentifier']} })
     value: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
                        'Length',
                        'PropertyIdentifier',
+                       'ParcelIdentifier',
                        'PartyContact',
+                       'ListingIdentifier',
                        'Valuation']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
@@ -1338,6 +1413,8 @@ class PropertyIdentifier(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1348,20 +1425,120 @@ class PropertyIdentifier(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class ParcelIdentifier(Entity):
+    """
+    Namespaced external parcel IDs — assessor account numbers, alternate APNs, Universal Parcel Identifier (UPI) URNs (scheme upi, value the full urn verbatim including any :sub: subcomponent). Mirrors PropertyIdentifier for identifiers scoped to a parcel rather than the property.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
+         'unique_keys': {'parcel_identifier_identity': {'unique_key_name': 'parcel_identifier_identity',
+                                                        'unique_key_slots': ['scheme',
+                                                                             'namespace',
+                                                                             'value']}}})
+
+    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'ParcelIdentifier',
+                       'Assessment',
+                       'TaxBill',
+                       'Transfer',
+                       'Loan']} })
+    scheme: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier', 'ParcelIdentifier', 'ListingIdentifier']} })
+    namespace: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier', 'ParcelIdentifier', 'ListingIdentifier']} })
+    value: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
+                       'Length',
+                       'PropertyIdentifier',
+                       'ParcelIdentifier',
+                       'PartyContact',
+                       'ListingIdentifier',
+                       'Valuation']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'SaleEvidence',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('value')
+    def pattern_value(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid value format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid value format: {v}"
+            raise ValueError(err_msg)
+        return v
 
     @field_validator('id')
     def pattern_id(cls, v):
@@ -1383,7 +1560,7 @@ class Party(Entity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    kind: PartyKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+    kind: PartyType = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
                        'SourceArtifact',
@@ -1392,7 +1569,6 @@ class Party(Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -1420,6 +1596,8 @@ class Party(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1430,19 +1608,22 @@ class Party(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('name')
@@ -1495,6 +1676,8 @@ class VerificationAttribution(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1505,7 +1688,8 @@ class VerificationAttribution(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('verifier')
     def pattern_verifier(cls, v):
@@ -1527,9 +1711,9 @@ class SourceArtifact(Entity):
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    uri: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    uri: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:MediaURL'], 'domain_of': ['SourceArtifact']} })
     storage_reference: Optional[str] = Field(default=None, description="""Producer-defined object or document storage reference""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
-    media_type: Optional[str] = Field(default=None, description="""MIME media type""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    media_type: Optional[str] = Field(default=None, description="""MIME media type""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:MimeType'], 'domain_of': ['SourceArtifact']} })
     kind: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
@@ -1539,7 +1723,6 @@ class SourceArtifact(Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -1548,7 +1731,11 @@ class SourceArtifact(Entity):
     content_hash: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
     hash_scheme: Optional[str] = Field(default=None, description="""Producer-namespaced content hashing scheme""", json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
     page_count: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
-    captured_on: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    captured_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SourceArtifact']} })
+    order: Optional[int] = Field(default=None, description="""Presentation order within the owning record's artifact list""", ge=0, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:Order'], 'domain_of': ['SourceArtifact']} })
+    short_description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ShortDescription'], 'domain_of': ['SourceArtifact']} })
+    source_modified_at: Optional[datetime ] = Field(default=None, description="""When the source system last modified this media/document record""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ModificationTimestamp'],
+         'domain_of': ['Provenance', 'SourceArtifact', 'MlsObservation']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -1564,6 +1751,8 @@ class SourceArtifact(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1574,19 +1763,22 @@ class SourceArtifact(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('uri')
@@ -1660,7 +1852,10 @@ class AddressAssociation(ConfiguredBaseModel):
 
     address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     role: Optional[CodeableConcept] = Field(default=None, description="""situs | entrance | alias | address_range | former | mailing | other (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'AddressAssociation',
+                       'PartyContact',
+                       'ListingIdentifier']} })
     valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
 
@@ -1696,6 +1891,8 @@ class PartyAddress(AddressAssociation):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1706,22 +1903,28 @@ class PartyAddress(AddressAssociation):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     role: Optional[CodeableConcept] = Field(default=None, description="""situs | entrance | alias | address_range | former | mailing | other (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'AddressAssociation',
+                       'PartyContact',
+                       'ListingIdentifier']} })
     valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
 
@@ -1767,7 +1970,10 @@ class PropertyAddress(AddressAssociation, Entity):
                        'PropertyProfile']} })
     address: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     role: Optional[CodeableConcept] = Field(default=None, description="""situs | entrance | alias | address_range | former | mailing | other (open vocabulary)""", json_schema_extra = { "linkml_meta": {'domain_of': ['TransactionParty', 'AddressAssociation', 'OwnershipInterest']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'AddressAssociation',
+                       'PartyContact',
+                       'ListingIdentifier']} })
     valid_from: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     valid_to: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AddressAssociation']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
@@ -1785,6 +1991,8 @@ class PropertyAddress(AddressAssociation, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1795,19 +2003,22 @@ class PropertyAddress(AddressAssociation, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('address')
@@ -1849,17 +2060,21 @@ class PartyContact(ConfiguredBaseModel):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
     value: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
                        'Length',
                        'PropertyIdentifier',
+                       'ParcelIdentifier',
                        'PartyContact',
+                       'ListingIdentifier',
                        'Valuation']} })
     label: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PartyContact', 'StatementLineItem']} })
-    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'AddressAssociation', 'PartyContact']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'AddressAssociation',
+                       'PartyContact',
+                       'ListingIdentifier']} })
     do_not_contact: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PartyContact']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -1875,6 +2090,8 @@ class PartyContact(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1885,24 +2102,27 @@ class PartyContact(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class OwnershipPeriod(Entity):
     """
-    One ownership regime; ended_on is end-exclusive, NULL = current.
+    One ownership regime; end_date is end-exclusive, NULL = current.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
@@ -1928,8 +2148,8 @@ class OwnershipPeriod(Entity):
                        'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    started_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
-    ended_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
+    start_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
+    end_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'OwnershipPeriod']} })
     vesting_type: Optional[str] = Field(default=None, description="""joint_tenants | tenants_in_common | community_property | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipPeriod']} })
     mailing_address: Optional[str] = Field(default=None, description="""Owner's mailing address during THIS period""", json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipPeriod']} })
     acquired_via_transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['OwnershipPeriod']} })
@@ -1950,6 +2170,8 @@ class OwnershipPeriod(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -1960,19 +2182,22 @@ class OwnershipPeriod(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('mailing_address')
@@ -2023,6 +2248,8 @@ class OwnershipInterest(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2033,7 +2260,8 @@ class OwnershipInterest(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -2061,7 +2289,6 @@ class StructureFacts(ConfiguredBaseModel):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -2136,7 +2363,6 @@ class Structure(StructureFacts, Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -2189,6 +2415,8 @@ class Structure(StructureFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2199,19 +2427,22 @@ class Structure(StructureFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -2240,7 +2471,6 @@ class AreaMeasure(ConfiguredBaseModel):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -2259,6 +2489,8 @@ class AreaMeasure(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2269,7 +2501,8 @@ class AreaMeasure(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class ResidentialDetails(ConfiguredBaseModel):
@@ -2310,6 +2543,8 @@ class ResidentialDetails(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2320,19 +2555,22 @@ class ResidentialDetails(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class CommercialDetails(ConfiguredBaseModel):
@@ -2368,6 +2606,8 @@ class CommercialDetails(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2378,19 +2618,22 @@ class CommercialDetails(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class Renovation(ConfiguredBaseModel):
@@ -2408,13 +2651,12 @@ class Renovation(ConfiguredBaseModel):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Rating', 'Renovation', 'Permit']} })
     completed_year: Optional[int] = Field(default=None, ge=1, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
-    completed_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
+    completed_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
     cost: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Renovation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -2430,6 +2672,8 @@ class Renovation(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2440,19 +2684,22 @@ class Renovation(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class SiteFacts(ConfiguredBaseModel):
@@ -2550,6 +2797,8 @@ class Site(SiteFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2560,19 +2809,22 @@ class Site(SiteFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -2661,6 +2913,8 @@ class Space(SpaceFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2671,19 +2925,22 @@ class Space(SpaceFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -2728,6 +2985,8 @@ class PropertyState(PropertyFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2738,19 +2997,22 @@ class PropertyState(PropertyFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -2811,6 +3073,8 @@ class SiteState(SiteFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2821,19 +3085,22 @@ class SiteState(SiteFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -2864,7 +3131,6 @@ class StructureState(StructureFacts, Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -2917,6 +3183,8 @@ class StructureState(StructureFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2927,19 +3195,22 @@ class StructureState(StructureFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -2984,6 +3255,8 @@ class SpaceState(SpaceFacts, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -2994,19 +3267,22 @@ class SpaceState(SpaceFacts, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3076,6 +3352,8 @@ class PropertyStateSnapshot(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3086,19 +3364,22 @@ class PropertyStateSnapshot(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3161,6 +3442,8 @@ class PropertyAssociation(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3171,19 +3454,22 @@ class PropertyAssociation(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('party')
@@ -3224,7 +3510,12 @@ class Assessment(Entity):
                                                                       'tax_year',
                                                                       'roll_type']}}})
 
-    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
+    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'ParcelIdentifier',
+                       'Assessment',
+                       'TaxBill',
+                       'Transfer',
+                       'Loan']} })
     jurisdiction: str = Field(default=..., description="""The ASSESSING authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
     tax_year: int = Field(default=..., ge=1000, le=2200, json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment', 'TaxBill']} })
     roll_type: Optional[str] = Field(default=None, description="""original | corrected | supplemental | appeal | ...""", json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment']} })
@@ -3253,6 +3544,8 @@ class Assessment(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3263,19 +3556,22 @@ class Assessment(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3304,7 +3600,6 @@ class TaxExemption(ConfiguredBaseModel):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -3331,6 +3626,8 @@ class TaxExemption(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3341,7 +3638,8 @@ class TaxExemption(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class TaxBill(Entity):
@@ -3352,7 +3650,12 @@ class TaxBill(Entity):
                                                                     'tax_year',
                                                                     'bill_number']}}})
 
-    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
+    parcel: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'ParcelIdentifier',
+                       'Assessment',
+                       'TaxBill',
+                       'Transfer',
+                       'Loan']} })
     jurisdiction: str = Field(default=..., description="""Issuing authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['Parcel', 'Assessment', 'TaxBill', 'TaxLineItem']} })
     tax_year: int = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Assessment', 'TaxBill']} })
     bill_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill']} })
@@ -3379,6 +3682,8 @@ class TaxBill(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3389,19 +3694,22 @@ class TaxBill(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3422,7 +3730,7 @@ class TaxInstallment(ConfiguredBaseModel):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
     installment_number: Optional[int] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxInstallment']} })
-    due_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxInstallment']} })
+    due_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxInstallment', 'Loan']} })
     amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Money',
                        'UnitRate',
                        'TaxExemption',
@@ -3432,7 +3740,7 @@ class TaxInstallment(ConfiguredBaseModel):
                        'LoanEvent',
                        'Lien',
                        'StatementLineItem']} })
-    paid_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxInstallment']} })
+    paid_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxInstallment']} })
     amount_paid: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill', 'TaxInstallment']} })
     is_delinquent: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxBill', 'TaxInstallment']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
@@ -3449,6 +3757,8 @@ class TaxInstallment(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3459,7 +3769,8 @@ class TaxInstallment(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class TaxLineItem(ConfiguredBaseModel):
@@ -3490,6 +3801,8 @@ class TaxLineItem(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3500,7 +3813,8 @@ class TaxLineItem(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('jurisdiction')
     def pattern_jurisdiction(cls, v):
@@ -3545,9 +3859,14 @@ class Transfer(RecordedInstrument, Entity):
                        'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    parcel: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
-    transfer_kind: str = Field(default=..., description="""warranty_deed | quitclaim | foreclosure | tax_deed | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
-    effective_on: Optional[date] = Field(default=None, description="""Legal/economic effectiveness — may differ from instrument_date and recorded_on""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer']} })
+    parcel: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'ParcelIdentifier',
+                       'Assessment',
+                       'TaxBill',
+                       'Transfer',
+                       'Loan']} })
+    transfer_type: str = Field(default=..., description="""warranty_deed | quitclaim | foreclosure | tax_deed | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
+    effective_date: Optional[date] = Field(default=None, description="""Legal/economic effectiveness — may differ from instrument_date and recorded_date""", json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer', 'ListingEvent', 'LoanEvent']} })
     consideration: Optional[Money] = Field(default=None, description="""Often $0 / nominal""", json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
     transfer_tax: Optional[Money] = Field(default=None, description="""Doc stamps; price-inference basis in many places""", json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer']} })
     price_disclosure: Optional[PriceDisclosure] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
@@ -3563,16 +3882,17 @@ class Transfer(RecordedInstrument, Entity):
                        'Lien',
                        'ForeclosureCase',
                        'PropertyProfile']} })
-    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     recording_book: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_page: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    recorded_on: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    recorded_date: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     instrument_date: Optional[date] = Field(default=None, description="""Date executed/signed as dated on the instrument""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     document_type: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -3592,6 +3912,8 @@ class Transfer(RecordedInstrument, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3602,19 +3924,22 @@ class Transfer(RecordedInstrument, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3654,6 +3979,8 @@ class TransferParty(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3664,7 +3991,8 @@ class TransferParty(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -3713,17 +4041,31 @@ class SaleEvent(Entity):
                        'Listing',
                        'LeaseEvent',
                        'Valuation']} })
-    transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Loan']} })
-    sale_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent'], 'exact_mappings': ['reso:CloseDate']} })
-    sale_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent'], 'exact_mappings': ['reso:ClosePrice']} })
+    transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Loan']} })
+    close_date: date = Field(default=..., description="""Closing date of the market sale (reconciled layer)""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:CloseDate'],
+         'domain_of': ['SaleEvent', 'SaleEvidence']} })
+    sale_price: Optional[Money] = Field(default=None, description="""Reconciled market-sale amount — NOT the raw MLS ClosePrice claim (that is SaleEvidence.close_price)""", json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'reconciled'}},
+         'domain_of': ['SaleEvent'],
+         'related_mappings': ['reso:ClosePrice']} })
     price_disclosure: Optional[PriceDisclosure] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
     price_code: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer', 'SaleEvent']} })
     sale_type: Optional[SaleTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
-    price_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
-    price_per_unit: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
-    financing: Optional[str] = Field(default=None, description="""cash | conventional | seller | assumption | other (coarse; loans carry detail)""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
-    concessions: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'LeaseEvent']} })
-    cap_rate: Optional[Decimal] = Field(default=None, description="""Capitalization rate in percentage points; 5.75 means 5.75 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
+    price_per_area: Optional[UnitRate] = Field(default=None, json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'derived'}},
+         'domain_of': ['SaleEvent']} })
+    price_per_unit: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'derived'}},
+         'domain_of': ['SaleEvent']} })
+    buyer_financing: Optional[CodeableConcept] = Field(default=None, description="""Financing the purchaser used to close""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:BuyerFinancing'], 'domain_of': ['SaleEvent']} })
+    concessions_amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ConcessionsAmount'],
+         'domain_of': ['SaleEvent', 'SaleEvidence']} })
+    concessions: Optional[list[CodeableConcept]] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:Concessions'],
+         'domain_of': ['SaleEvent', 'LeaseEvent']} })
+    concessions_comments: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ConcessionsComments'], 'domain_of': ['SaleEvent']} })
+    cap_rate: Optional[Decimal] = Field(default=None, description="""Capitalization rate in percentage points; 5.75 means 5.75 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'derived'}},
+         'domain_of': ['SaleEvent']} })
     noi_at_sale: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     opex_at_sale: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
     occupancy_at_sale_pct: Optional[Decimal] = Field(default=None, description="""0–100 percentage points; 90 means 90 percent.""", ge=0, le=100, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent']} })
@@ -3736,7 +4078,8 @@ class SaleEvent(Entity):
                        'Lien',
                        'ForeclosureCase',
                        'PropertyProfile']} })
-    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Listing', 'LeaseEvent']} })
+    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Listing', 'LeaseEvent']} })
+    listings: Optional[list[SaleListingRelationship]] = Field(default=None, description="""Absent/empty for off-market sales""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'PropertyProfile']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -3752,6 +4095,8 @@ class SaleEvent(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3762,19 +4107,22 @@ class SaleEvent(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3814,6 +4162,8 @@ class SaleEventParty(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3824,7 +4174,8 @@ class SaleEventParty(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -3840,9 +4191,224 @@ class SaleEventParty(TransactionParty):
         return v
 
 
+class SaleListingRelationship(ConfiguredBaseModel):
+    """
+    Sale-to-listing relation. Vocabulary stays sale-oriented; relist chains are listing-to-listing facts and \"this MLS reported the sale\" is a SaleEvidence row with listing set — neither belongs here.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    listing: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SaleListingRelationship', 'SaleEvidence']} })
+    relationship_type: str = Field(default=..., description="""resulted_in_sale | prior_listing | other (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'SaleListingRelationship']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+
+    @field_validator('listing')
+    def pattern_listing(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid listing format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid listing format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class SaleEvidence(Entity):
+    """
+    One source's claims about a market sale. SaleEvent holds the reconciliation; evidence rows hold the disagreeing inputs (MLS close record, deed, assessor, broker or appraiser verification). One row = one source = one provenance. When an MLS-sourced row links a listing, its close_date/close_price should equal that listing's closed-event values (convention, deliberately unenforced).
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    sale: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvidence']} })
+    listing: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleListingRelationship', 'SaleEvidence']} })
+    transfer: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Loan']} })
+    close_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'asserted'}},
+         'domain_of': ['SaleEvent', 'SaleEvidence'],
+         'exact_mappings': ['reso:CloseDate']} })
+    close_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'asserted'}},
+         'close_mappings': ['reso:ClosePrice'],
+         'domain_of': ['SaleEvidence', 'ListingEvent']} })
+    concessions_amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'annotations': {'value_classification': {'tag': 'value_classification',
+                                                  'value': 'asserted'}},
+         'close_mappings': ['reso:ConcessionsAmount'],
+         'domain_of': ['SaleEvent', 'SaleEvidence']} })
+    document_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
+    verification_method: Optional[CodeableConcept] = Field(default=None, description="""mls_record | deed | assessor | broker_confirmed | appraiser_verified | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvidence']} })
+    remarks: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Listing', 'LeaseEvent']} })
+    artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
+                       'Listing',
+                       'Permit',
+                       'Valuation',
+                       'PropertyProfile']} })
+    provenance: Provenance = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'SaleEvidence',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
+
+    @field_validator('sale')
+    def pattern_sale(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid sale format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid sale format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+    @field_validator('id')
+    def pattern_id(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid id format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid id format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
+class ListingIdentifier(ConfiguredBaseModel):
+    """
+    Namespaced listing identifier mirroring PropertyIdentifier (scheme + namespace + value). RESO ListingKey and ListingId stay separately recoverable as distinct schemes; identity rule is (namespace, scheme=listing_key, value) with provider-specific fallback. At most one is_primary identifier per namespace.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
+
+    scheme: str = Field(default=..., description="""listing_key | listing_id | source_system_id | other (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier', 'ParcelIdentifier', 'ListingIdentifier']} })
+    namespace: Optional[str] = Field(default=None, description="""Issuing system: MLS, aggregator, or portal""", json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyIdentifier', 'ParcelIdentifier', 'ListingIdentifier']} })
+    value: str = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
+                       'Length',
+                       'PropertyIdentifier',
+                       'ParcelIdentifier',
+                       'PartyContact',
+                       'ListingIdentifier',
+                       'Valuation']} })
+    is_primary: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'AddressAssociation',
+                       'PartyContact',
+                       'ListingIdentifier']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+
+    @field_validator('value')
+    def pattern_value(cls, v):
+        pattern=re.compile(r"^[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF](?:[\s\S]*[^\u0009-\u000D\u0020\u0085\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF])?(?![\s\S])")
+        if isinstance(v, list):
+            for element in v:
+                if isinstance(element, str) and not pattern.match(element):
+                    err_msg = f"Invalid value format: {element}"
+                    raise ValueError(err_msg)
+        elif isinstance(v, str) and not pattern.match(v):
+            err_msg = f"Invalid value format: {v}"
+            raise ValueError(err_msg)
+        return v
+
+
 class Listing(Entity):
     """
-    Listing identity and non-lifecycle facts. Process events by occurred_on ascending; array order breaks same-date ties. Carry status, asking_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.
+    Listing identity, header identifiers, and latest-observed agreement terms; process events by effective_date ascending; array order breaks same-date ties. Carry status, list_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
@@ -3873,29 +4439,25 @@ class Listing(Entity):
                        'Listing',
                        'LeaseEvent',
                        'Valuation']} })
-    kind: ListingKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
-                       'ParcelLineage',
-                       'Party',
-                       'SourceArtifact',
-                       'PartyContact',
-                       'StructureFacts',
-                       'AreaMeasure',
-                       'Renovation',
-                       'TaxExemption',
-                       'Listing',
-                       'Lien',
-                       'Permit',
-                       'Valuation']} })
-    listing_type: Optional[str] = Field(default=None, description="""mls | fsbo | auction | pocket""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
-    mls_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
+    offering_type: OfferingType = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
+    identifiers: Optional[list[ListingIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'PropertyProfile']} })
+    listing_contract_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing'], 'exact_mappings': ['reso:ListingContractDate']} })
+    expiration_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'LeaseEvent', 'Permit'],
+         'exact_mappings': ['reso:ExpirationDate']} })
+    listing_agreement_type: Optional[str] = Field(default=None, description="""exclusive_right_to_sell | exclusive_agency | open | net | other (open)""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ListingAgreement'], 'domain_of': ['Listing']} })
+    service_level: Optional[str] = Field(default=None, description="""full_service | limited_service | entry_only | other (open)""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ListingService'], 'domain_of': ['Listing']} })
+    marketing_channel: Optional[str] = Field(default=None, description="""mls | private_network | public_portal | owner_direct | auction_platform | other (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
+    exposure_type: Optional[str] = Field(default=None, description="""public | office_exclusive | private | coming_soon | other (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
+    special_listing_conditions: Optional[list[CodeableConcept]] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:SpecialListingConditions'], 'domain_of': ['Listing']} })
     events: Optional[list[ListingEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'Loan'], 'list_elements_ordered': True} })
     participants: Optional[list[ListingParticipant]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
                        'PropertyProfile']} })
-    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Listing', 'LeaseEvent']} })
+    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Listing', 'LeaseEvent']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -3911,6 +4473,8 @@ class Listing(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3921,19 +4485,22 @@ class Listing(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -3952,20 +4519,27 @@ class Listing(Entity):
 
 class ListingEvent(ConfiguredBaseModel):
     """
-    A dated listing assertion. asking_price is a sale price or periodic rent; rent_period states the period when asking_price is rent. close_price is asserted on a closed event.
+    A dated listing assertion. effective_date is when the change took effect; effective_at adds optional precision and must fall on effective_date (compared on the timestamp's lexical date in its stated offset). observed_at is when the producer retrieved or detected the event. Order events by effective_date ascending, then effective_at when present, then array order. list_price is the asking sale price or periodic rent; rent_period states the period when it is rent. close_price is asserted only on a closed event and is the source's reported closing claim, not the reconciled SaleEvent.sale_price.
     """
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities'})
 
-    occurred_on: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
-    event_kind: str = Field(default=..., description="""listed | price_change | status_change | relisted | closed""", json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
-    status: Optional[ListingStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
+    effective_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer', 'ListingEvent', 'LoanEvent']} })
+    effective_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent']} })
+    observed_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent']} })
+    event_type: str = Field(default=..., description="""listed | price_change | status_change | coming_soon | back_on_market | relisted | contingent | pending | closed | expired | withdrawn | canceled (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
+    status: Optional[ListingStatus] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:StandardStatus'],
+         'domain_of': ['ListingEvent',
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
-    asking_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    source_status: Optional[str] = Field(default=None, description="""Native source status verbatim""", json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent'], 'exact_mappings': ['reso:MlsStatus']} })
+    list_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ListPrice'], 'domain_of': ['ListingEvent']} })
+    list_price_low: Optional[Money] = Field(default=None, description="""Lower bound for range-priced listings""", json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ListPriceLow'], 'domain_of': ['ListingEvent']} })
     rent_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LeaseEvent', 'RentRoll']} })
-    close_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent']} })
+    close_price: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ClosePrice'],
+         'domain_of': ['SaleEvidence', 'ListingEvent']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
@@ -3980,6 +4554,8 @@ class ListingEvent(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -3990,19 +4566,22 @@ class ListingEvent(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class ListingParticipant(TransactionParty):
@@ -4028,6 +4607,8 @@ class ListingParticipant(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4038,7 +4619,8 @@ class ListingParticipant(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -4091,7 +4673,7 @@ class LeaseEvent(Entity):
     lease_type: Optional[LeaseTypeEnum] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     execution_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     commencement_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
-    expiration_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
+    expiration_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'LeaseEvent', 'Permit']} })
     term_months: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent', 'Loan']} })
     leased_area: Optional[Area] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     rent: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
@@ -4111,7 +4693,7 @@ class LeaseEvent(Entity):
                        'PropertyProfile']} })
     escalations: Optional[list[LeaseEscalation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent']} })
     concessions: Optional[list[LeaseConcession]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'LeaseEvent']} })
-    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Listing', 'LeaseEvent']} })
+    remarks: Optional[str] = Field(default=None, description="""Source- or vendor-authored narrative interpreted through provenance.""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Listing', 'LeaseEvent']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -4127,6 +4709,8 @@ class LeaseEvent(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4137,19 +4721,22 @@ class LeaseEvent(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -4189,6 +4776,8 @@ class LeaseEventParty(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4199,7 +4788,8 @@ class LeaseEventParty(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -4240,6 +4830,8 @@ class ExpenseStructure(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4250,7 +4842,8 @@ class ExpenseStructure(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class LeaseEscalation(ConfiguredBaseModel):
@@ -4279,6 +4872,8 @@ class LeaseEscalation(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4289,7 +4884,8 @@ class LeaseEscalation(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class RentStep(ConfiguredBaseModel):
@@ -4331,6 +4927,8 @@ class LeaseConcession(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4341,7 +4939,8 @@ class LeaseConcession(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class UnitRentObservation(Entity):
@@ -4382,7 +4981,7 @@ class UnitRentObservation(Entity):
     rate_period: Optional[RentPeriod] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     rate_basis: Optional[RateBasis] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     rate_type: Optional[RateType] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
-    observed_on: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
+    observed_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     concessions_note: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['UnitRentObservation']} })
     id: str = Field(default=..., description="""Canonical identifier; nonblank with no leading or trailing whitespace""", json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
@@ -4399,6 +4998,8 @@ class UnitRentObservation(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4409,19 +5010,22 @@ class UnitRentObservation(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -4467,8 +5071,13 @@ class Loan(RecordedInstrument, Entity):
                        'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    parcel: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel', 'Assessment', 'TaxBill', 'Transfer', 'Loan']} })
-    transfer: Optional[str] = Field(default=None, description="""Purchase-money linkage""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'Loan']} })
+    parcel: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyParcel',
+                       'ParcelIdentifier',
+                       'Assessment',
+                       'TaxBill',
+                       'Transfer',
+                       'Loan']} })
+    transfer: Optional[str] = Field(default=None, description="""Purchase-money linkage""", json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'SaleEvidence', 'Loan']} })
     is_purchase_money: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     loan_amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     loan_type: Optional[str] = Field(default=None, description="""conventional | fha | va | ... (open)""", json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
@@ -4480,7 +5089,7 @@ class Loan(RecordedInstrument, Entity):
     interest_rate: Optional[Decimal] = Field(default=None, description="""Nominal interest rate in percentage points; 6.5 means 6.5 percent.""", ge=0, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     is_variable_rate: Optional[bool] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     term_months: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['LeaseEvent', 'Loan']} })
-    due_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
+    due_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['TaxInstallment', 'Loan']} })
     lien_position: Optional[int] = Field(default=None, ge=1, json_schema_extra = { "linkml_meta": {'domain_of': ['Loan']} })
     parties: Optional[list[LoanParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
                        'SaleEvent',
@@ -4490,16 +5099,17 @@ class Loan(RecordedInstrument, Entity):
                        'ForeclosureCase',
                        'PropertyProfile']} })
     events: Optional[list[LoanEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'Loan']} })
-    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     recording_book: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_page: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    recorded_on: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    recorded_date: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     instrument_date: Optional[date] = Field(default=None, description="""Date executed/signed as dated on the instrument""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     document_type: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -4519,6 +5129,8 @@ class Loan(RecordedInstrument, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4529,19 +5141,22 @@ class Loan(RecordedInstrument, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -4581,6 +5196,8 @@ class LoanParty(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4591,7 +5208,8 @@ class LoanParty(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -4614,8 +5232,8 @@ class LoanEvent(RecordedInstrument):
     linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds/entities',
          'mixins': ['RecordedInstrument']})
 
-    event_kind: LoanEventKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
-    occurred_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
+    event_type: LoanEventType = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent', 'LoanEvent']} })
+    effective_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ParcelLineage', 'Transfer', 'ListingEvent', 'LoanEvent']} })
     amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Money',
                        'UnitRate',
                        'TaxExemption',
@@ -4640,6 +5258,8 @@ class LoanEvent(RecordedInstrument):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4650,29 +5270,33 @@ class LoanEvent(RecordedInstrument):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
-    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     recording_book: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_page: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    recorded_on: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    recorded_date: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     instrument_date: Optional[date] = Field(default=None, description="""Date executed/signed as dated on the instrument""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     document_type: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -4721,7 +5345,7 @@ class Lien(RecordedInstrument, Entity):
                        'RentRoll',
                        'Valuation',
                        'PropertyProfile']} })
-    kind: LienKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+    kind: LienType = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
                        'SourceArtifact',
@@ -4730,7 +5354,6 @@ class Lien(RecordedInstrument, Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -4743,7 +5366,7 @@ class Lien(RecordedInstrument, Entity):
                        'LoanEvent',
                        'Lien',
                        'StatementLineItem']} })
-    released_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Lien']} })
+    released_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Lien']} })
     parties: Optional[list[LienParty]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Transfer',
                        'SaleEvent',
                        'LeaseEvent',
@@ -4751,16 +5374,17 @@ class Lien(RecordedInstrument, Entity):
                        'Lien',
                        'ForeclosureCase',
                        'PropertyProfile']} })
-    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     recording_book: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_page: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    recorded_on: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    recorded_date: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     instrument_date: Optional[date] = Field(default=None, description="""Date executed/signed as dated on the instrument""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     document_type: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -4780,6 +5404,8 @@ class Lien(RecordedInstrument, Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4790,19 +5416,22 @@ class Lien(RecordedInstrument, Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -4842,6 +5471,8 @@ class LienParty(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4852,7 +5483,8 @@ class LienParty(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -4898,8 +5530,8 @@ class ForeclosureCase(Entity):
                        'PropertyProfile']} })
     loan: Optional[str] = Field(default=None, description="""The defaulted loan, when known""", json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
     case_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
-    opened_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
-    resolved_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
+    opened_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
+    resolved_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
     resolution: Optional[str] = Field(default=None, description="""sold_at_auction | cured | dismissed | reo""", json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
     past_due_amount: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
     unpaid_balance: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureCase']} })
@@ -4929,6 +5561,8 @@ class ForeclosureCase(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -4939,19 +5573,22 @@ class ForeclosureCase(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -4979,8 +5616,9 @@ class ForeclosureFiling(RecordedInstrument):
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
-    auction_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureFiling']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    auction_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureFiling']} })
     auction_at_time: Optional[str] = Field(default=None, description="""Time-of-day as published""", json_schema_extra = { "linkml_meta": {'domain_of': ['ForeclosureFiling']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
@@ -4996,6 +5634,8 @@ class ForeclosureFiling(RecordedInstrument):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5006,29 +5646,33 @@ class ForeclosureFiling(RecordedInstrument):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
-    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    document_number: Optional[str] = Field(default=None, description="""Primary identifier assigned by the recording/registry authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument', 'SaleEvidence']} })
     recording_book: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_page: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
-    recorded_on: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
+    recorded_date: Optional[date] = Field(default=None, description="""Date accepted, recorded, or registered by the authority""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     instrument_date: Optional[date] = Field(default=None, description="""Date executed/signed as dated on the instrument""", json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     document_type: Optional[CodeableConcept] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     recording_authority: Optional[str] = Field(default=None, description="""Authority maintaining the record (optional — parcel context is inference, not identity)""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     registry_reference: Optional[str] = Field(default=None, description="""Alternate authority-issued reference: title, dealing, folio, or notarial-act number""", json_schema_extra = { "linkml_meta": {'domain_of': ['InstrumentReference', 'RecordedInstrument']} })
     related_instruments: Optional[list[InstrumentReference]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -5058,6 +5702,8 @@ class ForeclosureCaseParty(TransactionParty):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5068,7 +5714,8 @@ class ForeclosureCaseParty(TransactionParty):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('party')
     def pattern_party(cls, v):
@@ -5124,7 +5771,6 @@ class Permit(Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -5132,16 +5778,18 @@ class Permit(Entity):
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     description: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Rating', 'Renovation', 'Permit']} })
-    applied_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    issued_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    finaled_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
-    expires_on: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
+    applied_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
+    issued_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
+    finaled_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
+    expiration_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'LeaseEvent', 'Permit']} })
     job_value: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     fees: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     contractor_party: Optional[str] = Field(default=None, description="""Canonical contractor Party reference; credential records are outside core v0.2""", json_schema_extra = { "linkml_meta": {'domain_of': ['Permit']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -5161,6 +5809,8 @@ class Permit(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5171,19 +5821,22 @@ class Permit(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('contractor_party')
@@ -5273,6 +5926,8 @@ class OperatingStatement(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5283,19 +5938,22 @@ class OperatingStatement(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -5340,6 +5998,8 @@ class StatementLineItem(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5350,7 +6010,8 @@ class StatementLineItem(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class RentRoll(Entity):
@@ -5404,6 +6065,8 @@ class RentRoll(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5414,19 +6077,22 @@ class RentRoll(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -5470,6 +6136,8 @@ class RentRollLine(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5480,7 +6148,8 @@ class RentRollLine(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
     @field_validator('tenant')
     def pattern_tenant(cls, v):
@@ -5529,7 +6198,7 @@ class Valuation(Entity):
                        'Listing',
                        'LeaseEvent',
                        'Valuation']} })
-    kind: ValuationKind = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
+    kind: ValuationType = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Jurisdiction',
                        'ParcelLineage',
                        'Party',
                        'SourceArtifact',
@@ -5538,7 +6207,6 @@ class Valuation(Entity):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -5547,7 +6215,9 @@ class Valuation(Entity):
     value: Money = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Area',
                        'Length',
                        'PropertyIdentifier',
+                       'ParcelIdentifier',
                        'PartyContact',
+                       'ListingIdentifier',
                        'Valuation']} })
     value_low: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     value_high: Optional[Money] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
@@ -5565,6 +6235,7 @@ class Valuation(Entity):
     as_of_date: date = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyStateSnapshot', 'RentRoll', 'Valuation']} })
     report_date: Optional[date] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Valuation']} })
     artifacts: Optional[list[str]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -5584,6 +6255,8 @@ class Valuation(Entity):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5594,19 +6267,22 @@ class Valuation(Entity):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('performed_by_party')
@@ -5650,6 +6326,7 @@ class PropertyProfile(ConfiguredBaseModel):
                        'ForeclosureCase',
                        'PropertyProfile']} })
     artifacts: Optional[list[SourceArtifact]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -5678,9 +6355,10 @@ class PropertyProfile(ConfiguredBaseModel):
                        'Valuation',
                        'PropertyProfile']} })
     property_addresses: Optional[list[PropertyAddress]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
-    identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'PropertyProfile']} })
     jurisdictions: Optional[list[Jurisdiction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcels: Optional[list[Parcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    parcel_identifiers: Optional[list[ParcelIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     property_parcels: Optional[list[PropertyParcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcel_lineage: Optional[list[ParcelLineage]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     site: Optional[Site] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -5692,7 +6370,8 @@ class PropertyProfile(ConfiguredBaseModel):
     tax_bills: Optional[list[TaxBill]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     transfers: Optional[list[Transfer]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     sales: Optional[list[SaleEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
-    listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    sale_evidence: Optional[list[SaleEvidence]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'PropertyProfile']} })
     leases: Optional[list[LeaseEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     unit_rents: Optional[list[UnitRentObservation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     rent_rolls: Optional[list[RentRoll]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -5709,12 +6388,14 @@ class PropertyProfile(ConfiguredBaseModel):
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
@@ -5729,6 +6410,8 @@ class PropertyProfile(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5739,7 +6422,8 @@ class PropertyProfile(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class AssessorObservation(ConfiguredBaseModel):
@@ -5752,25 +6436,34 @@ class AssessorObservation(ConfiguredBaseModel):
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     query_address: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
     query_parcel_number: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
     assessor_url: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation']} })
-    profile: Optional[PropertyProfile] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
-    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
+    profile: Optional[PropertyProfile] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Provenance = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
-    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
@@ -5785,6 +6478,8 @@ class AssessorObservation(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5795,7 +6490,8 @@ class AssessorObservation(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class ExtractionObservation(ConfiguredBaseModel):
@@ -5808,27 +6504,36 @@ class ExtractionObservation(ConfiguredBaseModel):
                        'ForeclosureFiling',
                        'Permit',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     category: Optional[ExtractionCategory] = Field(default=None, description="""Content classification; expected when status is success""", json_schema_extra = { "linkml_meta": {'domain_of': ['StatementLineItem', 'ExtractionObservation']} })
     source_category: Optional[str] = Field(default=None, description="""Raw or more specific producer classification, especially when category is `other`""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionObservation']} })
-    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
+    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     source_url: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Provenance', 'ExtractionObservation']} })
     extracted_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionObservation']} })
     model: Optional[str] = Field(default=None, description="""Extraction model identifier""", json_schema_extra = { "linkml_meta": {'domain_of': ['ExtractionObservation']} })
-    profile: Optional[PropertyProfile] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
+    profile: Optional[PropertyProfile] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Provenance = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
-    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation', 'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
@@ -5843,6 +6548,8 @@ class ExtractionObservation(ConfiguredBaseModel):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5853,7 +6560,79 @@ class ExtractionObservation(ConfiguredBaseModel):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+
+
+class MlsObservation(ConfiguredBaseModel):
+    """
+    Capture envelope for an MLS / RESO Web API / feed record. The payload is a sparse PropertyProfile (a valid profile still requires its `property` section); listing-centric property characteristics belong on the profile's state snapshots, not on timeless entities. By convention profile accompanies success and error accompanies failure statuses — validators deliberately do not enforce this pairing, so consumers must branch on status, not on field presence. Source fields the profile does not model may be preserved under extras with producer-namespaced keys; the namespace and field naming are the producer's choice. original_entry_at and source_modified_at are the feed record's clocks (RESO OriginalEntryTimestamp / ModificationTimestamp); they duplicate provenance source clocks so they survive when the profile is detached from the envelope, and should agree with them.
+    """
+    linkml_meta: ClassVar[LinkMLMeta] = LinkMLMeta({'from_schema': 'https://example.org/phds'})
+
+    status: MlsObservationStatus = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['ListingEvent',
+                       'ForeclosureFiling',
+                       'Permit',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    query: Optional[str] = Field(default=None, description="""Listing id/key or address queried""", json_schema_extra = { "linkml_meta": {'domain_of': ['MlsObservation']} })
+    source_record_key: Optional[str] = Field(default=None, description="""The feed's ListingKey for this record""", json_schema_extra = { "linkml_meta": {'domain_of': ['MlsObservation']} })
+    original_entry_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:OriginalEntryTimestamp'],
+         'domain_of': ['MlsObservation']} })
+    source_modified_at: Optional[datetime ] = Field(default=None, json_schema_extra = { "linkml_meta": {'close_mappings': ['reso:ModificationTimestamp'],
+         'domain_of': ['Provenance', 'SourceArtifact', 'MlsObservation']} })
+    profile: Optional[PropertyProfile] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    error: Optional[str] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    provenance: Provenance = Field(default=..., json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'PartyAddress',
+                       'PartyContact',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'SaleEvidence',
+                       'ListingEvent',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    artifact_refs: Optional[list[str]] = Field(default=None, description="""References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent.""", json_schema_extra = { "linkml_meta": {'domain_of': ['AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
+    extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
+                       'InstrumentReference',
+                       'TransactionParty',
+                       'VerificationAttribution',
+                       'PartyAddress',
+                       'PartyContact',
+                       'OwnershipInterest',
+                       'AreaMeasure',
+                       'ResidentialDetails',
+                       'CommercialDetails',
+                       'Renovation',
+                       'TaxExemption',
+                       'TaxInstallment',
+                       'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
+                       'ListingEvent',
+                       'ExpenseStructure',
+                       'LeaseEscalation',
+                       'LeaseConcession',
+                       'LoanEvent',
+                       'ForeclosureFiling',
+                       'StatementLineItem',
+                       'RentRollLine',
+                       'PropertyProfile',
+                       'AssessorObservation',
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class BomaMetroOfficeMarketClassification(Rating):
@@ -5971,6 +6750,8 @@ class BomaMetroCommercialDetails(CommercialDetails):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -5981,19 +6762,22 @@ class BomaMetroCommercialDetails(CommercialDetails):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class BomaInternationalCommercialDetails(CommercialDetails):
@@ -6028,6 +6812,8 @@ class BomaInternationalCommercialDetails(CommercialDetails):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6038,19 +6824,22 @@ class BomaInternationalCommercialDetails(CommercialDetails):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class BomaMetroStructure(Structure):
@@ -6089,7 +6878,6 @@ class BomaMetroStructure(Structure):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -6142,6 +6930,8 @@ class BomaMetroStructure(Structure):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6152,19 +6942,22 @@ class BomaMetroStructure(Structure):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -6196,7 +6989,6 @@ class BomaMetroStructureState(StructureState):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -6249,6 +7041,8 @@ class BomaMetroStructureState(StructureState):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6259,19 +7053,22 @@ class BomaMetroStructureState(StructureState):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -6340,6 +7137,8 @@ class BomaMetroPropertyStateSnapshot(PropertyStateSnapshot):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6350,19 +7149,22 @@ class BomaMetroPropertyStateSnapshot(PropertyStateSnapshot):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -6398,6 +7200,7 @@ class BomaMetroPropertyProfile(PropertyProfile):
                        'ForeclosureCase',
                        'PropertyProfile']} })
     artifacts: Optional[list[SourceArtifact]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -6426,9 +7229,10 @@ class BomaMetroPropertyProfile(PropertyProfile):
                        'Valuation',
                        'PropertyProfile']} })
     property_addresses: Optional[list[PropertyAddress]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
-    identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'PropertyProfile']} })
     jurisdictions: Optional[list[Jurisdiction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcels: Optional[list[Parcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    parcel_identifiers: Optional[list[ParcelIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     property_parcels: Optional[list[PropertyParcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcel_lineage: Optional[list[ParcelLineage]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     site: Optional[Site] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -6440,7 +7244,8 @@ class BomaMetroPropertyProfile(PropertyProfile):
     tax_bills: Optional[list[TaxBill]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     transfers: Optional[list[Transfer]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     sales: Optional[list[SaleEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
-    listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    sale_evidence: Optional[list[SaleEvidence]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'PropertyProfile']} })
     leases: Optional[list[LeaseEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     unit_rents: Optional[list[UnitRentObservation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     rent_rolls: Optional[list[RentRoll]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -6457,12 +7262,14 @@ class BomaMetroPropertyProfile(PropertyProfile):
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
@@ -6477,6 +7284,8 @@ class BomaMetroPropertyProfile(PropertyProfile):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6487,7 +7296,8 @@ class BomaMetroPropertyProfile(PropertyProfile):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 class BomaInternationalStructure(Structure):
@@ -6526,7 +7336,6 @@ class BomaInternationalStructure(Structure):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -6579,6 +7388,8 @@ class BomaInternationalStructure(Structure):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6589,19 +7400,22 @@ class BomaInternationalStructure(Structure):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -6633,7 +7447,6 @@ class BomaInternationalStructureState(StructureState):
                        'AreaMeasure',
                        'Renovation',
                        'TaxExemption',
-                       'Listing',
                        'Lien',
                        'Permit',
                        'Valuation']} })
@@ -6686,6 +7499,8 @@ class BomaInternationalStructureState(StructureState):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6696,19 +7511,22 @@ class BomaInternationalStructureState(StructureState):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -6777,6 +7595,8 @@ class BomaInternationalPropertyStateSnapshot(PropertyStateSnapshot):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6787,19 +7607,22 @@ class BomaInternationalPropertyStateSnapshot(PropertyStateSnapshot):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     provenance: Optional[Provenance] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'PartyAddress',
                        'PartyContact',
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     verifications: Optional[list[VerificationAttribution]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity']} })
 
     @field_validator('id')
@@ -6835,6 +7658,7 @@ class BomaInternationalPropertyProfile(PropertyProfile):
                        'ForeclosureCase',
                        'PropertyProfile']} })
     artifacts: Optional[list[SourceArtifact]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['RecordedInstrument',
+                       'SaleEvidence',
                        'Listing',
                        'Permit',
                        'Valuation',
@@ -6863,9 +7687,10 @@ class BomaInternationalPropertyProfile(PropertyProfile):
                        'Valuation',
                        'PropertyProfile']} })
     property_addresses: Optional[list[PropertyAddress]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
-    identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    identifiers: Optional[list[PropertyIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Listing', 'PropertyProfile']} })
     jurisdictions: Optional[list[Jurisdiction]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcels: Optional[list[Parcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    parcel_identifiers: Optional[list[ParcelIdentifier]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     property_parcels: Optional[list[PropertyParcel]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     parcel_lineage: Optional[list[ParcelLineage]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     site: Optional[Site] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -6877,7 +7702,8 @@ class BomaInternationalPropertyProfile(PropertyProfile):
     tax_bills: Optional[list[TaxBill]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     transfers: Optional[list[Transfer]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     sales: Optional[list[SaleEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
-    listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    sale_evidence: Optional[list[SaleEvidence]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
+    listings: Optional[list[Listing]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['SaleEvent', 'PropertyProfile']} })
     leases: Optional[list[LeaseEvent]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     unit_rents: Optional[list[UnitRentObservation]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
     rent_rolls: Optional[list[RentRoll]] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['PropertyProfile']} })
@@ -6894,12 +7720,14 @@ class BomaInternationalPropertyProfile(PropertyProfile):
                        'ResidentialDetails',
                        'CommercialDetails',
                        'Renovation',
+                       'SaleEvidence',
                        'ListingEvent',
                        'LoanEvent',
                        'ForeclosureFiling',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
     extras: Optional[Any] = Field(default=None, json_schema_extra = { "linkml_meta": {'domain_of': ['Entity',
                        'InstrumentReference',
                        'TransactionParty',
@@ -6914,6 +7742,8 @@ class BomaInternationalPropertyProfile(PropertyProfile):
                        'TaxExemption',
                        'TaxInstallment',
                        'TaxLineItem',
+                       'SaleListingRelationship',
+                       'ListingIdentifier',
                        'ListingEvent',
                        'ExpenseStructure',
                        'LeaseEscalation',
@@ -6924,7 +7754,8 @@ class BomaInternationalPropertyProfile(PropertyProfile):
                        'RentRollLine',
                        'PropertyProfile',
                        'AssessorObservation',
-                       'ExtractionObservation']} })
+                       'ExtractionObservation',
+                       'MlsObservation']} })
 
 
 # Model rebuild
@@ -6951,6 +7782,7 @@ Parcel.model_rebuild()
 PropertyParcel.model_rebuild()
 ParcelLineage.model_rebuild()
 PropertyIdentifier.model_rebuild()
+ParcelIdentifier.model_rebuild()
 Party.model_rebuild()
 VerificationAttribution.model_rebuild()
 SourceArtifact.model_rebuild()
@@ -6985,6 +7817,9 @@ Transfer.model_rebuild()
 TransferParty.model_rebuild()
 SaleEvent.model_rebuild()
 SaleEventParty.model_rebuild()
+SaleListingRelationship.model_rebuild()
+SaleEvidence.model_rebuild()
+ListingIdentifier.model_rebuild()
 Listing.model_rebuild()
 ListingEvent.model_rebuild()
 ListingParticipant.model_rebuild()
@@ -7012,6 +7847,7 @@ Valuation.model_rebuild()
 PropertyProfile.model_rebuild()
 AssessorObservation.model_rebuild()
 ExtractionObservation.model_rebuild()
+MlsObservation.model_rebuild()
 BomaMetroOfficeMarketClassification.model_rebuild()
 BomaInternationalOfficeMarketClassification.model_rebuild()
 BomaMetroCommercialDetails.model_rebuild()

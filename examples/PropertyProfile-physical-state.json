@@ -61,7 +61,7 @@
       "id": "https://example.org/sales/physical-state-example-2019",
       "property": "https://example.org/properties/physical-state-example",
       "property_state": "https://example.org/property-state-snapshots/physical-state-example-2019",
-      "sale_date": "2019-06-14"
+      "close_date": "2019-06-14"
     }
   ]
 }

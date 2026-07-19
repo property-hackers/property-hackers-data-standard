@@ -1,0 +1,19 @@
+{
+  "property": {"id": "prop-1"},
+  "listings": [
+    {
+      "id": "lst-1",
+      "property": "prop-1",
+      "offering_type": "for_sale",
+      "events": [
+        {
+          "effective_date": "2026-03-01",
+          "effective_at": "2026-03-02T09:00:00-05:00",
+          "event_type": "listed",
+          "status": "active",
+          "list_price": {"amount": "400000", "currency": "USD"}
+        }
+      ]
+    }
+  ]
+}

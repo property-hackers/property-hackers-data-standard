@@ -4,7 +4,7 @@
 // rewrites src/, Cargo.toml, pyproject.toml) never touches it.
 //
 // The exhaustive test below enumerates every permissible value of every
-// vocabulary enum in phds.schema.json (135 variants across 24 enums);
+// vocabulary enum in phds.schema.json (143 variants across 25 enums);
 // tests/test_generated_contract.py census-checks that this stays in sync
 // with the schema.
 #![cfg(feature = "serde")]
@@ -74,35 +74,43 @@ fn all_enum_variants_round_trip_canonical_wire_values() {
     assert_round_trip(LeaseTypeEnum::Other, "other");
     assert_round_trip(LengthUnit::Ft, "ft");
     assert_round_trip(LengthUnit::M, "m");
-    assert_round_trip(LienKind::Tax, "tax");
-    assert_round_trip(LienKind::Judgment, "judgment");
-    assert_round_trip(LienKind::Hoa, "hoa");
-    assert_round_trip(LienKind::Mechanics, "mechanics");
-    assert_round_trip(LienKind::Municipal, "municipal");
-    assert_round_trip(LienKind::Other, "other");
-    assert_round_trip(ListingKind::ForSale, "for_sale");
-    assert_round_trip(ListingKind::ForLease, "for_lease");
+    assert_round_trip(LienType::Tax, "tax");
+    assert_round_trip(LienType::Judgment, "judgment");
+    assert_round_trip(LienType::Hoa, "hoa");
+    assert_round_trip(LienType::Mechanics, "mechanics");
+    assert_round_trip(LienType::Municipal, "municipal");
+    assert_round_trip(LienType::Other, "other");
+    assert_round_trip(ListingStatus::ComingSoon, "coming_soon");
     assert_round_trip(ListingStatus::Active, "active");
+    assert_round_trip(ListingStatus::ActiveUnderContract, "active_under_contract");
     assert_round_trip(ListingStatus::Pending, "pending");
+    assert_round_trip(ListingStatus::Hold, "hold");
     assert_round_trip(ListingStatus::Sold, "sold");
     assert_round_trip(ListingStatus::Leased, "leased");
     assert_round_trip(ListingStatus::Withdrawn, "withdrawn");
+    assert_round_trip(ListingStatus::Canceled, "canceled");
     assert_round_trip(ListingStatus::Expired, "expired");
-    assert_round_trip(ListingStatus::ComingSoon, "coming_soon");
     assert_round_trip(ListingStatus::Other, "other");
-    assert_round_trip(LoanEventKind::Origination, "origination");
-    assert_round_trip(LoanEventKind::Assignment, "assignment");
-    assert_round_trip(LoanEventKind::Modification, "modification");
-    assert_round_trip(LoanEventKind::Satisfaction, "satisfaction");
-    assert_round_trip(LoanEventKind::Release, "release");
-    assert_round_trip(LoanEventKind::Default, "default");
-    assert_round_trip(LoanEventKind::Reinstatement, "reinstatement");
-    assert_round_trip(LoanEventKind::Other, "other");
-    assert_round_trip(ParcelLineageKind::Split, "split");
-    assert_round_trip(ParcelLineageKind::Merge, "merge");
-    assert_round_trip(ParcelLineageKind::Renumber, "renumber");
-    assert_round_trip(PartyKind::Person, "person");
-    assert_round_trip(PartyKind::Organization, "organization");
+    assert_round_trip(LoanEventType::Origination, "origination");
+    assert_round_trip(LoanEventType::Assignment, "assignment");
+    assert_round_trip(LoanEventType::Modification, "modification");
+    assert_round_trip(LoanEventType::Satisfaction, "satisfaction");
+    assert_round_trip(LoanEventType::Release, "release");
+    assert_round_trip(LoanEventType::Default, "default");
+    assert_round_trip(LoanEventType::Reinstatement, "reinstatement");
+    assert_round_trip(LoanEventType::Other, "other");
+    assert_round_trip(MlsObservationStatus::Success, "success");
+    assert_round_trip(MlsObservationStatus::NotFound, "not_found");
+    assert_round_trip(MlsObservationStatus::ApiError, "api_error");
+    assert_round_trip(MlsObservationStatus::ParseError, "parse_error");
+    assert_round_trip(MlsObservationStatus::Ambiguous, "ambiguous");
+    assert_round_trip(OfferingType::ForSale, "for_sale");
+    assert_round_trip(OfferingType::ForLease, "for_lease");
+    assert_round_trip(ParcelLineageType::Split, "split");
+    assert_round_trip(ParcelLineageType::Merge, "merge");
+    assert_round_trip(ParcelLineageType::Renumber, "renumber");
+    assert_round_trip(PartyType::Person, "person");
+    assert_round_trip(PartyType::Organization, "organization");
     assert_round_trip(PriceDisclosure::Full, "full");
     assert_round_trip(PriceDisclosure::Partial, "partial");
     assert_round_trip(PriceDisclosure::Estimated, "estimated");
@@ -148,11 +156,11 @@ fn all_enum_variants_round_trip_canonical_wire_values() {
     assert_round_trip(StatementBasis::Stabilized, "stabilized");
     assert_round_trip(StatementBasis::Projected, "projected");
     assert_round_trip(StatementBasis::Other, "other");
-    assert_round_trip(ValuationKind::Avm, "avm");
-    assert_round_trip(ValuationKind::Appraisal, "appraisal");
-    assert_round_trip(ValuationKind::Bpo, "bpo");
-    assert_round_trip(ValuationKind::BrokerOpinion, "broker_opinion");
-    assert_round_trip(ValuationKind::Internal, "internal");
+    assert_round_trip(ValuationType::Avm, "avm");
+    assert_round_trip(ValuationType::Appraisal, "appraisal");
+    assert_round_trip(ValuationType::Bpo, "bpo");
+    assert_round_trip(ValuationType::BrokerOpinion, "broker_opinion");
+    assert_round_trip(ValuationType::Internal, "internal");
     assert_round_trip(VerificationStatus::Unverified, "unverified");
     assert_round_trip(VerificationStatus::PendingReview, "pending_review");
     assert_round_trip(VerificationStatus::Verified, "verified");

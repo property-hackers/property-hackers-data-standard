@@ -1,0 +1,11 @@
+{
+  "property": {"id": "prop-1"},
+  "sales": [
+    {
+      "id": "sale-1",
+      "property": "prop-1",
+      "close_date": "2026-04-01",
+      "listings": [{"listing": "lst-missing", "relationship_type": "resulted_in_sale"}]
+    }
+  ]
+}

@@ -39,7 +39,7 @@ classes:
       ratio: {range: decimal}
       ratios: {range: decimal, multivalued: true}
       exact_amount: {range: DecimalString}
-      observed_on: {range: date}
+      observed_date: {range: date}
   RefinedReading:
     is_a: Reading
     slot_usage:
@@ -111,8 +111,8 @@ class EnumAwareTypescriptGeneratorTests(unittest.TestCase):
 
     def test_linkml_dates_are_iso_8601_strings(self):
         self.assertEqual(
-            "observed_on?: string,",
-            _declaration(self.wrapped, "observed_on"),
+            "observed_date?: string,",
+            _declaration(self.wrapped, "observed_date"),
         )
         self.assertNotIn("type date =", self.wrapped)
 

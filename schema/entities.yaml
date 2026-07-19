@@ -49,7 +49,7 @@ classes:
       document_number: {description: Primary identifier assigned by the recording/registry authority}
       recording_book: {}
       recording_page: {}
-      recorded_on: {range: date, description: "Date accepted, recorded, or registered by the authority"}
+      recorded_date: {range: date, description: "Date accepted, recorded, or registered by the authority"}
       instrument_date: {range: date, description: "Date executed/signed as dated on the instrument"}
       document_type: {range: CodeableConcept}
       recording_authority: {range: Jurisdiction, inlined: false, description: "Authority maintaining the record (optional — parcel context is inference, not identity)"}
@@ -126,7 +126,7 @@ classes:
   Parcel:
     unique_keys:
       parcel_identity:
-        unique_key_slots: [jurisdiction, parcel_number, unit_designator, retired_on]
+        unique_key_slots: [jurisdiction, parcel_number, unit_designator, retired_date]
     is_a: Entity
     attributes:
       jurisdiction: {range: Jurisdiction, inlined: false, required: true}
@@ -136,32 +136,31 @@ classes:
         exact_mappings: [reso:ParcelNumber]
       normalized_parcel_number: {description: "Matching only, never identity"}
       unit_designator: {description: Condo sub-parcel discriminator}
-      reso_upi: {description: "urn:reso:upi:2.0:..."}
       legal_description: {}
       land_area: {range: Area}
       boundary: {range: Geometry, description: GeoJSON MultiPolygon (optional)}
-      retired_on: {range: date, description: Set by lineage events}
+      retired_date: {range: date, description: Set by lineage events}
 
   PropertyParcel:
     unique_keys:
       property_parcel_pair:
         unique_key_slots: [property, parcel]
     is_a: Entity
-    description: Property ↔ parcel, many-to-many over time (splits/merges/condos). ended_on is end-exclusive.
+    description: Property ↔ parcel, many-to-many over time (splits/merges/condos). end_date is end-exclusive.
     attributes:
       property: {range: Property, inlined: false, required: true}
       parcel: {range: Parcel, inlined: false, required: true}
       is_primary: {range: boolean}
-      started_on: {range: date}
-      ended_on: {range: date}
+      start_date: {range: date}
+      end_date: {range: date}
 
   ParcelLineage:
     is_a: Entity
     attributes:
       predecessor_parcel: {range: Parcel, inlined: false, required: true}
       successor_parcel: {range: Parcel, inlined: false, required: true}
-      kind: {range: ParcelLineageKind, required: true}
-      effective_on: {range: date}
+      kind: {range: ParcelLineageType, required: true}
+      effective_date: {range: date}
 
   PropertyIdentifier:
     unique_keys:
@@ -175,12 +174,29 @@ classes:
       namespace: {}
       value: {required: true}
 
+  ParcelIdentifier:
+    unique_keys:
+      parcel_identifier_identity:
+        unique_key_slots: [scheme, namespace, value]
+    is_a: Entity
+    description: >-
+      Namespaced external parcel IDs — assessor account numbers, alternate
+      APNs, Universal Parcel Identifier (UPI) URNs (scheme upi, value the
+      full urn verbatim including any :sub: subcomponent). Mirrors
+      PropertyIdentifier for identifiers scoped to a parcel rather than the
+      property.
+    attributes:
+      parcel: {range: Parcel, inlined: false, required: true}
+      scheme: {required: true}
+      namespace: {}
+      value: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+
   # ==== parties =============================================================
   Party:
     is_a: Entity
     description: One canonical model for every actor — owners, buyers, tenants and lessees, borrowers, lenders, brokers, trustees, claimants, contractors, associations, and valuation performers.
     attributes:
-      kind: {range: PartyKind, required: true}
+      kind: {range: PartyType, required: true}
       legal_form:
         range: Classification
         description: >-
@@ -211,16 +227,19 @@ classes:
       Source material that supports or preserves an assertion. Semantic
       validation requires at least one nonblank uri or storage_reference.
     attributes:
-      uri: {range: uri, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      uri: {range: uri, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", close_mappings: [reso:MediaURL]}
       storage_reference: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Producer-defined object or document storage reference}
-      media_type: {description: MIME media type}
+      media_type: {description: MIME media type, close_mappings: [reso:MimeType]}
       kind: {range: CodeableConcept}
       title: {}
       original_filename: {}
       content_hash: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
       hash_scheme: {pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Producer-namespaced content hashing scheme}
       page_count: {range: integer, minimum_value: 1}
-      captured_on: {range: datetime}
+      captured_at: {range: datetime}
+      order: {range: integer, minimum_value: 0, close_mappings: [reso:Order], description: Presentation order within the owning record's artifact list}
+      short_description: {close_mappings: [reso:ShortDescription]}
+      source_modified_at: {range: datetime, close_mappings: [reso:ModificationTimestamp], description: When the source system last modified this media/document record}
 
   AddressAssociation:
     mixin: true
@@ -255,11 +274,11 @@ classes:
 
   OwnershipPeriod:
     is_a: Entity
-    description: One ownership regime; ended_on is end-exclusive, NULL = current.
+    description: One ownership regime; end_date is end-exclusive, NULL = current.
     attributes:
       property: {range: Property, inlined: false, required: true}
-      started_on: {range: date}
-      ended_on: {range: date}
+      start_date: {range: date}
+      end_date: {range: date}
       vesting_type: {description: joint_tenants | tenants_in_common | community_property | ... (open)}
       mailing_address: {range: Address, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Owner's mailing address during THIS period}
       acquired_via_transfer: {range: Transfer, inlined: false}
@@ -424,7 +443,7 @@ classes:
       kind: {description: kitchen | bath | roof | addition | gut | ... (open)}
       description: {}
       completed_year: {range: integer, minimum_value: 1, maximum_value: 2200}
-      completed_on: {range: date}
+      completed_date: {range: date}
       cost: {range: Money}
       extras: {range: Any}
       provenance: {range: Provenance}
@@ -585,9 +604,9 @@ classes:
   TaxInstallment:
     attributes:
       installment_number: {range: integer}
-      due_on: {range: date}
+      due_date: {range: date}
       amount: {range: Money}
-      paid_on: {range: date}
+      paid_date: {range: date}
       amount_paid: {range: Money}
       is_delinquent: {range: boolean}
       extras: {range: Any}
@@ -606,8 +625,8 @@ classes:
     attributes:
       property: {range: Property, inlined: false, required: true}
       parcel: {range: Parcel, inlined: false}
-      transfer_kind: {required: true, description: warranty_deed | quitclaim | foreclosure | tax_deed | ... (open)}
-      effective_on: {range: date, description: Legal/economic effectiveness — may differ from instrument_date and recorded_on}
+      transfer_type: {required: true, description: warranty_deed | quitclaim | foreclosure | tax_deed | ... (open)}
+      effective_date: {range: date, description: Legal/economic effectiveness — may differ from instrument_date and recorded_date}
       consideration: {range: Money, description: Often $0 / nominal}
       transfer_tax: {range: Money, description: Doc stamps; price-inference basis in many places}
       price_disclosure: {range: PriceDisclosure}
@@ -631,16 +650,22 @@ classes:
       property: {range: Property, inlined: false, required: true}
       property_state: {range: PropertyStateSnapshot, inlined: false}
       transfer: {range: Transfer, inlined: false}
-      sale_date: {range: date, required: true, exact_mappings: [reso:CloseDate]}
-      sale_price: {range: Money, exact_mappings: [reso:ClosePrice]}
+      close_date: {range: date, required: true, close_mappings: [reso:CloseDate], description: Closing date of the market sale (reconciled layer)}
+      sale_price:
+        range: Money
+        description: Reconciled market-sale amount — NOT the raw MLS ClosePrice claim (that is SaleEvidence.close_price)
+        related_mappings: [reso:ClosePrice]
+        annotations: {value_classification: reconciled}
       price_disclosure: {range: PriceDisclosure}
       price_code: {range: CodeableConcept}
       sale_type: {range: SaleTypeEnum}
-      price_per_area: {range: UnitRate}
-      price_per_unit: {range: Money}
-      financing: {description: cash | conventional | seller | assumption | other (coarse; loans carry detail)}
-      concessions: {range: Money}
-      cap_rate: {range: decimal, minimum_value: 0, maximum_value: 100, description: Capitalization rate in percentage points; 5.75 means 5.75 percent.}
+      price_per_area: {range: UnitRate, annotations: {value_classification: derived}}
+      price_per_unit: {range: Money, annotations: {value_classification: derived}}
+      buyer_financing: {range: CodeableConcept, close_mappings: [reso:BuyerFinancing], description: Financing the purchaser used to close}
+      concessions_amount: {range: Money, close_mappings: [reso:ConcessionsAmount]}
+      concessions: {range: CodeableConcept, multivalued: true, inlined: true, inlined_as_list: true, close_mappings: [reso:Concessions]}
+      concessions_comments: {close_mappings: [reso:ConcessionsComments]}
+      cap_rate: {range: decimal, minimum_value: 0, maximum_value: 100, description: Capitalization rate in percentage points; 5.75 means 5.75 percent., annotations: {value_classification: derived}}
       noi_at_sale: {range: Money}
       opex_at_sale: {range: Money}
       occupancy_at_sale_pct: {range: decimal, minimum_value: 0, maximum_value: 100, description: 0–100 percentage points; 90 means 90 percent.}
@@ -648,25 +673,79 @@ classes:
       supporting_operating_statement: {range: OperatingStatement, inlined: false, description: "Traceability: the statement noi_at_sale derives from, when known"}
       parties: {range: SaleEventParty, multivalued: true, inlined: true, inlined_as_list: true}
       remarks: {description: Source- or vendor-authored narrative interpreted through provenance.}
+      listings: {range: SaleListingRelationship, multivalued: true, inlined: true, inlined_as_list: true, description: Absent/empty for off-market sales}
 
   SaleEventParty:
     is_a: TransactionParty
     description: role = buyer | seller | buyer_broker | seller_broker
 
+  SaleListingRelationship:
+    description: >-
+      Sale-to-listing relation. Vocabulary stays sale-oriented; relist chains
+      are listing-to-listing facts and "this MLS reported the sale" is a
+      SaleEvidence row with listing set — neither belongs here.
+    attributes:
+      listing: {range: Listing, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      relationship_type: {required: true, description: "resulted_in_sale | prior_listing | other (open)"}
+      extras: {range: Any}
+
+  SaleEvidence:
+    is_a: Entity
+    description: >-
+      One source's claims about a market sale. SaleEvent holds the
+      reconciliation; evidence rows hold the disagreeing inputs (MLS close
+      record, deed, assessor, broker or appraiser verification). One row =
+      one source = one provenance. When an MLS-sourced row links a listing,
+      its close_date/close_price should equal that listing's closed-event
+      values (convention, deliberately unenforced).
+    attributes:
+      sale: {range: SaleEvent, inlined: false, required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      listing: {range: Listing, inlined: false}
+      transfer: {range: Transfer, inlined: false}
+      close_date: {range: date, exact_mappings: [reso:CloseDate], annotations: {value_classification: asserted}}
+      close_price: {range: Money, close_mappings: [reso:ClosePrice], annotations: {value_classification: asserted}}
+      concessions_amount: {range: Money, close_mappings: [reso:ConcessionsAmount], annotations: {value_classification: asserted}}
+      document_number: {}
+      verification_method: {range: CodeableConcept, description: "mls_record | deed | assessor | broker_confirmed | appraiser_verified | ... (open)"}
+      remarks: {}
+      artifacts: {range: SourceArtifact, multivalued: true, inlined: false}
+      provenance: {range: Provenance, required: true}
+
+  ListingIdentifier:
+    description: >-
+      Namespaced listing identifier mirroring PropertyIdentifier
+      (scheme + namespace + value). RESO ListingKey and ListingId stay
+      separately recoverable as distinct schemes; identity rule is
+      (namespace, scheme=listing_key, value) with provider-specific
+      fallback. At most one is_primary identifier per namespace.
+    attributes:
+      scheme: {required: true, description: "listing_key | listing_id | source_system_id | other (open)"}
+      namespace: {description: "Issuing system: MLS, aggregator, or portal"}
+      value: {required: true, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])"}
+      is_primary: {range: boolean}
+      extras: {range: Any}
+
   Listing:
     is_a: Entity
     description: >-
-      Listing identity and non-lifecycle facts. Process events by occurred_on
-      ascending; array order breaks same-date ties. Carry status, asking_price,
-      and rent_period forward independently from the latest event that supplies
-      each field. Original asking terms come from the earliest event supplying
-      them. close_price comes from the latest closed event supplying it.
+      Listing identity, header identifiers, and latest-observed agreement
+      terms; process events by effective_date ascending; array order breaks
+      same-date ties. Carry status, list_price, and rent_period forward
+      independently from the latest event that supplies each field. Original
+      asking terms come from the earliest event supplying them. close_price
+      comes from the latest closed event supplying it.
     attributes:
       property: {range: Property, inlined: false, required: true}
       property_state: {range: PropertyStateSnapshot, inlined: false}
-      kind: {range: ListingKind, required: true}
-      listing_type: {description: mls | fsbo | auction | pocket}
-      mls_number: {}
+      offering_type: {range: OfferingType, required: true}
+      identifiers: {range: ListingIdentifier, multivalued: true, inlined: true, inlined_as_list: true}
+      listing_contract_date: {range: date, exact_mappings: [reso:ListingContractDate]}
+      expiration_date: {range: date, exact_mappings: [reso:ExpirationDate]}
+      listing_agreement_type: {description: "exclusive_right_to_sell | exclusive_agency | open | net | other (open)", close_mappings: [reso:ListingAgreement]}
+      service_level: {description: "full_service | limited_service | entry_only | other (open)", close_mappings: [reso:ListingService]}
+      marketing_channel: {description: "mls | private_network | public_portal | owner_direct | auction_platform | other (open)"}
+      exposure_type: {description: "public | office_exclusive | private | coming_soon | other (open)"}
+      special_listing_conditions: {range: CodeableConcept, multivalued: true, inlined: true, inlined_as_list: true, close_mappings: [reso:SpecialListingConditions]}
       events: {range: ListingEvent, multivalued: true, inlined: true, inlined_as_list: true, list_elements_ordered: true}
       participants: {range: ListingParticipant, multivalued: true, inlined: true, inlined_as_list: true}
       artifacts: {range: SourceArtifact, multivalued: true, inlined: false}
@@ -674,16 +753,26 @@ classes:
 
   ListingEvent:
     description: >-
-      A dated listing assertion. asking_price is a sale price or periodic rent;
-      rent_period states the period when asking_price is rent. close_price is
-      asserted on a closed event.
+      A dated listing assertion. effective_date is when the change took
+      effect; effective_at adds optional precision and must fall on
+      effective_date (compared on the timestamp's lexical date in its stated
+      offset). observed_at is when the producer retrieved or detected the
+      event. Order events by effective_date ascending, then effective_at when
+      present, then array order. list_price is the asking sale price or
+      periodic rent; rent_period states the period when it is rent.
+      close_price is asserted only on a closed event and is the source's
+      reported closing claim, not the reconciled SaleEvent.sale_price.
     attributes:
-      occurred_on: {range: date, required: true}
-      event_kind: {required: true, description: listed | price_change | status_change | relisted | closed}
-      status: {range: ListingStatus}
-      asking_price: {range: Money}
+      effective_date: {range: date, required: true}
+      effective_at: {range: datetime}
+      observed_at: {range: datetime}
+      event_type: {required: true, description: "listed | price_change | status_change | coming_soon | back_on_market | relisted | contingent | pending | closed | expired | withdrawn | canceled (open)"}
+      status: {range: ListingStatus, close_mappings: [reso:StandardStatus]}
+      source_status: {exact_mappings: [reso:MlsStatus], description: Native source status verbatim}
+      list_price: {range: Money, close_mappings: [reso:ListPrice]}
+      list_price_low: {range: Money, close_mappings: [reso:ListPriceLow], description: Lower bound for range-priced listings}
       rent_period: {range: RentPeriod}
-      close_price: {range: Money}
+      close_price: {range: Money, close_mappings: [reso:ClosePrice]}
       extras: {range: Any}
       provenance: {range: Provenance}
 
@@ -781,7 +870,7 @@ classes:
       rate_period: {range: RentPeriod}
       rate_basis: {range: RateBasis}
       rate_type: {range: RateType}
-      observed_on: {range: date, required: true}
+      observed_date: {range: date, required: true}
       concessions_note: {}
 
   Loan:
@@ -823,8 +912,8 @@ classes:
       Recording fields apply when the event is a recorded instrument; they
       stay null for unrecorded servicing events.
     attributes:
-      event_kind: {range: LoanEventKind, required: true}
-      occurred_on: {range: date}
+      event_type: {range: LoanEventType, required: true}
+      effective_date: {range: date}
       amount: {range: Money}
       to_party: {range: Party, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical assignee for assignment-like events}
       extras: {range: Any}
@@ -836,9 +925,9 @@ classes:
     description: Involuntary encumbrances — tax, judgment, HOA, mechanic's.
     attributes:
       property: {range: Property, inlined: false, required: true}
-      kind: {range: LienKind, required: true}
+      kind: {range: LienType, required: true}
       amount: {range: Money}
-      released_on: {range: date}
+      released_date: {range: date}
       parties: {range: LienParty, multivalued: true, inlined: true, inlined_as_list: true}
 
   LienParty:
@@ -852,8 +941,8 @@ classes:
       property: {range: Property, inlined: false, required: true}
       loan: {range: Loan, inlined: false, description: "The defaulted loan, when known"}
       case_number: {}
-      opened_on: {range: date}
-      resolved_on: {range: date}
+      opened_date: {range: date}
+      resolved_date: {range: date}
       resolution: {description: sold_at_auction | cured | dismissed | reo}
       past_due_amount: {range: Money}
       unpaid_balance: {range: Money}
@@ -868,7 +957,7 @@ classes:
     description: One recorded filing; postponements append as new filings.
     attributes:
       status: {required: true, description: nod | lis_pendens | notice_of_sale | auction_scheduled | postponement | ... (open; US-seeded)}
-      auction_on: {range: date}
+      auction_date: {range: date}
       auction_at_time: {description: Time-of-day as published}
       extras: {range: Any}
       provenance: {range: Provenance}
@@ -891,10 +980,10 @@ classes:
       kind: {description: roofing | solar | hvac | adu | pool | new_construction | ... (open)}
       status: {description: issued | finaled | expired | ... (open)}
       description: {}
-      applied_on: {range: date}
-      issued_on: {range: date}
-      finaled_on: {range: date}
-      expires_on: {range: date}
+      applied_date: {range: date}
+      issued_date: {range: date}
+      finaled_date: {range: date}
+      expiration_date: {range: date}
       job_value: {range: Money}
       fees: {range: Money}
       contractor_party: {range: Party, inlined: false, pattern: "^[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF](?:[\\s\\S]*[^\\u0009-\\u000D\\u0020\\u0085\\u00A0\\u1680\\u2000-\\u200A\\u2028\\u2029\\u202F\\u205F\\u3000\\uFEFF])?(?![\\s\\S])", description: Canonical contractor Party reference; credential records are outside core v0.2}
@@ -1004,7 +1093,7 @@ classes:
     attributes:
       property: {range: Property, inlined: false, required: true}
       property_state: {range: PropertyStateSnapshot, inlined: false}
-      kind: {range: ValuationKind, required: true}
+      kind: {range: ValuationType, required: true}
       valuation_method: {description: desktop | exterior | hybrid | traditional}
       value_type: {description: market_value | liquidation | insurable | land | ... (open)}
       value: {range: Money, required: true}

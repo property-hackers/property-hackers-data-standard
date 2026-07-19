@@ -52,7 +52,7 @@ class ProfileRoundTripTests(unittest.TestCase):
         cases = (
             (
                 self.models.SaleEvent,
-                {"id": "sale-1", "property": "property-1", "sale_date": "2026-01-01"},
+                {"id": "sale-1", "property": "property-1", "close_date": "2026-01-01"},
                 ("sale_type",),
             ),
             (
@@ -62,7 +62,7 @@ class ProfileRoundTripTests(unittest.TestCase):
                     "property": "property-1",
                     "unit_type": "studio",
                     "rate": {"amount": "1000", "currency": "CAD"},
-                    "observed_on": "2026-01-01",
+                    "observed_date": "2026-01-01",
                 },
                 ("rate_period", "rate_basis", "rate_type"),
             ),

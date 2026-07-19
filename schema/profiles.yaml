@@ -35,6 +35,7 @@ classes:
       identifiers: {range: PropertyIdentifier, multivalued: true, inlined: true, inlined_as_list: true}
       jurisdictions: {range: Jurisdiction, multivalued: true, inlined: true, inlined_as_list: true}
       parcels: {range: Parcel, multivalued: true, inlined: true, inlined_as_list: true}
+      parcel_identifiers: {range: ParcelIdentifier, multivalued: true, inlined: true, inlined_as_list: true}
       property_parcels: {range: PropertyParcel, multivalued: true, inlined: true, inlined_as_list: true}
       parcel_lineage: {range: ParcelLineage, multivalued: true, inlined: true, inlined_as_list: true}
       site: {range: Site, inlined: true}
@@ -46,6 +47,7 @@ classes:
       tax_bills: {range: TaxBill, multivalued: true, inlined: true, inlined_as_list: true}
       transfers: {range: Transfer, multivalued: true, inlined: true, inlined_as_list: true}
       sales: {range: SaleEvent, multivalued: true, inlined: true, inlined_as_list: true}
+      sale_evidence: {range: SaleEvidence, multivalued: true, inlined: true, inlined_as_list: true}
       listings: {range: Listing, multivalued: true, inlined: true, inlined_as_list: true}
       leases: {range: LeaseEvent, multivalued: true, inlined: true, inlined_as_list: true}
       unit_rents: {range: UnitRentObservation, multivalued: true, inlined: true, inlined_as_list: true}

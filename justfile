@@ -40,6 +40,14 @@ validate:
       .venv/bin/python tools/profile_validation.py "$f" || exit 1; \
       echo "PASS $f"; \
     done
+    capture_examples=(examples/capture/MlsObservation-*.json); \
+    if [ ! -e "${capture_examples[0]}" ]; \
+    then echo "FAIL no capture examples found"; exit 1; fi; \
+    for f in "${capture_examples[@]}"; do \
+      .venv/bin/linkml-validate -s schema/capture.yaml -C MlsObservation "$f" || exit 1; \
+      .venv/bin/python tools/profile_validation.py --document-type capture-envelope "$f" || exit 1; \
+      echo "PASS $f"; \
+    done
     schema_counterexamples=(counter_examples/schema/*.json); \
     if [ ! -e "${schema_counterexamples[0]}" ]; \
     then echo "FAIL no structural counterexamples found"; exit 1; fi; \

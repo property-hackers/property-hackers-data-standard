@@ -285,7 +285,9 @@ class GeneratedContractTests(unittest.TestCase):
                 model = getattr(self.models, event)
                 self.assertIn("property_state", model.model_fields)
                 interface = re.search(
-                    rf"export interface {event}[^{{]*\{{(.*?)\n\}}", ts, re.DOTALL
+                    rf"export interface {event}(?![A-Za-z])[^{{]*\{{(.*?)\n\}}",
+                    ts,
+                    re.DOTALL,
                 )
                 self.assertIsNotNone(interface)
                 self.assertIn(
@@ -411,7 +413,7 @@ class GeneratedContractTests(unittest.TestCase):
                 remarks = self.schema["$defs"][entity]["properties"].get("remarks")
                 self.assertIsNotNone(remarks)
                 self.assertIn("source- or vendor-authored", remarks["description"].lower())
-        for envelope in ("AssessorObservation", "ExtractionObservation"):
+        for envelope in ("AssessorObservation", "ExtractionObservation", "MlsObservation"):
             with self.subTest(envelope=envelope):
                 self.assertIn(
                     "artifact_refs", self.schema["$defs"][envelope]["properties"]
@@ -470,7 +472,7 @@ class GeneratedContractTests(unittest.TestCase):
             "References to SourceArtifact IDs in the nested profile.artifacts "
             "bundle; invalid when profile or profile.artifacts is absent."
         )
-        for envelope in ("AssessorObservation", "ExtractionObservation"):
+        for envelope in ("AssessorObservation", "ExtractionObservation", "MlsObservation"):
             with self.subTest(envelope=envelope, contract="json-schema"):
                 self.assertEqual(
                     reference_description,
@@ -497,7 +499,7 @@ class GeneratedContractTests(unittest.TestCase):
         self.assertIn(artifact_requirement, self.models.SourceArtifact.__doc__)
 
         ts = (GENERATED / "phds.ts").read_text(encoding="utf-8")
-        self.assertEqual(2, ts.count(f"/** {reference_description} */"))
+        self.assertEqual(3, ts.count(f"/** {reference_description} */"))
         self.assertIn(artifact_requirement, ts)
 
     def test_transaction_party_relationship_requires_canonical_party(self):
@@ -547,7 +549,7 @@ class GeneratedContractTests(unittest.TestCase):
                 {"id": "association-1", "property": "property-1"},
                 "party",
             ),
-            "LoanEvent": ({"event_kind": "assignment"}, "to_party"),
+            "LoanEvent": ({"event_type": "assignment"}, "to_party"),
             "Permit": (
                 {"id": "permit-1", "property": "property-1"},
                 "contractor_party",

@@ -6,6 +6,7 @@ export type ParcelId = string;
 export type PropertyParcelId = string;
 export type ParcelLineageId = string;
 export type PropertyIdentifierId = string;
+export type ParcelIdentifierId = string;
 export type PartyId = string;
 export type SourceArtifactId = string;
 export type PropertyAddressId = string;
@@ -23,6 +24,7 @@ export type AssessmentId = string;
 export type TaxBillId = string;
 export type TransferId = string;
 export type SaleEventId = string;
+export type SaleEvidenceId = string;
 export type ListingId = string;
 export type LeaseEventId = string;
 export type UnitRentObservationId = string;
@@ -69,7 +71,7 @@ export enum VerificationStatus {
     rejected = "rejected",
 };
 
-export enum PartyKind {
+export enum PartyType {
 
     person = "person",
     organization = "organization",
@@ -146,25 +148,30 @@ export enum RateType {
     contract = "contract",
 };
 
-export enum ListingKind {
+export enum OfferingType {
 
     for_sale = "for_sale",
     for_lease = "for_lease",
 };
-
+/**
+* PHDS-normalized listing status (close mapping to RESO StandardStatus). sold/leased replace RESO's ambiguous Closed; Incomplete and Delete are MLS record-management states that normalize to other with the raw value preserved in extras.
+*/
 export enum ListingStatus {
 
+    coming_soon = "coming_soon",
     active = "active",
+    active_under_contract = "active_under_contract",
     pending = "pending",
+    hold = "hold",
     sold = "sold",
     leased = "leased",
     withdrawn = "withdrawn",
+    canceled = "canceled",
     expired = "expired",
-    coming_soon = "coming_soon",
     other = "other",
 };
 
-export enum ValuationKind {
+export enum ValuationType {
 
     avm = "avm",
     appraisal = "appraisal",
@@ -173,7 +180,7 @@ export enum ValuationKind {
     internal = "internal",
 };
 
-export enum LoanEventKind {
+export enum LoanEventType {
 
     origination = "origination",
     assignment = "assignment",
@@ -185,7 +192,7 @@ export enum LoanEventKind {
     other = "other",
 };
 
-export enum LienKind {
+export enum LienType {
 
     tax = "tax",
     judgment = "judgment",
@@ -195,7 +202,7 @@ export enum LienKind {
     other = "other",
 };
 
-export enum ParcelLineageKind {
+export enum ParcelLineageType {
 
     split = "split",
     merge = "merge",
@@ -280,6 +287,17 @@ export enum AssessorStatus {
     api_error = "api_error",
     parse_error = "parse_error",
     invalid_address = "invalid_address",
+    ambiguous = "ambiguous",
+};
+/**
+* Outcome of an MLS / listing-feed record capture.
+*/
+export enum MlsObservationStatus {
+
+    success = "success",
+    not_found = "not_found",
+    api_error = "api_error",
+    parse_error = "parse_error",
     ambiguous = "ambiguous",
 };
 
@@ -431,6 +449,16 @@ export interface Provenance {
     /** Fraction from 0 through 1; 0.8 means 80 percent confidence. */
     confidence?: number,
     verification?: VerificationStatus,
+    /** System where the record was born */
+    originating_system?: string,
+    /** Immediate system that supplied the record */
+    source_system?: string,
+    /** The immediate source's record identifier */
+    source_record_id?: string,
+    /** When the immediate source created the record */
+    source_created_at?: string,
+    /** When the immediate source last modified the record */
+    source_modified_at?: string,
 }
 
 
@@ -466,7 +494,7 @@ export interface RecordedInstrument {
     recording_book?: string,
     recording_page?: string,
     /** Date accepted, recorded, or registered by the authority */
-    recorded_on?: string,
+    recorded_date?: string,
     /** Date executed/signed as dated on the instrument */
     instrument_date?: string,
     document_type?: CodeableConcept,
@@ -568,26 +596,24 @@ export interface Parcel extends Entity {
     normalized_parcel_number?: string,
     /** Condo sub-parcel discriminator */
     unit_designator?: string,
-    /** urn:reso:upi:2.0:... */
-    reso_upi?: string,
     legal_description?: string,
     land_area?: Area,
     /** GeoJSON MultiPolygon (optional) */
     boundary?: Geometry,
     /** Set by lineage events */
-    retired_on?: string,
+    retired_date?: string,
 }
 
 
 /**
- * Property ↔ parcel, many-to-many over time (splits/merges/condos). ended_on is end-exclusive.
+ * Property ↔ parcel, many-to-many over time (splits/merges/condos). end_date is end-exclusive.
  */
 export interface PropertyParcel extends Entity {
     property: PropertyId,
     parcel: ParcelId,
     is_primary?: boolean,
-    started_on?: string,
-    ended_on?: string,
+    start_date?: string,
+    end_date?: string,
 }
 
 
@@ -595,8 +621,8 @@ export interface PropertyParcel extends Entity {
 export interface ParcelLineage extends Entity {
     predecessor_parcel: ParcelId,
     successor_parcel: ParcelId,
-    kind: ParcelLineageKind,
-    effective_on?: string,
+    kind: ParcelLineageType,
+    effective_date?: string,
 }
 
 
@@ -612,10 +638,21 @@ export interface PropertyIdentifier extends Entity {
 
 
 /**
+ * Namespaced external parcel IDs — assessor account numbers, alternate APNs, Universal Parcel Identifier (UPI) URNs (scheme upi, value the full urn verbatim including any :sub: subcomponent). Mirrors PropertyIdentifier for identifiers scoped to a parcel rather than the property.
+ */
+export interface ParcelIdentifier extends Entity {
+    parcel: ParcelId,
+    scheme: string,
+    namespace?: string,
+    value: string,
+}
+
+
+/**
  * One canonical model for every actor — owners, buyers, tenants and lessees, borrowers, lenders, brokers, trustees, claimants, contractors, associations, and valuation performers.
  */
 export interface Party extends Entity {
-    kind: PartyKind,
+    kind: PartyType,
     /** Optional system-qualified legal form for an organization under an identified jurisdictional or producer vocabulary. This is not an industry classification or a contextual role such as lender, broker, tenant, or association. */
     legal_form?: Classification,
     /** Canonical display name for this Party in the profile; nonblank with no leading or trailing whitespace. Source-specific wording is attributed through provenance or SourceArtifact. */
@@ -662,7 +699,12 @@ export interface SourceArtifact extends Entity {
     /** Producer-namespaced content hashing scheme */
     hash_scheme?: string,
     page_count?: number,
-    captured_on?: string,
+    captured_at?: string,
+    /** Presentation order within the owning record's artifact list */
+    order?: number,
+    short_description?: string,
+    /** When the source system last modified this media/document record */
+    source_modified_at?: string,
 }
 
 
@@ -704,12 +746,12 @@ export interface PartyContact {
 
 
 /**
- * One ownership regime; ended_on is end-exclusive, NULL = current.
+ * One ownership regime; end_date is end-exclusive, NULL = current.
  */
 export interface OwnershipPeriod extends Entity {
     property: PropertyId,
-    started_on?: string,
-    ended_on?: string,
+    start_date?: string,
+    end_date?: string,
     /** joint_tenants | tenants_in_common | community_property | ... (open) */
     vesting_type?: string,
     /** Owner's mailing address during THIS period */
@@ -866,7 +908,7 @@ export interface Renovation {
     kind?: string,
     description?: string,
     completed_year?: number,
-    completed_on?: string,
+    completed_date?: string,
     cost?: Money,
     extras?: Any,
     provenance?: Provenance,
@@ -1038,9 +1080,9 @@ export interface TaxBill extends Entity {
 
 export interface TaxInstallment {
     installment_number?: number,
-    due_on?: string,
+    due_date?: string,
     amount?: Money,
-    paid_on?: string,
+    paid_date?: string,
     amount_paid?: Money,
     is_delinquent?: boolean,
     extras?: Any,
@@ -1065,9 +1107,9 @@ export interface Transfer extends Entity, RecordedInstrument {
     property: PropertyId,
     parcel?: ParcelId,
     /** warranty_deed | quitclaim | foreclosure | tax_deed | ... (open) */
-    transfer_kind: string,
-    /** Legal/economic effectiveness — may differ from instrument_date and recorded_on */
-    effective_on?: string,
+    transfer_type: string,
+    /** Legal/economic effectiveness — may differ from instrument_date and recorded_date */
+    effective_date?: string,
     /** Often $0 / nominal */
     consideration?: Money,
     /** Doc stamps; price-inference basis in many places */
@@ -1098,16 +1140,20 @@ export interface SaleEvent extends Entity {
     property: PropertyId,
     property_state?: PropertyStateSnapshotId,
     transfer?: TransferId,
-    sale_date: string,
+    /** Closing date of the market sale (reconciled layer) */
+    close_date: string,
+    /** Reconciled market-sale amount — NOT the raw MLS ClosePrice claim (that is SaleEvidence.close_price) */
     sale_price?: Money,
     price_disclosure?: PriceDisclosure,
     price_code?: CodeableConcept,
     sale_type?: SaleTypeEnum,
     price_per_area?: UnitRate,
     price_per_unit?: Money,
-    /** cash | conventional | seller | assumption | other (coarse; loans carry detail) */
-    financing?: string,
-    concessions?: Money,
+    /** Financing the purchaser used to close */
+    buyer_financing?: CodeableConcept,
+    concessions_amount?: Money,
+    concessions?: CodeableConcept[],
+    concessions_comments?: string,
     /** Capitalization rate in percentage points; 5.75 means 5.75 percent. */
     cap_rate?: number,
     noi_at_sale?: Money,
@@ -1120,6 +1166,8 @@ export interface SaleEvent extends Entity {
     parties?: SaleEventParty[],
     /** Source- or vendor-authored narrative interpreted through provenance. */
     remarks?: string,
+    /** Absent/empty for off-market sales */
+    listings?: SaleListingRelationship[],
 }
 
 
@@ -1131,15 +1179,68 @@ export interface SaleEventParty extends TransactionParty {
 
 
 /**
- * Listing identity and non-lifecycle facts. Process events by occurred_on ascending; array order breaks same-date ties. Carry status, asking_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.
+ * Sale-to-listing relation. Vocabulary stays sale-oriented; relist chains are listing-to-listing facts and "this MLS reported the sale" is a SaleEvidence row with listing set — neither belongs here.
+ */
+export interface SaleListingRelationship {
+    listing: ListingId,
+    /** resulted_in_sale | prior_listing | other (open) */
+    relationship_type: string,
+    extras?: Any,
+}
+
+
+/**
+ * One source's claims about a market sale. SaleEvent holds the reconciliation; evidence rows hold the disagreeing inputs (MLS close record, deed, assessor, broker or appraiser verification). One row = one source = one provenance. When an MLS-sourced row links a listing, its close_date/close_price should equal that listing's closed-event values (convention, deliberately unenforced).
+ */
+export interface SaleEvidence extends Entity {
+    sale: SaleEventId,
+    listing?: ListingId,
+    transfer?: TransferId,
+    close_date?: string,
+    close_price?: Money,
+    concessions_amount?: Money,
+    document_number?: string,
+    /** mls_record | deed | assessor | broker_confirmed | appraiser_verified | ... (open) */
+    verification_method?: CodeableConcept,
+    remarks?: string,
+    artifacts?: SourceArtifactId[],
+    provenance: Provenance,
+}
+
+
+/**
+ * Namespaced listing identifier mirroring PropertyIdentifier (scheme + namespace + value). RESO ListingKey and ListingId stay separately recoverable as distinct schemes; identity rule is (namespace, scheme=listing_key, value) with provider-specific fallback. At most one is_primary identifier per namespace.
+ */
+export interface ListingIdentifier {
+    /** listing_key | listing_id | source_system_id | other (open) */
+    scheme: string,
+    /** Issuing system: MLS, aggregator, or portal */
+    namespace?: string,
+    value: string,
+    is_primary?: boolean,
+    extras?: Any,
+}
+
+
+/**
+ * Listing identity, header identifiers, and latest-observed agreement terms; process events by effective_date ascending; array order breaks same-date ties. Carry status, list_price, and rent_period forward independently from the latest event that supplies each field. Original asking terms come from the earliest event supplying them. close_price comes from the latest closed event supplying it.
  */
 export interface Listing extends Entity {
     property: PropertyId,
     property_state?: PropertyStateSnapshotId,
-    kind: ListingKind,
-    /** mls | fsbo | auction | pocket */
-    listing_type?: string,
-    mls_number?: string,
+    offering_type: OfferingType,
+    identifiers?: ListingIdentifier[],
+    listing_contract_date?: string,
+    expiration_date?: string,
+    /** exclusive_right_to_sell | exclusive_agency | open | net | other (open) */
+    listing_agreement_type?: string,
+    /** full_service | limited_service | entry_only | other (open) */
+    service_level?: string,
+    /** mls | private_network | public_portal | owner_direct | auction_platform | other (open) */
+    marketing_channel?: string,
+    /** public | office_exclusive | private | coming_soon | other (open) */
+    exposure_type?: string,
+    special_listing_conditions?: CodeableConcept[],
     events?: ListingEvent[],
     participants?: ListingParticipant[],
     artifacts?: SourceArtifactId[],
@@ -1149,14 +1250,20 @@ export interface Listing extends Entity {
 
 
 /**
- * A dated listing assertion. asking_price is a sale price or periodic rent; rent_period states the period when asking_price is rent. close_price is asserted on a closed event.
+ * A dated listing assertion. effective_date is when the change took effect; effective_at adds optional precision and must fall on effective_date (compared on the timestamp's lexical date in its stated offset). observed_at is when the producer retrieved or detected the event. Order events by effective_date ascending, then effective_at when present, then array order. list_price is the asking sale price or periodic rent; rent_period states the period when it is rent. close_price is asserted only on a closed event and is the source's reported closing claim, not the reconciled SaleEvent.sale_price.
  */
 export interface ListingEvent {
-    occurred_on: string,
-    /** listed | price_change | status_change | relisted | closed */
-    event_kind: string,
+    effective_date: string,
+    effective_at?: string,
+    observed_at?: string,
+    /** listed | price_change | status_change | coming_soon | back_on_market | relisted | contingent | pending | closed | expired | withdrawn | canceled (open) */
+    event_type: string,
     status?: ListingStatus,
-    asking_price?: Money,
+    /** Native source status verbatim */
+    source_status?: string,
+    list_price?: Money,
+    /** Lower bound for range-priced listings */
+    list_price_low?: Money,
     rent_period?: RentPeriod,
     close_price?: Money,
     extras?: Any,
@@ -1279,7 +1386,7 @@ export interface UnitRentObservation extends Entity {
     rate_period?: RentPeriod,
     rate_basis?: RateBasis,
     rate_type?: RateType,
-    observed_on: string,
+    observed_date: string,
     concessions_note?: string,
 }
 
@@ -1324,8 +1431,8 @@ export interface LoanParty extends TransactionParty {
  * Dated loan lifecycle — assignments, modifications, satisfactions. Recording fields apply when the event is a recorded instrument; they stay null for unrecorded servicing events.
  */
 export interface LoanEvent extends RecordedInstrument {
-    event_kind: LoanEventKind,
-    occurred_on?: string,
+    event_type: LoanEventType,
+    effective_date?: string,
     amount?: Money,
     /** Canonical assignee for assignment-like events */
     to_party?: PartyId,
@@ -1339,9 +1446,9 @@ export interface LoanEvent extends RecordedInstrument {
  */
 export interface Lien extends Entity, RecordedInstrument {
     property: PropertyId,
-    kind: LienKind,
+    kind: LienType,
     amount?: Money,
-    released_on?: string,
+    released_date?: string,
     parties?: LienParty[],
 }
 
@@ -1361,8 +1468,8 @@ export interface ForeclosureCase extends Entity {
     /** The defaulted loan, when known */
     loan?: LoanId,
     case_number?: string,
-    opened_on?: string,
-    resolved_on?: string,
+    opened_date?: string,
+    resolved_date?: string,
     /** sold_at_auction | cured | dismissed | reo */
     resolution?: string,
     past_due_amount?: Money,
@@ -1381,7 +1488,7 @@ export interface ForeclosureCase extends Entity {
 export interface ForeclosureFiling extends RecordedInstrument {
     /** nod | lis_pendens | notice_of_sale | auction_scheduled | postponement | ... (open; US-seeded) */
     status: string,
-    auction_on?: string,
+    auction_date?: string,
     /** Time-of-day as published */
     auction_at_time?: string,
     extras?: Any,
@@ -1409,10 +1516,10 @@ export interface Permit extends Entity {
     /** issued | finaled | expired | ... (open) */
     status?: string,
     description?: string,
-    applied_on?: string,
-    issued_on?: string,
-    finaled_on?: string,
-    expires_on?: string,
+    applied_date?: string,
+    issued_date?: string,
+    finaled_date?: string,
+    expiration_date?: string,
     job_value?: Money,
     fees?: Money,
     /** Canonical contractor Party reference; credential records are outside core v0.2 */
@@ -1502,7 +1609,7 @@ export interface RentRollLine {
 export interface Valuation extends Entity {
     property: PropertyId,
     property_state?: PropertyStateSnapshotId,
-    kind: ValuationKind,
+    kind: ValuationType,
     /** desktop | exterior | hybrid | traditional */
     valuation_method?: string,
     /** market_value | liquidation | insurable | land | ... (open) */
@@ -1546,6 +1653,7 @@ export interface PropertyProfile {
     identifiers?: PropertyIdentifier[],
     jurisdictions?: Jurisdiction[],
     parcels?: Parcel[],
+    parcel_identifiers?: ParcelIdentifier[],
     property_parcels?: PropertyParcel[],
     parcel_lineage?: ParcelLineage[],
     site?: Site,
@@ -1557,6 +1665,7 @@ export interface PropertyProfile {
     tax_bills?: TaxBill[],
     transfers?: Transfer[],
     sales?: SaleEvent[],
+    sale_evidence?: SaleEvidence[],
     listings?: Listing[],
     leases?: LeaseEvent[],
     unit_rents?: UnitRentObservation[],
@@ -1605,6 +1714,26 @@ export interface ExtractionObservation {
     /** Extraction model identifier */
     model?: string,
     profile?: PropertyProfile,
+    provenance: Provenance,
+    /** References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent. */
+    artifact_refs?: SourceArtifactId[],
+    extras?: Any,
+}
+
+
+/**
+ * Capture envelope for an MLS / RESO Web API / feed record. The payload is a sparse PropertyProfile (a valid profile still requires its `property` section); listing-centric property characteristics belong on the profile's state snapshots, not on timeless entities. By convention profile accompanies success and error accompanies failure statuses — validators deliberately do not enforce this pairing, so consumers must branch on status, not on field presence. Source fields the profile does not model may be preserved under extras with producer-namespaced keys; the namespace and field naming are the producer's choice. original_entry_at and source_modified_at are the feed record's clocks (RESO OriginalEntryTimestamp / ModificationTimestamp); they duplicate provenance source clocks so they survive when the profile is detached from the envelope, and should agree with them.
+ */
+export interface MlsObservation {
+    status: MlsObservationStatus,
+    /** Listing id/key or address queried */
+    query?: string,
+    /** The feed's ListingKey for this record */
+    source_record_key?: string,
+    original_entry_at?: string,
+    source_modified_at?: string,
+    profile?: PropertyProfile,
+    error?: string,
     provenance: Provenance,
     /** References to SourceArtifact IDs in the nested profile.artifacts bundle; invalid when profile or profile.artifacts is absent. */
     artifact_refs?: SourceArtifactId[],

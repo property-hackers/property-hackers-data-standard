@@ -294,6 +294,26 @@ pub trait Provenance   {
     // fn verification_mut(&mut self) -> &mut Option<&'a crate::VerificationStatus>;
     // fn set_verification(&mut self, value: Option<&'a VerificationStatus>);
 
+    fn originating_system<'a>(&'a self) -> Option<&'a str>;
+    // fn originating_system_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_originating_system(&mut self, value: Option<&'a str>);
+
+    fn source_system<'a>(&'a self) -> Option<&'a str>;
+    // fn source_system_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_source_system(&mut self, value: Option<&'a str>);
+
+    fn source_record_id<'a>(&'a self) -> Option<&'a str>;
+    // fn source_record_id_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_source_record_id(&mut self, value: Option<&'a str>);
+
+    fn source_created_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn source_created_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_source_created_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
+    fn source_modified_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn source_modified_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_source_modified_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
 
 }
 
@@ -315,6 +335,21 @@ impl Provenance for crate::Provenance {
     }
         fn verification<'a>(&'a self) -> Option<&'a crate::VerificationStatus> {
         return self.verification.as_ref();
+    }
+        fn originating_system<'a>(&'a self) -> Option<&'a str> {
+        return self.originating_system.as_deref();
+    }
+        fn source_system<'a>(&'a self) -> Option<&'a str> {
+        return self.source_system.as_deref();
+    }
+        fn source_record_id<'a>(&'a self) -> Option<&'a str> {
+        return self.source_record_id.as_deref();
+    }
+        fn source_created_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.source_created_at.as_ref();
+    }
+        fn source_modified_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.source_modified_at.as_ref();
     }
 }
 
@@ -439,6 +474,20 @@ impl Entity for crate::ParcelLineage {
     }
 }
 impl Entity for crate::PropertyIdentifier {
+        fn id<'a>(&'a self) -> &'a str {
+        return &self.id[..];
+    }
+        fn extras<'a>(&'a self) -> Option<&'a crate::Any> {
+        return self.extras.as_ref();
+    }
+        fn provenance<'a>(&'a self) -> Option<&'a crate::Provenance> {
+        return self.provenance.as_ref();
+    }
+        fn verifications<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::VerificationAttribution>> {
+        return self.verifications.as_ref();
+    }
+}
+impl Entity for crate::ParcelIdentifier {
         fn id<'a>(&'a self) -> &'a str {
         return &self.id[..];
     }
@@ -690,6 +739,20 @@ impl Entity for crate::SaleEvent {
         return self.verifications.as_ref();
     }
 }
+impl Entity for crate::SaleEvidence {
+        fn id<'a>(&'a self) -> &'a str {
+        return &self.id[..];
+    }
+        fn extras<'a>(&'a self) -> Option<&'a crate::Any> {
+        return self.extras.as_ref();
+    }
+        fn provenance<'a>(&'a self) -> Option<&'a crate::Provenance> {
+        return Some(&self.provenance);
+    }
+        fn verifications<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::VerificationAttribution>> {
+        return self.verifications.as_ref();
+    }
+}
 impl Entity for crate::Listing {
         fn id<'a>(&'a self) -> &'a str {
         return &self.id[..];
@@ -841,6 +904,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::PropertyParcel(val) => val.id(),
                 EntityOrSubtype::ParcelLineage(val) => val.id(),
                 EntityOrSubtype::PropertyIdentifier(val) => val.id(),
+                EntityOrSubtype::ParcelIdentifier(val) => val.id(),
                 EntityOrSubtype::Party(val) => val.id(),
                 EntityOrSubtype::SourceArtifact(val) => val.id(),
                 EntityOrSubtype::PropertyAddress(val) => val.id(),
@@ -858,6 +922,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::TaxBill(val) => val.id(),
                 EntityOrSubtype::Transfer(val) => val.id(),
                 EntityOrSubtype::SaleEvent(val) => val.id(),
+                EntityOrSubtype::SaleEvidence(val) => val.id(),
                 EntityOrSubtype::Listing(val) => val.id(),
                 EntityOrSubtype::LeaseEvent(val) => val.id(),
                 EntityOrSubtype::UnitRentObservation(val) => val.id(),
@@ -880,6 +945,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::PropertyParcel(val) => val.extras(),
                 EntityOrSubtype::ParcelLineage(val) => val.extras(),
                 EntityOrSubtype::PropertyIdentifier(val) => val.extras(),
+                EntityOrSubtype::ParcelIdentifier(val) => val.extras(),
                 EntityOrSubtype::Party(val) => val.extras(),
                 EntityOrSubtype::SourceArtifact(val) => val.extras(),
                 EntityOrSubtype::PropertyAddress(val) => val.extras(),
@@ -897,6 +963,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::TaxBill(val) => val.extras(),
                 EntityOrSubtype::Transfer(val) => val.extras(),
                 EntityOrSubtype::SaleEvent(val) => val.extras(),
+                EntityOrSubtype::SaleEvidence(val) => val.extras(),
                 EntityOrSubtype::Listing(val) => val.extras(),
                 EntityOrSubtype::LeaseEvent(val) => val.extras(),
                 EntityOrSubtype::UnitRentObservation(val) => val.extras(),
@@ -919,6 +986,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::PropertyParcel(val) => val.provenance(),
                 EntityOrSubtype::ParcelLineage(val) => val.provenance(),
                 EntityOrSubtype::PropertyIdentifier(val) => val.provenance(),
+                EntityOrSubtype::ParcelIdentifier(val) => val.provenance(),
                 EntityOrSubtype::Party(val) => val.provenance(),
                 EntityOrSubtype::SourceArtifact(val) => val.provenance(),
                 EntityOrSubtype::PropertyAddress(val) => val.provenance(),
@@ -936,6 +1004,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::TaxBill(val) => val.provenance(),
                 EntityOrSubtype::Transfer(val) => val.provenance(),
                 EntityOrSubtype::SaleEvent(val) => val.provenance(),
+                EntityOrSubtype::SaleEvidence(val) => val.provenance(),
                 EntityOrSubtype::Listing(val) => val.provenance(),
                 EntityOrSubtype::LeaseEvent(val) => val.provenance(),
                 EntityOrSubtype::UnitRentObservation(val) => val.provenance(),
@@ -958,6 +1027,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::PropertyParcel(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::ParcelLineage(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::PropertyIdentifier(val) => val.verifications().map(|x| x.to_any()),
+                EntityOrSubtype::ParcelIdentifier(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::Party(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::SourceArtifact(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::PropertyAddress(val) => val.verifications().map(|x| x.to_any()),
@@ -975,6 +1045,7 @@ impl Entity for crate::EntityOrSubtype {
                 EntityOrSubtype::TaxBill(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::Transfer(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::SaleEvent(val) => val.verifications().map(|x| x.to_any()),
+                EntityOrSubtype::SaleEvidence(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::Listing(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::LeaseEvent(val) => val.verifications().map(|x| x.to_any()),
                 EntityOrSubtype::UnitRentObservation(val) => val.verifications().map(|x| x.to_any()),
@@ -1048,9 +1119,9 @@ pub trait RecordedInstrument   {
     // fn recording_page_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_recording_page(&mut self, value: Option<&'a str>);
 
-    fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn recorded_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_recorded_on(&mut self, value: Option<&'a NaiveDate>);
+    fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn recorded_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_recorded_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
     // fn instrument_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
@@ -1089,8 +1160,8 @@ impl RecordedInstrument for crate::RecordedInstrument {
         fn recording_page<'a>(&'a self) -> Option<&'a str> {
         return self.recording_page.as_deref();
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.recorded_on.as_ref();
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.recorded_date.as_ref();
     }
         fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         return self.instrument_date.as_ref();
@@ -1121,8 +1192,8 @@ impl RecordedInstrument for crate::Transfer {
         fn recording_page<'a>(&'a self) -> Option<&'a str> {
         return self.recording_page.as_deref();
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.recorded_on.as_ref();
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.recorded_date.as_ref();
     }
         fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         return self.instrument_date.as_ref();
@@ -1153,8 +1224,8 @@ impl RecordedInstrument for crate::Loan {
         fn recording_page<'a>(&'a self) -> Option<&'a str> {
         return self.recording_page.as_deref();
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.recorded_on.as_ref();
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.recorded_date.as_ref();
     }
         fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         return self.instrument_date.as_ref();
@@ -1185,8 +1256,8 @@ impl RecordedInstrument for crate::LoanEvent {
         fn recording_page<'a>(&'a self) -> Option<&'a str> {
         return self.recording_page.as_deref();
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.recorded_on.as_ref();
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.recorded_date.as_ref();
     }
         fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         return self.instrument_date.as_ref();
@@ -1217,8 +1288,8 @@ impl RecordedInstrument for crate::Lien {
         fn recording_page<'a>(&'a self) -> Option<&'a str> {
         return self.recording_page.as_deref();
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.recorded_on.as_ref();
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.recorded_date.as_ref();
     }
         fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         return self.instrument_date.as_ref();
@@ -1249,8 +1320,8 @@ impl RecordedInstrument for crate::ForeclosureFiling {
         fn recording_page<'a>(&'a self) -> Option<&'a str> {
         return self.recording_page.as_deref();
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.recorded_on.as_ref();
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.recorded_date.as_ref();
     }
         fn instrument_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         return self.instrument_date.as_ref();
@@ -1303,13 +1374,13 @@ impl RecordedInstrument for crate::RecordedInstrumentOrSubtype {
 
         }
     }
-        fn recorded_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        fn recorded_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
         match self {
-                RecordedInstrumentOrSubtype::Transfer(val) => val.recorded_on(),
-                RecordedInstrumentOrSubtype::Loan(val) => val.recorded_on(),
-                RecordedInstrumentOrSubtype::LoanEvent(val) => val.recorded_on(),
-                RecordedInstrumentOrSubtype::Lien(val) => val.recorded_on(),
-                RecordedInstrumentOrSubtype::ForeclosureFiling(val) => val.recorded_on(),
+                RecordedInstrumentOrSubtype::Transfer(val) => val.recorded_date(),
+                RecordedInstrumentOrSubtype::Loan(val) => val.recorded_date(),
+                RecordedInstrumentOrSubtype::LoanEvent(val) => val.recorded_date(),
+                RecordedInstrumentOrSubtype::Lien(val) => val.recorded_date(),
+                RecordedInstrumentOrSubtype::ForeclosureFiling(val) => val.recorded_date(),
 
         }
     }
@@ -1969,10 +2040,6 @@ pub trait Parcel : Entity   {
     // fn unit_designator_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_unit_designator(&mut self, value: Option<&'a str>);
 
-    fn reso_upi<'a>(&'a self) -> Option<&'a str>;
-    // fn reso_upi_mut(&mut self) -> &mut Option<&'a str>;
-    // fn set_reso_upi(&mut self, value: Option<&'a str>);
-
     fn legal_description<'a>(&'a self) -> Option<&'a str>;
     // fn legal_description_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_legal_description(&mut self, value: Option<&'a str>);
@@ -1985,9 +2052,9 @@ pub trait Parcel : Entity   {
     // fn boundary_mut(&mut self) -> &mut Option<&'a crate::Geometry>;
     // fn set_boundary<E>(&mut self, value: Option<E>) where E: Into<Geometry>;
 
-    fn retired_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn retired_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_retired_on(&mut self, value: Option<&'a NaiveDate>);
+    fn retired_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn retired_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_retired_date(&mut self, value: Option<&'a NaiveDate>);
 
 
 }
@@ -2005,9 +2072,6 @@ impl Parcel for crate::Parcel {
         fn unit_designator<'a>(&'a self) -> Option<&'a str> {
         return self.unit_designator.as_deref();
     }
-        fn reso_upi<'a>(&'a self) -> Option<&'a str> {
-        return self.reso_upi.as_deref();
-    }
         fn legal_description<'a>(&'a self) -> Option<&'a str> {
         return self.legal_description.as_deref();
     }
@@ -2017,8 +2081,8 @@ impl Parcel for crate::Parcel {
         fn boundary<'a>(&'a self) -> Option<&'a crate::Geometry> {
         return self.boundary.as_ref();
     }
-        fn retired_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.retired_on.as_ref();
+        fn retired_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.retired_date.as_ref();
     }
 }
 
@@ -2037,13 +2101,13 @@ pub trait PropertyParcel : Entity   {
     // fn is_primary_mut(&mut self) -> &mut Option<bool>;
     // fn set_is_primary(&mut self, value: Option<bool>);
 
-    fn started_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn started_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_started_on(&mut self, value: Option<&'a NaiveDate>);
+    fn start_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn start_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_start_date(&mut self, value: Option<&'a NaiveDate>);
 
-    fn ended_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn ended_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_ended_on(&mut self, value: Option<&'a NaiveDate>);
+    fn end_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn end_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_end_date(&mut self, value: Option<&'a NaiveDate>);
 
 
 }
@@ -2058,11 +2122,11 @@ impl PropertyParcel for crate::PropertyParcel {
         fn is_primary(&self) -> Option<bool> {
         return self.is_primary;
     }
-        fn started_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.started_on.as_ref();
+        fn start_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.start_date.as_ref();
     }
-        fn ended_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.ended_on.as_ref();
+        fn end_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.end_date.as_ref();
     }
 }
 
@@ -2077,13 +2141,13 @@ pub trait ParcelLineage : Entity   {
     // fn successor_parcel_mut(&mut self) -> &mut &'a str;
     // fn set_successor_parcel<E>(&mut self, value: String) where E: Into<String>;
 
-    fn kind<'a>(&'a self) -> &'a crate::ParcelLineageKind;
-    // fn kind_mut(&mut self) -> &mut &'a crate::ParcelLineageKind;
-    // fn set_kind(&mut self, value: ParcelLineageKind);
+    fn kind<'a>(&'a self) -> &'a crate::ParcelLineageType;
+    // fn kind_mut(&mut self) -> &mut &'a crate::ParcelLineageType;
+    // fn set_kind(&mut self, value: ParcelLineageType);
 
-    fn effective_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn effective_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_effective_on(&mut self, value: Option<&'a NaiveDate>);
+    fn effective_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn effective_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_effective_date(&mut self, value: Option<&'a NaiveDate>);
 
 
 }
@@ -2095,11 +2159,11 @@ impl ParcelLineage for crate::ParcelLineage {
         fn successor_parcel<'a>(&'a self) -> &'a str {
         return &self.successor_parcel[..];
     }
-        fn kind<'a>(&'a self) -> &'a crate::ParcelLineageKind {
+        fn kind<'a>(&'a self) -> &'a crate::ParcelLineageType {
         return &self.kind;
     }
-        fn effective_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.effective_on.as_ref();
+        fn effective_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.effective_date.as_ref();
     }
 }
 
@@ -2141,11 +2205,48 @@ impl PropertyIdentifier for crate::PropertyIdentifier {
 }
 
 
+pub trait ParcelIdentifier : Entity   {
+
+    fn parcel<'a>(&'a self) -> &'a str;
+    // fn parcel_mut(&mut self) -> &mut &'a str;
+    // fn set_parcel<E>(&mut self, value: String) where E: Into<String>;
+
+    fn scheme<'a>(&'a self) -> &'a str;
+    // fn scheme_mut(&mut self) -> &mut &'a str;
+    // fn set_scheme(&mut self, value: String);
+
+    fn namespace<'a>(&'a self) -> Option<&'a str>;
+    // fn namespace_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_namespace(&mut self, value: Option<&'a str>);
+
+    fn value<'a>(&'a self) -> &'a str;
+    // fn value_mut(&mut self) -> &mut &'a str;
+    // fn set_value(&mut self, value: String);
+
+
+}
+
+impl ParcelIdentifier for crate::ParcelIdentifier {
+        fn parcel<'a>(&'a self) -> &'a str {
+        return &self.parcel[..];
+    }
+        fn scheme<'a>(&'a self) -> &'a str {
+        return &self.scheme[..];
+    }
+        fn namespace<'a>(&'a self) -> Option<&'a str> {
+        return self.namespace.as_deref();
+    }
+        fn value<'a>(&'a self) -> &'a str {
+        return &self.value[..];
+    }
+}
+
+
 pub trait Party : Entity   {
 
-    fn kind<'a>(&'a self) -> &'a crate::PartyKind;
-    // fn kind_mut(&mut self) -> &mut &'a crate::PartyKind;
-    // fn set_kind(&mut self, value: PartyKind);
+    fn kind<'a>(&'a self) -> &'a crate::PartyType;
+    // fn kind_mut(&mut self) -> &mut &'a crate::PartyType;
+    // fn set_kind(&mut self, value: PartyType);
 
     fn legal_form<'a>(&'a self) -> Option<&'a crate::Classification>;
     // fn legal_form_mut(&mut self) -> &mut Option<&'a crate::Classification>;
@@ -2187,7 +2288,7 @@ pub trait Party : Entity   {
 }
 
 impl Party for crate::Party {
-        fn kind<'a>(&'a self) -> &'a crate::PartyKind {
+        fn kind<'a>(&'a self) -> &'a crate::PartyType {
         return &self.kind;
     }
         fn legal_form<'a>(&'a self) -> Option<&'a crate::Classification> {
@@ -2295,9 +2396,21 @@ pub trait SourceArtifact : Entity   {
     // fn page_count_mut(&mut self) -> &mut Option<isize>;
     // fn set_page_count(&mut self, value: Option<isize>);
 
-    fn captured_on<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
-    // fn captured_on_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
-    // fn set_captured_on(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+    fn captured_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn captured_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_captured_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
+    fn order(&self) -> Option<isize>;
+    // fn order_mut(&mut self) -> &mut Option<isize>;
+    // fn set_order(&mut self, value: Option<isize>);
+
+    fn short_description<'a>(&'a self) -> Option<&'a str>;
+    // fn short_description_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_short_description(&mut self, value: Option<&'a str>);
+
+    fn source_modified_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn source_modified_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_source_modified_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
 
 
 }
@@ -2330,8 +2443,17 @@ impl SourceArtifact for crate::SourceArtifact {
         fn page_count(&self) -> Option<isize> {
         return self.page_count;
     }
-        fn captured_on<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
-        return self.captured_on.as_ref();
+        fn captured_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.captured_at.as_ref();
+    }
+        fn order(&self) -> Option<isize> {
+        return self.order;
+    }
+        fn short_description<'a>(&'a self) -> Option<&'a str> {
+        return self.short_description.as_deref();
+    }
+        fn source_modified_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.source_modified_at.as_ref();
     }
 }
 
@@ -2554,13 +2676,13 @@ pub trait OwnershipPeriod : Entity   {
     // fn property_mut(&mut self) -> &mut &'a str;
     // fn set_property<E>(&mut self, value: String) where E: Into<String>;
 
-    fn started_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn started_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_started_on(&mut self, value: Option<&'a NaiveDate>);
+    fn start_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn start_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_start_date(&mut self, value: Option<&'a NaiveDate>);
 
-    fn ended_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn ended_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_ended_on(&mut self, value: Option<&'a NaiveDate>);
+    fn end_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn end_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_end_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn vesting_type<'a>(&'a self) -> Option<&'a str>;
     // fn vesting_type_mut(&mut self) -> &mut Option<&'a str>;
@@ -2589,11 +2711,11 @@ impl OwnershipPeriod for crate::OwnershipPeriod {
         fn property<'a>(&'a self) -> &'a str {
         return &self.property[..];
     }
-        fn started_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.started_on.as_ref();
+        fn start_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.start_date.as_ref();
     }
-        fn ended_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.ended_on.as_ref();
+        fn end_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.end_date.as_ref();
     }
         fn vesting_type<'a>(&'a self) -> Option<&'a str> {
         return self.vesting_type.as_deref();
@@ -3695,9 +3817,9 @@ pub trait Renovation   {
     // fn completed_year_mut(&mut self) -> &mut Option<isize>;
     // fn set_completed_year(&mut self, value: Option<isize>);
 
-    fn completed_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn completed_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_completed_on(&mut self, value: Option<&'a NaiveDate>);
+    fn completed_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn completed_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_completed_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn cost<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn cost_mut(&mut self) -> &mut Option<&'a crate::Money>;
@@ -3724,8 +3846,8 @@ impl Renovation for crate::Renovation {
         fn completed_year(&self) -> Option<isize> {
         return self.completed_year;
     }
-        fn completed_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.completed_on.as_ref();
+        fn completed_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.completed_date.as_ref();
     }
         fn cost<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.cost.as_ref();
@@ -4890,17 +5012,17 @@ pub trait TaxInstallment   {
     // fn installment_number_mut(&mut self) -> &mut Option<isize>;
     // fn set_installment_number(&mut self, value: Option<isize>);
 
-    fn due_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn due_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_due_on(&mut self, value: Option<&'a NaiveDate>);
+    fn due_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn due_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_due_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn amount<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn amount_mut(&mut self) -> &mut Option<&'a crate::Money>;
     // fn set_amount<E>(&mut self, value: Option<E>) where E: Into<Money>;
 
-    fn paid_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn paid_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_paid_on(&mut self, value: Option<&'a NaiveDate>);
+    fn paid_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn paid_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_paid_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn amount_paid<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn amount_paid_mut(&mut self) -> &mut Option<&'a crate::Money>;
@@ -4921,14 +5043,14 @@ impl TaxInstallment for crate::TaxInstallment {
         fn installment_number(&self) -> Option<isize> {
         return self.installment_number;
     }
-        fn due_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.due_on.as_ref();
+        fn due_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.due_date.as_ref();
     }
         fn amount<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.amount.as_ref();
     }
-        fn paid_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.paid_on.as_ref();
+        fn paid_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.paid_date.as_ref();
     }
         fn amount_paid<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.amount_paid.as_ref();
@@ -4989,13 +5111,13 @@ pub trait Transfer : Entity  +  RecordedInstrument   {
     // fn parcel_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_parcel<E>(&mut self, value: Option<&'a str>) where E: Into<String>;
 
-    fn transfer_kind<'a>(&'a self) -> &'a str;
-    // fn transfer_kind_mut(&mut self) -> &mut &'a str;
-    // fn set_transfer_kind(&mut self, value: String);
+    fn transfer_type<'a>(&'a self) -> &'a str;
+    // fn transfer_type_mut(&mut self) -> &mut &'a str;
+    // fn set_transfer_type(&mut self, value: String);
 
-    fn effective_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn effective_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_effective_on(&mut self, value: Option<&'a NaiveDate>);
+    fn effective_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn effective_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_effective_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn consideration<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn consideration_mut(&mut self) -> &mut Option<&'a crate::Money>;
@@ -5043,11 +5165,11 @@ impl Transfer for crate::Transfer {
         fn parcel<'a>(&'a self) -> Option<&'a str> {
         return self.parcel.as_deref();
     }
-        fn transfer_kind<'a>(&'a self) -> &'a str {
-        return &self.transfer_kind[..];
+        fn transfer_type<'a>(&'a self) -> &'a str {
+        return &self.transfer_type[..];
     }
-        fn effective_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.effective_on.as_ref();
+        fn effective_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.effective_date.as_ref();
     }
         fn consideration<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.consideration.as_ref();
@@ -5102,9 +5224,9 @@ pub trait SaleEvent : Entity   {
     // fn transfer_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_transfer<E>(&mut self, value: Option<&'a str>) where E: Into<String>;
 
-    fn sale_date<'a>(&'a self) -> &'a crate::NaiveDate;
-    // fn sale_date_mut(&mut self) -> &mut &'a crate::NaiveDate;
-    // fn set_sale_date(&mut self, value: NaiveDate);
+    fn close_date<'a>(&'a self) -> &'a crate::NaiveDate;
+    // fn close_date_mut(&mut self) -> &mut &'a crate::NaiveDate;
+    // fn set_close_date(&mut self, value: NaiveDate);
 
     fn sale_price<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn sale_price_mut(&mut self) -> &mut Option<&'a crate::Money>;
@@ -5130,13 +5252,21 @@ pub trait SaleEvent : Entity   {
     // fn price_per_unit_mut(&mut self) -> &mut Option<&'a crate::Money>;
     // fn set_price_per_unit<E>(&mut self, value: Option<E>) where E: Into<Money>;
 
-    fn financing<'a>(&'a self) -> Option<&'a str>;
-    // fn financing_mut(&mut self) -> &mut Option<&'a str>;
-    // fn set_financing(&mut self, value: Option<&'a str>);
+    fn buyer_financing<'a>(&'a self) -> Option<&'a CodeableConceptOrSubtype>;
+    // fn buyer_financing_mut(&mut self) -> &mut Option<&'a CodeableConceptOrSubtype>;
+    // fn set_buyer_financing<E>(&mut self, value: Option<E>) where E: Into<CodeableConcept>;
 
-    fn concessions<'a>(&'a self) -> Option<&'a crate::Money>;
-    // fn concessions_mut(&mut self) -> &mut Option<&'a crate::Money>;
-    // fn set_concessions<E>(&mut self, value: Option<E>) where E: Into<Money>;
+    fn concessions_amount<'a>(&'a self) -> Option<&'a crate::Money>;
+    // fn concessions_amount_mut(&mut self) -> &mut Option<&'a crate::Money>;
+    // fn set_concessions_amount<E>(&mut self, value: Option<E>) where E: Into<Money>;
+
+    fn concessions<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, CodeableConceptOrSubtype>>;
+    // fn concessions_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, CodeableConceptOrSubtype>>;
+    // fn set_concessions<E>(&mut self, value: Option<&Vec<E>>) where E: Into<CodeableConcept>;
+
+    fn concessions_comments<'a>(&'a self) -> Option<&'a str>;
+    // fn concessions_comments_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_concessions_comments(&mut self, value: Option<&'a str>);
 
     fn cap_rate(&self) -> Option<f64>;
     // fn cap_rate_mut(&mut self) -> &mut Option<f64>;
@@ -5170,6 +5300,10 @@ pub trait SaleEvent : Entity   {
     // fn remarks_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_remarks(&mut self, value: Option<&'a str>);
 
+    fn listings<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::SaleListingRelationship>>;
+    // fn listings_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::SaleListingRelationship>>;
+    // fn set_listings<E>(&mut self, value: Option<&Vec<E>>) where E: Into<SaleListingRelationship>;
+
 
 }
 
@@ -5183,8 +5317,8 @@ impl SaleEvent for crate::SaleEvent {
         fn transfer<'a>(&'a self) -> Option<&'a str> {
         return self.transfer.as_deref();
     }
-        fn sale_date<'a>(&'a self) -> &'a crate::NaiveDate {
-        return &self.sale_date;
+        fn close_date<'a>(&'a self) -> &'a crate::NaiveDate {
+        return &self.close_date;
     }
         fn sale_price<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.sale_price.as_ref();
@@ -5204,11 +5338,17 @@ impl SaleEvent for crate::SaleEvent {
         fn price_per_unit<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.price_per_unit.as_ref();
     }
-        fn financing<'a>(&'a self) -> Option<&'a str> {
-        return self.financing.as_deref();
+        fn buyer_financing<'a>(&'a self) -> Option<&'a CodeableConceptOrSubtype> {
+        return self.buyer_financing.as_ref();
     }
-        fn concessions<'a>(&'a self) -> Option<&'a crate::Money> {
+        fn concessions_amount<'a>(&'a self) -> Option<&'a crate::Money> {
+        return self.concessions_amount.as_ref();
+    }
+        fn concessions<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, CodeableConceptOrSubtype>> {
         return self.concessions.as_ref();
+    }
+        fn concessions_comments<'a>(&'a self) -> Option<&'a str> {
+        return self.concessions_comments.as_deref();
     }
         fn cap_rate(&self) -> Option<f64> {
         return self.cap_rate;
@@ -5234,6 +5374,9 @@ impl SaleEvent for crate::SaleEvent {
         fn remarks<'a>(&'a self) -> Option<&'a str> {
         return self.remarks.as_deref();
     }
+        fn listings<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::SaleListingRelationship>> {
+        return self.listings.as_ref();
+    }
 }
 
 
@@ -5243,6 +5386,159 @@ pub trait SaleEventParty : TransactionParty   {
 }
 
 impl SaleEventParty for crate::SaleEventParty {
+}
+
+
+pub trait SaleListingRelationship   {
+
+    fn listing<'a>(&'a self) -> &'a str;
+    // fn listing_mut(&mut self) -> &mut &'a str;
+    // fn set_listing<E>(&mut self, value: String) where E: Into<String>;
+
+    fn relationship_type<'a>(&'a self) -> &'a str;
+    // fn relationship_type_mut(&mut self) -> &mut &'a str;
+    // fn set_relationship_type(&mut self, value: String);
+
+    fn extras<'a>(&'a self) -> Option<&'a crate::Any>;
+    // fn extras_mut(&mut self) -> &mut Option<&'a crate::Any>;
+    // fn set_extras<E>(&mut self, value: Option<E>) where E: Into<Any>;
+
+
+}
+
+impl SaleListingRelationship for crate::SaleListingRelationship {
+        fn listing<'a>(&'a self) -> &'a str {
+        return &self.listing[..];
+    }
+        fn relationship_type<'a>(&'a self) -> &'a str {
+        return &self.relationship_type[..];
+    }
+        fn extras<'a>(&'a self) -> Option<&'a crate::Any> {
+        return self.extras.as_ref();
+    }
+}
+
+
+pub trait SaleEvidence : Entity   {
+
+    fn sale<'a>(&'a self) -> &'a str;
+    // fn sale_mut(&mut self) -> &mut &'a str;
+    // fn set_sale<E>(&mut self, value: String) where E: Into<String>;
+
+    fn listing<'a>(&'a self) -> Option<&'a str>;
+    // fn listing_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_listing<E>(&mut self, value: Option<&'a str>) where E: Into<String>;
+
+    fn transfer<'a>(&'a self) -> Option<&'a str>;
+    // fn transfer_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_transfer<E>(&mut self, value: Option<&'a str>) where E: Into<String>;
+
+    fn close_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn close_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_close_date(&mut self, value: Option<&'a NaiveDate>);
+
+    fn close_price<'a>(&'a self) -> Option<&'a crate::Money>;
+    // fn close_price_mut(&mut self) -> &mut Option<&'a crate::Money>;
+    // fn set_close_price<E>(&mut self, value: Option<E>) where E: Into<Money>;
+
+    fn concessions_amount<'a>(&'a self) -> Option<&'a crate::Money>;
+    // fn concessions_amount_mut(&mut self) -> &mut Option<&'a crate::Money>;
+    // fn set_concessions_amount<E>(&mut self, value: Option<E>) where E: Into<Money>;
+
+    fn document_number<'a>(&'a self) -> Option<&'a str>;
+    // fn document_number_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_document_number(&mut self, value: Option<&'a str>);
+
+    fn verification_method<'a>(&'a self) -> Option<&'a CodeableConceptOrSubtype>;
+    // fn verification_method_mut(&mut self) -> &mut Option<&'a CodeableConceptOrSubtype>;
+    // fn set_verification_method<E>(&mut self, value: Option<E>) where E: Into<CodeableConcept>;
+
+    fn remarks<'a>(&'a self) -> Option<&'a str>;
+    // fn remarks_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_remarks(&mut self, value: Option<&'a str>);
+
+    fn artifacts<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, String>>;
+    // fn artifacts_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, String>>;
+    // fn set_artifacts<E>(&mut self, value: Option<&Vec<String>>) where E: Into<String>;
+
+
+}
+
+impl SaleEvidence for crate::SaleEvidence {
+        fn sale<'a>(&'a self) -> &'a str {
+        return &self.sale[..];
+    }
+        fn listing<'a>(&'a self) -> Option<&'a str> {
+        return self.listing.as_deref();
+    }
+        fn transfer<'a>(&'a self) -> Option<&'a str> {
+        return self.transfer.as_deref();
+    }
+        fn close_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.close_date.as_ref();
+    }
+        fn close_price<'a>(&'a self) -> Option<&'a crate::Money> {
+        return self.close_price.as_ref();
+    }
+        fn concessions_amount<'a>(&'a self) -> Option<&'a crate::Money> {
+        return self.concessions_amount.as_ref();
+    }
+        fn document_number<'a>(&'a self) -> Option<&'a str> {
+        return self.document_number.as_deref();
+    }
+        fn verification_method<'a>(&'a self) -> Option<&'a CodeableConceptOrSubtype> {
+        return self.verification_method.as_ref();
+    }
+        fn remarks<'a>(&'a self) -> Option<&'a str> {
+        return self.remarks.as_deref();
+    }
+        fn artifacts<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, String>> {
+        return self.artifacts.as_ref();
+    }
+}
+
+
+pub trait ListingIdentifier   {
+
+    fn scheme<'a>(&'a self) -> &'a str;
+    // fn scheme_mut(&mut self) -> &mut &'a str;
+    // fn set_scheme(&mut self, value: String);
+
+    fn namespace<'a>(&'a self) -> Option<&'a str>;
+    // fn namespace_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_namespace(&mut self, value: Option<&'a str>);
+
+    fn value<'a>(&'a self) -> &'a str;
+    // fn value_mut(&mut self) -> &mut &'a str;
+    // fn set_value(&mut self, value: String);
+
+    fn is_primary(&self) -> Option<bool>;
+    // fn is_primary_mut(&mut self) -> &mut Option<bool>;
+    // fn set_is_primary(&mut self, value: Option<bool>);
+
+    fn extras<'a>(&'a self) -> Option<&'a crate::Any>;
+    // fn extras_mut(&mut self) -> &mut Option<&'a crate::Any>;
+    // fn set_extras<E>(&mut self, value: Option<E>) where E: Into<Any>;
+
+
+}
+
+impl ListingIdentifier for crate::ListingIdentifier {
+        fn scheme<'a>(&'a self) -> &'a str {
+        return &self.scheme[..];
+    }
+        fn namespace<'a>(&'a self) -> Option<&'a str> {
+        return self.namespace.as_deref();
+    }
+        fn value<'a>(&'a self) -> &'a str {
+        return &self.value[..];
+    }
+        fn is_primary(&self) -> Option<bool> {
+        return self.is_primary;
+    }
+        fn extras<'a>(&'a self) -> Option<&'a crate::Any> {
+        return self.extras.as_ref();
+    }
 }
 
 
@@ -5256,17 +5552,41 @@ pub trait Listing : Entity   {
     // fn property_state_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_property_state<E>(&mut self, value: Option<&'a str>) where E: Into<String>;
 
-    fn kind<'a>(&'a self) -> &'a crate::ListingKind;
-    // fn kind_mut(&mut self) -> &mut &'a crate::ListingKind;
-    // fn set_kind(&mut self, value: ListingKind);
+    fn offering_type<'a>(&'a self) -> &'a crate::OfferingType;
+    // fn offering_type_mut(&mut self) -> &mut &'a crate::OfferingType;
+    // fn set_offering_type(&mut self, value: OfferingType);
 
-    fn listing_type<'a>(&'a self) -> Option<&'a str>;
-    // fn listing_type_mut(&mut self) -> &mut Option<&'a str>;
-    // fn set_listing_type(&mut self, value: Option<&'a str>);
+    fn identifiers<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::ListingIdentifier>>;
+    // fn identifiers_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::ListingIdentifier>>;
+    // fn set_identifiers<E>(&mut self, value: Option<&Vec<E>>) where E: Into<ListingIdentifier>;
 
-    fn mls_number<'a>(&'a self) -> Option<&'a str>;
-    // fn mls_number_mut(&mut self) -> &mut Option<&'a str>;
-    // fn set_mls_number(&mut self, value: Option<&'a str>);
+    fn listing_contract_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn listing_contract_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_listing_contract_date(&mut self, value: Option<&'a NaiveDate>);
+
+    fn expiration_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn expiration_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_expiration_date(&mut self, value: Option<&'a NaiveDate>);
+
+    fn listing_agreement_type<'a>(&'a self) -> Option<&'a str>;
+    // fn listing_agreement_type_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_listing_agreement_type(&mut self, value: Option<&'a str>);
+
+    fn service_level<'a>(&'a self) -> Option<&'a str>;
+    // fn service_level_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_service_level(&mut self, value: Option<&'a str>);
+
+    fn marketing_channel<'a>(&'a self) -> Option<&'a str>;
+    // fn marketing_channel_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_marketing_channel(&mut self, value: Option<&'a str>);
+
+    fn exposure_type<'a>(&'a self) -> Option<&'a str>;
+    // fn exposure_type_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_exposure_type(&mut self, value: Option<&'a str>);
+
+    fn special_listing_conditions<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, CodeableConceptOrSubtype>>;
+    // fn special_listing_conditions_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, CodeableConceptOrSubtype>>;
+    // fn set_special_listing_conditions<E>(&mut self, value: Option<&Vec<E>>) where E: Into<CodeableConcept>;
 
     fn events<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::ListingEvent>>;
     // fn events_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::ListingEvent>>;
@@ -5294,14 +5614,32 @@ impl Listing for crate::Listing {
         fn property_state<'a>(&'a self) -> Option<&'a str> {
         return self.property_state.as_deref();
     }
-        fn kind<'a>(&'a self) -> &'a crate::ListingKind {
-        return &self.kind;
+        fn offering_type<'a>(&'a self) -> &'a crate::OfferingType {
+        return &self.offering_type;
     }
-        fn listing_type<'a>(&'a self) -> Option<&'a str> {
-        return self.listing_type.as_deref();
+        fn identifiers<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::ListingIdentifier>> {
+        return self.identifiers.as_ref();
     }
-        fn mls_number<'a>(&'a self) -> Option<&'a str> {
-        return self.mls_number.as_deref();
+        fn listing_contract_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.listing_contract_date.as_ref();
+    }
+        fn expiration_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.expiration_date.as_ref();
+    }
+        fn listing_agreement_type<'a>(&'a self) -> Option<&'a str> {
+        return self.listing_agreement_type.as_deref();
+    }
+        fn service_level<'a>(&'a self) -> Option<&'a str> {
+        return self.service_level.as_deref();
+    }
+        fn marketing_channel<'a>(&'a self) -> Option<&'a str> {
+        return self.marketing_channel.as_deref();
+    }
+        fn exposure_type<'a>(&'a self) -> Option<&'a str> {
+        return self.exposure_type.as_deref();
+    }
+        fn special_listing_conditions<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, CodeableConceptOrSubtype>> {
+        return self.special_listing_conditions.as_ref();
     }
         fn events<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::ListingEvent>> {
         return self.events.as_ref();
@@ -5320,21 +5658,37 @@ impl Listing for crate::Listing {
 
 pub trait ListingEvent   {
 
-    fn occurred_on<'a>(&'a self) -> &'a crate::NaiveDate;
-    // fn occurred_on_mut(&mut self) -> &mut &'a crate::NaiveDate;
-    // fn set_occurred_on(&mut self, value: NaiveDate);
+    fn effective_date<'a>(&'a self) -> &'a crate::NaiveDate;
+    // fn effective_date_mut(&mut self) -> &mut &'a crate::NaiveDate;
+    // fn set_effective_date(&mut self, value: NaiveDate);
 
-    fn event_kind<'a>(&'a self) -> &'a str;
-    // fn event_kind_mut(&mut self) -> &mut &'a str;
-    // fn set_event_kind(&mut self, value: String);
+    fn effective_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn effective_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_effective_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
+    fn observed_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn observed_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_observed_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
+    fn event_type<'a>(&'a self) -> &'a str;
+    // fn event_type_mut(&mut self) -> &mut &'a str;
+    // fn set_event_type(&mut self, value: String);
 
     fn status<'a>(&'a self) -> Option<&'a crate::ListingStatus>;
     // fn status_mut(&mut self) -> &mut Option<&'a crate::ListingStatus>;
     // fn set_status(&mut self, value: Option<&'a ListingStatus>);
 
-    fn asking_price<'a>(&'a self) -> Option<&'a crate::Money>;
-    // fn asking_price_mut(&mut self) -> &mut Option<&'a crate::Money>;
-    // fn set_asking_price<E>(&mut self, value: Option<E>) where E: Into<Money>;
+    fn source_status<'a>(&'a self) -> Option<&'a str>;
+    // fn source_status_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_source_status(&mut self, value: Option<&'a str>);
+
+    fn list_price<'a>(&'a self) -> Option<&'a crate::Money>;
+    // fn list_price_mut(&mut self) -> &mut Option<&'a crate::Money>;
+    // fn set_list_price<E>(&mut self, value: Option<E>) where E: Into<Money>;
+
+    fn list_price_low<'a>(&'a self) -> Option<&'a crate::Money>;
+    // fn list_price_low_mut(&mut self) -> &mut Option<&'a crate::Money>;
+    // fn set_list_price_low<E>(&mut self, value: Option<E>) where E: Into<Money>;
 
     fn rent_period<'a>(&'a self) -> Option<&'a crate::RentPeriod>;
     // fn rent_period_mut(&mut self) -> &mut Option<&'a crate::RentPeriod>;
@@ -5356,17 +5710,29 @@ pub trait ListingEvent   {
 }
 
 impl ListingEvent for crate::ListingEvent {
-        fn occurred_on<'a>(&'a self) -> &'a crate::NaiveDate {
-        return &self.occurred_on;
+        fn effective_date<'a>(&'a self) -> &'a crate::NaiveDate {
+        return &self.effective_date;
     }
-        fn event_kind<'a>(&'a self) -> &'a str {
-        return &self.event_kind[..];
+        fn effective_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.effective_at.as_ref();
+    }
+        fn observed_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.observed_at.as_ref();
+    }
+        fn event_type<'a>(&'a self) -> &'a str {
+        return &self.event_type[..];
     }
         fn status<'a>(&'a self) -> Option<&'a crate::ListingStatus> {
         return self.status.as_ref();
     }
-        fn asking_price<'a>(&'a self) -> Option<&'a crate::Money> {
-        return self.asking_price.as_ref();
+        fn source_status<'a>(&'a self) -> Option<&'a str> {
+        return self.source_status.as_deref();
+    }
+        fn list_price<'a>(&'a self) -> Option<&'a crate::Money> {
+        return self.list_price.as_ref();
+    }
+        fn list_price_low<'a>(&'a self) -> Option<&'a crate::Money> {
+        return self.list_price_low.as_ref();
     }
         fn rent_period<'a>(&'a self) -> Option<&'a crate::RentPeriod> {
         return self.rent_period.as_ref();
@@ -5821,9 +6187,9 @@ pub trait UnitRentObservation : Entity   {
     // fn rate_type_mut(&mut self) -> &mut Option<&'a crate::RateType>;
     // fn set_rate_type(&mut self, value: Option<&'a RateType>);
 
-    fn observed_on<'a>(&'a self) -> &'a crate::NaiveDate;
-    // fn observed_on_mut(&mut self) -> &mut &'a crate::NaiveDate;
-    // fn set_observed_on(&mut self, value: NaiveDate);
+    fn observed_date<'a>(&'a self) -> &'a crate::NaiveDate;
+    // fn observed_date_mut(&mut self) -> &mut &'a crate::NaiveDate;
+    // fn set_observed_date(&mut self, value: NaiveDate);
 
     fn concessions_note<'a>(&'a self) -> Option<&'a str>;
     // fn concessions_note_mut(&mut self) -> &mut Option<&'a str>;
@@ -5866,8 +6232,8 @@ impl UnitRentObservation for crate::UnitRentObservation {
         fn rate_type<'a>(&'a self) -> Option<&'a crate::RateType> {
         return self.rate_type.as_ref();
     }
-        fn observed_on<'a>(&'a self) -> &'a crate::NaiveDate {
-        return &self.observed_on;
+        fn observed_date<'a>(&'a self) -> &'a crate::NaiveDate {
+        return &self.observed_date;
     }
         fn concessions_note<'a>(&'a self) -> Option<&'a str> {
         return self.concessions_note.as_deref();
@@ -6021,13 +6387,13 @@ impl LoanParty for crate::LoanParty {
 
 pub trait LoanEvent : RecordedInstrument   {
 
-    fn event_kind<'a>(&'a self) -> &'a crate::LoanEventKind;
-    // fn event_kind_mut(&mut self) -> &mut &'a crate::LoanEventKind;
-    // fn set_event_kind(&mut self, value: LoanEventKind);
+    fn event_type<'a>(&'a self) -> &'a crate::LoanEventType;
+    // fn event_type_mut(&mut self) -> &mut &'a crate::LoanEventType;
+    // fn set_event_type(&mut self, value: LoanEventType);
 
-    fn occurred_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn occurred_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_occurred_on(&mut self, value: Option<&'a NaiveDate>);
+    fn effective_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn effective_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_effective_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn amount<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn amount_mut(&mut self) -> &mut Option<&'a crate::Money>;
@@ -6049,11 +6415,11 @@ pub trait LoanEvent : RecordedInstrument   {
 }
 
 impl LoanEvent for crate::LoanEvent {
-        fn event_kind<'a>(&'a self) -> &'a crate::LoanEventKind {
-        return &self.event_kind;
+        fn event_type<'a>(&'a self) -> &'a crate::LoanEventType {
+        return &self.event_type;
     }
-        fn occurred_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.occurred_on.as_ref();
+        fn effective_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.effective_date.as_ref();
     }
         fn amount<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.amount.as_ref();
@@ -6076,17 +6442,17 @@ pub trait Lien : Entity  +  RecordedInstrument   {
     // fn property_mut(&mut self) -> &mut &'a str;
     // fn set_property<E>(&mut self, value: String) where E: Into<String>;
 
-    fn kind<'a>(&'a self) -> &'a crate::LienKind;
-    // fn kind_mut(&mut self) -> &mut &'a crate::LienKind;
-    // fn set_kind(&mut self, value: LienKind);
+    fn kind<'a>(&'a self) -> &'a crate::LienType;
+    // fn kind_mut(&mut self) -> &mut &'a crate::LienType;
+    // fn set_kind(&mut self, value: LienType);
 
     fn amount<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn amount_mut(&mut self) -> &mut Option<&'a crate::Money>;
     // fn set_amount<E>(&mut self, value: Option<E>) where E: Into<Money>;
 
-    fn released_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn released_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_released_on(&mut self, value: Option<&'a NaiveDate>);
+    fn released_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn released_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_released_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn parties<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::LienParty>>;
     // fn parties_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::LienParty>>;
@@ -6099,14 +6465,14 @@ impl Lien for crate::Lien {
         fn property<'a>(&'a self) -> &'a str {
         return &self.property[..];
     }
-        fn kind<'a>(&'a self) -> &'a crate::LienKind {
+        fn kind<'a>(&'a self) -> &'a crate::LienType {
         return &self.kind;
     }
         fn amount<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.amount.as_ref();
     }
-        fn released_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.released_on.as_ref();
+        fn released_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.released_date.as_ref();
     }
         fn parties<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::LienParty>> {
         return self.parties.as_ref();
@@ -6137,13 +6503,13 @@ pub trait ForeclosureCase : Entity   {
     // fn case_number_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_case_number(&mut self, value: Option<&'a str>);
 
-    fn opened_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn opened_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_opened_on(&mut self, value: Option<&'a NaiveDate>);
+    fn opened_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn opened_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_opened_date(&mut self, value: Option<&'a NaiveDate>);
 
-    fn resolved_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn resolved_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_resolved_on(&mut self, value: Option<&'a NaiveDate>);
+    fn resolved_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn resolved_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_resolved_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn resolution<'a>(&'a self) -> Option<&'a str>;
     // fn resolution_mut(&mut self) -> &mut Option<&'a str>;
@@ -6190,11 +6556,11 @@ impl ForeclosureCase for crate::ForeclosureCase {
         fn case_number<'a>(&'a self) -> Option<&'a str> {
         return self.case_number.as_deref();
     }
-        fn opened_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.opened_on.as_ref();
+        fn opened_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.opened_date.as_ref();
     }
-        fn resolved_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.resolved_on.as_ref();
+        fn resolved_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.resolved_date.as_ref();
     }
         fn resolution<'a>(&'a self) -> Option<&'a str> {
         return self.resolution.as_deref();
@@ -6229,9 +6595,9 @@ pub trait ForeclosureFiling : RecordedInstrument   {
     // fn status_mut(&mut self) -> &mut &'a str;
     // fn set_status(&mut self, value: String);
 
-    fn auction_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn auction_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_auction_on(&mut self, value: Option<&'a NaiveDate>);
+    fn auction_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn auction_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_auction_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn auction_at_time<'a>(&'a self) -> Option<&'a str>;
     // fn auction_at_time_mut(&mut self) -> &mut Option<&'a str>;
@@ -6252,8 +6618,8 @@ impl ForeclosureFiling for crate::ForeclosureFiling {
         fn status<'a>(&'a self) -> &'a str {
         return &self.status[..];
     }
-        fn auction_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.auction_on.as_ref();
+        fn auction_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.auction_date.as_ref();
     }
         fn auction_at_time<'a>(&'a self) -> Option<&'a str> {
         return self.auction_at_time.as_deref();
@@ -6306,21 +6672,21 @@ pub trait Permit : Entity   {
     // fn description_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_description(&mut self, value: Option<&'a str>);
 
-    fn applied_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn applied_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_applied_on(&mut self, value: Option<&'a NaiveDate>);
+    fn applied_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn applied_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_applied_date(&mut self, value: Option<&'a NaiveDate>);
 
-    fn issued_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn issued_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_issued_on(&mut self, value: Option<&'a NaiveDate>);
+    fn issued_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn issued_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_issued_date(&mut self, value: Option<&'a NaiveDate>);
 
-    fn finaled_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn finaled_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_finaled_on(&mut self, value: Option<&'a NaiveDate>);
+    fn finaled_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn finaled_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_finaled_date(&mut self, value: Option<&'a NaiveDate>);
 
-    fn expires_on<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
-    // fn expires_on_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
-    // fn set_expires_on(&mut self, value: Option<&'a NaiveDate>);
+    fn expiration_date<'a>(&'a self) -> Option<&'a crate::NaiveDate>;
+    // fn expiration_date_mut(&mut self) -> &mut Option<&'a crate::NaiveDate>;
+    // fn set_expiration_date(&mut self, value: Option<&'a NaiveDate>);
 
     fn job_value<'a>(&'a self) -> Option<&'a crate::Money>;
     // fn job_value_mut(&mut self) -> &mut Option<&'a crate::Money>;
@@ -6363,17 +6729,17 @@ impl Permit for crate::Permit {
         fn description<'a>(&'a self) -> Option<&'a str> {
         return self.description.as_deref();
     }
-        fn applied_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.applied_on.as_ref();
+        fn applied_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.applied_date.as_ref();
     }
-        fn issued_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.issued_on.as_ref();
+        fn issued_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.issued_date.as_ref();
     }
-        fn finaled_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.finaled_on.as_ref();
+        fn finaled_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.finaled_date.as_ref();
     }
-        fn expires_on<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
-        return self.expires_on.as_ref();
+        fn expiration_date<'a>(&'a self) -> Option<&'a crate::NaiveDate> {
+        return self.expiration_date.as_ref();
     }
         fn job_value<'a>(&'a self) -> Option<&'a crate::Money> {
         return self.job_value.as_ref();
@@ -6709,9 +7075,9 @@ pub trait Valuation : Entity   {
     // fn property_state_mut(&mut self) -> &mut Option<&'a str>;
     // fn set_property_state<E>(&mut self, value: Option<&'a str>) where E: Into<String>;
 
-    fn kind<'a>(&'a self) -> &'a crate::ValuationKind;
-    // fn kind_mut(&mut self) -> &mut &'a crate::ValuationKind;
-    // fn set_kind(&mut self, value: ValuationKind);
+    fn kind<'a>(&'a self) -> &'a crate::ValuationType;
+    // fn kind_mut(&mut self) -> &mut &'a crate::ValuationType;
+    // fn set_kind(&mut self, value: ValuationType);
 
     fn valuation_method<'a>(&'a self) -> Option<&'a str>;
     // fn valuation_method_mut(&mut self) -> &mut Option<&'a str>;
@@ -6799,7 +7165,7 @@ impl Valuation for crate::Valuation {
         fn property_state<'a>(&'a self) -> Option<&'a str> {
         return self.property_state.as_deref();
     }
-        fn kind<'a>(&'a self) -> &'a crate::ValuationKind {
+        fn kind<'a>(&'a self) -> &'a crate::ValuationType {
         return &self.kind;
     }
         fn valuation_method<'a>(&'a self) -> Option<&'a str> {
@@ -6896,6 +7262,10 @@ pub trait PropertyProfile   {
     // fn parcels_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::Parcel>>;
     // fn set_parcels<E>(&mut self, value: Option<&Vec<E>>) where E: Into<Parcel>;
 
+    fn parcel_identifiers<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::ParcelIdentifier>>;
+    // fn parcel_identifiers_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::ParcelIdentifier>>;
+    // fn set_parcel_identifiers<E>(&mut self, value: Option<&Vec<E>>) where E: Into<ParcelIdentifier>;
+
     fn property_parcels<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::PropertyParcel>>;
     // fn property_parcels_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::PropertyParcel>>;
     // fn set_property_parcels<E>(&mut self, value: Option<&Vec<E>>) where E: Into<PropertyParcel>;
@@ -6939,6 +7309,10 @@ pub trait PropertyProfile   {
     fn sales<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::SaleEvent>>;
     // fn sales_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::SaleEvent>>;
     // fn set_sales<E>(&mut self, value: Option<&Vec<E>>) where E: Into<SaleEvent>;
+
+    fn sale_evidence<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::SaleEvidence>>;
+    // fn sale_evidence_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::SaleEvidence>>;
+    // fn set_sale_evidence<E>(&mut self, value: Option<&Vec<E>>) where E: Into<SaleEvidence>;
 
     fn listings<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::Listing>>;
     // fn listings_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, crate::Listing>>;
@@ -7020,6 +7394,9 @@ impl PropertyProfile for crate::PropertyProfile {
         fn parcels<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::Parcel>> {
         return self.parcels.as_ref();
     }
+        fn parcel_identifiers<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::ParcelIdentifier>> {
+        return self.parcel_identifiers.as_ref();
+    }
         fn property_parcels<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::PropertyParcel>> {
         return self.property_parcels.as_ref();
     }
@@ -7052,6 +7429,9 @@ impl PropertyProfile for crate::PropertyProfile {
     }
         fn sales<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::SaleEvent>> {
         return self.sales.as_ref();
+    }
+        fn sale_evidence<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::SaleEvidence>> {
+        return self.sale_evidence.as_ref();
     }
         fn listings<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, crate::Listing>> {
         return self.listings.as_ref();
@@ -7240,6 +7620,85 @@ impl ExtractionObservation for crate::ExtractionObservation {
     }
         fn profile<'a>(&'a self) -> Option<&'a crate::PropertyProfile> {
         return self.profile.as_ref();
+    }
+        fn provenance<'a>(&'a self) -> &'a crate::Provenance {
+        return &self.provenance;
+    }
+        fn artifact_refs<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, String>> {
+        return self.artifact_refs.as_ref();
+    }
+        fn extras<'a>(&'a self) -> Option<&'a crate::Any> {
+        return self.extras.as_ref();
+    }
+}
+
+
+pub trait MlsObservation   {
+
+    fn status<'a>(&'a self) -> &'a crate::MlsObservationStatus;
+    // fn status_mut(&mut self) -> &mut &'a crate::MlsObservationStatus;
+    // fn set_status(&mut self, value: MlsObservationStatus);
+
+    fn query<'a>(&'a self) -> Option<&'a str>;
+    // fn query_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_query(&mut self, value: Option<&'a str>);
+
+    fn source_record_key<'a>(&'a self) -> Option<&'a str>;
+    // fn source_record_key_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_source_record_key(&mut self, value: Option<&'a str>);
+
+    fn original_entry_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn original_entry_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_original_entry_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
+    fn source_modified_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>>;
+    // fn source_modified_at_mut(&mut self) -> &mut Option<&'a crate::DateTime<FixedOffset>>;
+    // fn set_source_modified_at(&mut self, value: Option<&'a DateTime<FixedOffset>>);
+
+    fn profile<'a>(&'a self) -> Option<&'a crate::PropertyProfile>;
+    // fn profile_mut(&mut self) -> &mut Option<&'a crate::PropertyProfile>;
+    // fn set_profile<E>(&mut self, value: Option<E>) where E: Into<PropertyProfile>;
+
+    fn error<'a>(&'a self) -> Option<&'a str>;
+    // fn error_mut(&mut self) -> &mut Option<&'a str>;
+    // fn set_error(&mut self, value: Option<&'a str>);
+
+    fn provenance<'a>(&'a self) -> &'a crate::Provenance;
+    // fn provenance_mut(&mut self) -> &mut &'a crate::Provenance;
+    // fn set_provenance<E>(&mut self, value: E) where E: Into<Provenance>;
+
+    fn artifact_refs<'a>(&'a self) -> Option<impl poly_containers::SeqRef<'a, String>>;
+    // fn artifact_refs_mut(&mut self) -> &mut Option<impl poly_containers::SeqRef<'a, String>>;
+    // fn set_artifact_refs<E>(&mut self, value: Option<&Vec<String>>) where E: Into<String>;
+
+    fn extras<'a>(&'a self) -> Option<&'a crate::Any>;
+    // fn extras_mut(&mut self) -> &mut Option<&'a crate::Any>;
+    // fn set_extras<E>(&mut self, value: Option<E>) where E: Into<Any>;
+
+
+}
+
+impl MlsObservation for crate::MlsObservation {
+        fn status<'a>(&'a self) -> &'a crate::MlsObservationStatus {
+        return &self.status;
+    }
+        fn query<'a>(&'a self) -> Option<&'a str> {
+        return self.query.as_deref();
+    }
+        fn source_record_key<'a>(&'a self) -> Option<&'a str> {
+        return self.source_record_key.as_deref();
+    }
+        fn original_entry_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.original_entry_at.as_ref();
+    }
+        fn source_modified_at<'a>(&'a self) -> Option<&'a crate::DateTime<FixedOffset>> {
+        return self.source_modified_at.as_ref();
+    }
+        fn profile<'a>(&'a self) -> Option<&'a crate::PropertyProfile> {
+        return self.profile.as_ref();
+    }
+        fn error<'a>(&'a self) -> Option<&'a str> {
+        return self.error.as_deref();
     }
         fn provenance<'a>(&'a self) -> &'a crate::Provenance {
         return &self.provenance;

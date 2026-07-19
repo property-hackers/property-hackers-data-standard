@@ -42,7 +42,7 @@ enums:
       verified: {}
       disputed: {}
       rejected: {}
-  PartyKind:
+  PartyType:
     permissible_values: {person: {}, organization: {}}
   SaleTypeEnum:
     permissible_values:
@@ -97,21 +97,29 @@ enums:
       other: {}
   RateType:
     permissible_values: {asking: {}, market: {}, effective: {}, contract: {}}
-  ListingKind:
+  OfferingType:
     permissible_values: {for_sale: {}, for_lease: {}}
   ListingStatus:
+    description: >-
+      PHDS-normalized listing status (close mapping to RESO StandardStatus).
+      sold/leased replace RESO's ambiguous Closed; Incomplete and Delete are
+      MLS record-management states that normalize to other with the raw value
+      preserved in extras.
     permissible_values:
+      coming_soon: {}
       active: {}
+      active_under_contract: {}
       pending: {}
+      hold: {}
       sold: {}
       leased: {}
       withdrawn: {}
+      canceled: {}
       expired: {}
-      coming_soon: {}
       other: {}
-  ValuationKind:
+  ValuationType:
     permissible_values: {avm: {}, appraisal: {}, bpo: {}, broker_opinion: {}, internal: {}}
-  LoanEventKind:
+  LoanEventType:
     permissible_values:
       origination: {}
       assignment: {}
@@ -121,9 +129,9 @@ enums:
       default: {}
       reinstatement: {}
       other: {}
-  LienKind:
+  LienType:
     permissible_values: {tax: {}, judgment: {}, hoa: {}, mechanics: {}, municipal: {}, other: {}}
-  ParcelLineageKind:
+  ParcelLineageType:
     permissible_values: {split: {}, merge: {}, renumber: {}}
   EstateType:
     permissible_values:
@@ -254,3 +262,8 @@ classes:
         maximum_value: 1
         description: Fraction from 0 through 1; 0.8 means 80 percent confidence.
       verification: {range: VerificationStatus}
+      originating_system: {close_mappings: [reso:OriginatingSystemName], description: System where the record was born}
+      source_system: {close_mappings: [reso:SourceSystemName], description: Immediate system that supplied the record}
+      source_record_id: {description: The immediate source's record identifier}
+      source_created_at: {range: datetime, description: When the immediate source created the record}
+      source_modified_at: {range: datetime, description: When the immediate source last modified the record}

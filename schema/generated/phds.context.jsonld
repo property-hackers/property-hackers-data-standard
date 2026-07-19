@@ -387,9 +387,9 @@
       "@type": "@id",
       "@id": "loan"
     },
-    "opened_on": {
+    "opened_date": {
       "@type": "xsd:date",
-      "@id": "opened_on"
+      "@id": "opened_date"
     },
     "original_loan_amount": {
       "@type": "@id",
@@ -420,9 +420,9 @@
     "resolution": {
       "@id": "resolution"
     },
-    "resolved_on": {
+    "resolved_date": {
       "@type": "xsd:date",
-      "@id": "resolved_on"
+      "@id": "resolved_date"
     },
     "unpaid_balance": {
       "@type": "@id",
@@ -436,9 +436,9 @@
     "auction_at_time": {
       "@id": "auction_at_time"
     },
-    "auction_on": {
+    "auction_date": {
       "@type": "xsd:date",
-      "@id": "auction_on"
+      "@id": "auction_date"
     },
     "coordinates": {
       "@type": "@id",
@@ -466,7 +466,6 @@
       "@id": "registry_reference"
     },
     "relationship_type": {
-      "@type": "@id",
       "@id": "relationship_type"
     },
     "authority_code": {
@@ -556,12 +555,7 @@
     },
     "concessions": {
       "@type": "@id",
-      "@id": "concessions",
-      "@context": {
-        "amount": {
-          "@id": "decimal_amount"
-        }
-      }
+      "@id": "concessions"
     },
     "effective_rent_per_area": {
       "@type": "@id",
@@ -663,9 +657,9 @@
         }
       }
     },
-    "released_on": {
+    "released_date": {
       "@type": "xsd:date",
-      "@id": "released_on"
+      "@id": "released_date"
     },
     "artifacts": {
       "@type": "@id",
@@ -675,24 +669,41 @@
       "@type": "@id",
       "@id": "events"
     },
-    "listing_type": {
-      "@id": "listing_type"
+    "exposure_type": {
+      "@id": "exposure_type"
     },
-    "mls_number": {
-      "@id": "mls_number"
+    "identifiers": {
+      "@type": "@id",
+      "@id": "identifiers"
+    },
+    "listing_agreement_type": {
+      "@id": "listing_agreement_type"
+    },
+    "listing_contract_date": {
+      "@type": "xsd:date",
+      "@id": "listing_contract_date"
+    },
+    "marketing_channel": {
+      "@id": "marketing_channel"
+    },
+    "offering_type": {
+      "@context": {
+        "text": "skos:notation",
+        "description": "skos:prefLabel",
+        "meaning": "@id"
+      },
+      "@id": "offering_type"
     },
     "participants": {
       "@type": "@id",
       "@id": "participants"
     },
-    "asking_price": {
+    "service_level": {
+      "@id": "service_level"
+    },
+    "special_listing_conditions": {
       "@type": "@id",
-      "@id": "asking_price",
-      "@context": {
-        "amount": {
-          "@id": "decimal_amount"
-        }
-      }
+      "@id": "special_listing_conditions"
     },
     "close_price": {
       "@type": "@id",
@@ -703,17 +714,52 @@
         }
       }
     },
-    "event_kind": {
+    "effective_at": {
+      "@type": "xsd:dateTime",
+      "@id": "effective_at"
+    },
+    "effective_date": {
+      "@type": "xsd:date",
+      "@id": "effective_date"
+    },
+    "event_type": {
       "@context": {
         "text": "skos:notation",
         "description": "skos:prefLabel",
         "meaning": "@id"
       },
-      "@id": "event_kind"
+      "@id": "event_type"
     },
-    "occurred_on": {
-      "@type": "xsd:date",
-      "@id": "occurred_on"
+    "list_price": {
+      "@type": "@id",
+      "@id": "list_price",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "list_price_low": {
+      "@type": "@id",
+      "@id": "list_price_low",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "observed_at": {
+      "@type": "xsd:dateTime",
+      "@id": "observed_at"
+    },
+    "source_status": {
+      "@id": "source_status"
+    },
+    "namespace": {
+      "@id": "namespace"
+    },
+    "scheme": {
+      "@id": "scheme"
     },
     "due_date": {
       "@type": "xsd:date",
@@ -773,6 +819,20 @@
     "to_party": {
       "@type": "@id",
       "@id": "to_party"
+    },
+    "original_entry_at": {
+      "@type": "xsd:dateTime",
+      "@id": "original_entry_at"
+    },
+    "query": {
+      "@id": "query"
+    },
+    "source_modified_at": {
+      "@type": "xsd:dateTime",
+      "@id": "source_modified_at"
+    },
+    "source_record_key": {
+      "@id": "source_record_key"
     },
     "capex": {
       "@type": "@id",
@@ -911,9 +971,9 @@
       "@type": "@id",
       "@id": "disposed_via_transfer"
     },
-    "ended_on": {
+    "end_date": {
       "@type": "xsd:date",
-      "@id": "ended_on"
+      "@id": "end_date"
     },
     "interests": {
       "@type": "@id",
@@ -923,9 +983,9 @@
       "@type": "@id",
       "@id": "mailing_address"
     },
-    "started_on": {
+    "start_date": {
       "@type": "xsd:date",
-      "@id": "started_on"
+      "@id": "start_date"
     },
     "vesting_type": {
       "@id": "vesting_type"
@@ -943,19 +1003,12 @@
     "parcel_number": {
       "@id": "parcel_number"
     },
-    "reso_upi": {
-      "@id": "reso_upi"
-    },
-    "retired_on": {
+    "retired_date": {
       "@type": "xsd:date",
-      "@id": "retired_on"
+      "@id": "retired_date"
     },
     "unit_designator": {
       "@id": "unit_designator"
-    },
-    "effective_on": {
-      "@type": "xsd:date",
-      "@id": "effective_on"
     },
     "predecessor_parcel": {
       "@type": "@id",
@@ -1000,9 +1053,9 @@
     "label": {
       "@id": "label"
     },
-    "applied_on": {
+    "applied_date": {
       "@type": "xsd:date",
-      "@id": "applied_on"
+      "@id": "applied_date"
     },
     "contractor_party": {
       "@type": "@id",
@@ -1010,10 +1063,6 @@
     },
     "description": {
       "@id": "description"
-    },
-    "expires_on": {
-      "@type": "xsd:date",
-      "@id": "expires_on"
     },
     "fees": {
       "@type": "@id",
@@ -1024,13 +1073,13 @@
         }
       }
     },
-    "finaled_on": {
+    "finaled_date": {
       "@type": "xsd:date",
-      "@id": "finaled_on"
+      "@id": "finaled_date"
     },
-    "issued_on": {
+    "issued_date": {
       "@type": "xsd:date",
-      "@id": "issued_on"
+      "@id": "issued_date"
     },
     "job_value": {
       "@type": "@id",
@@ -1093,12 +1142,6 @@
     "property_use_type": {
       "@id": "property_use_type"
     },
-    "namespace": {
-      "@id": "namespace"
-    },
-    "scheme": {
-      "@id": "scheme"
-    },
     "assessments": {
       "@type": "@id",
       "@id": "assessments"
@@ -1110,10 +1153,6 @@
     "foreclosure_cases": {
       "@type": "@id",
       "@id": "foreclosure_cases"
-    },
-    "identifiers": {
-      "@type": "@id",
-      "@id": "identifiers"
     },
     "jurisdictions": {
       "@type": "@id",
@@ -1143,6 +1182,10 @@
       "@type": "@id",
       "@id": "ownership"
     },
+    "parcel_identifiers": {
+      "@type": "@id",
+      "@id": "parcel_identifiers"
+    },
     "parcel_lineage": {
       "@type": "@id",
       "@id": "parcel_lineage"
@@ -1170,6 +1213,10 @@
     "rent_rolls": {
       "@type": "@id",
       "@id": "rent_rolls"
+    },
+    "sale_evidence": {
+      "@type": "@id",
+      "@id": "sale_evidence"
     },
     "sales": {
       "@type": "@id",
@@ -1239,12 +1286,25 @@
       },
       "@id": "method"
     },
+    "originating_system": {
+      "@id": "originating_system"
+    },
     "provider": {
       "@id": "provider"
     },
     "retrieved_at": {
       "@type": "xsd:dateTime",
       "@id": "retrieved_at"
+    },
+    "source_created_at": {
+      "@type": "xsd:dateTime",
+      "@id": "source_created_at"
+    },
+    "source_record_id": {
+      "@id": "source_record_id"
+    },
+    "source_system": {
+      "@id": "source_system"
     },
     "verification": {
       "@context": {
@@ -1270,9 +1330,9 @@
       "@type": "xsd:date",
       "@id": "instrument_date"
     },
-    "recorded_on": {
+    "recorded_date": {
       "@type": "xsd:date",
-      "@id": "recorded_on"
+      "@id": "recorded_date"
     },
     "recording_book": {
       "@id": "recording_book"
@@ -1284,9 +1344,9 @@
       "@type": "@id",
       "@id": "related_instruments"
     },
-    "completed_on": {
+    "completed_date": {
       "@type": "xsd:date",
-      "@id": "completed_on"
+      "@id": "completed_date"
     },
     "completed_year": {
       "@type": "xsd:integer",
@@ -1430,12 +1490,29 @@
       "@type": "xsd:integer",
       "@id": "rooms_total"
     },
+    "buyer_financing": {
+      "@type": "@id",
+      "@id": "buyer_financing"
+    },
     "cap_rate": {
       "@type": "xsd:decimal",
       "@id": "cap_rate"
     },
-    "financing": {
-      "@id": "financing"
+    "close_date": {
+      "@type": "xsd:date",
+      "@id": "close_date"
+    },
+    "concessions_amount": {
+      "@type": "@id",
+      "@id": "concessions_amount",
+      "@context": {
+        "amount": {
+          "@id": "decimal_amount"
+        }
+      }
+    },
+    "concessions_comments": {
+      "@id": "concessions_comments"
     },
     "noi_at_sale": {
       "@type": "@id",
@@ -1489,10 +1566,6 @@
         }
       }
     },
-    "sale_date": {
-      "@type": "xsd:date",
-      "@id": "sale_date"
-    },
     "sale_price": {
       "@type": "@id",
       "@id": "sale_price",
@@ -1517,6 +1590,18 @@
     "unit_count_at_sale": {
       "@type": "xsd:integer",
       "@id": "unit_count_at_sale"
+    },
+    "listing": {
+      "@type": "@id",
+      "@id": "listing"
+    },
+    "sale": {
+      "@type": "@id",
+      "@id": "sale"
+    },
+    "verification_method": {
+      "@type": "@id",
+      "@id": "verification_method"
     },
     "block": {
       "@id": "block"
@@ -1600,9 +1685,9 @@
     "zoning_code": {
       "@id": "zoning_code"
     },
-    "captured_on": {
+    "captured_at": {
       "@type": "xsd:dateTime",
-      "@id": "captured_on"
+      "@id": "captured_at"
     },
     "content_hash": {
       "@id": "content_hash"
@@ -1613,12 +1698,19 @@
     "media_type": {
       "@id": "media_type"
     },
+    "order": {
+      "@type": "xsd:integer",
+      "@id": "order"
+    },
     "original_filename": {
       "@id": "original_filename"
     },
     "page_count": {
       "@type": "xsd:integer",
       "@id": "page_count"
+    },
+    "short_description": {
+      "@id": "short_description"
     },
     "storage_reference": {
       "@id": "storage_reference"
@@ -1818,17 +1910,13 @@
     "rate_code_area": {
       "@id": "rate_code_area"
     },
-    "due_on": {
-      "@type": "xsd:date",
-      "@id": "due_on"
-    },
     "installment_number": {
       "@type": "xsd:integer",
       "@id": "installment_number"
     },
-    "paid_on": {
+    "paid_date": {
       "@type": "xsd:date",
-      "@id": "paid_on"
+      "@id": "paid_date"
     },
     "rate": {
       "@type": "@id",
@@ -1868,9 +1956,6 @@
       "@type": "xsd:decimal",
       "@id": "partial_interest_pct"
     },
-    "transfer_kind": {
-      "@id": "transfer_kind"
-    },
     "transfer_tax": {
       "@type": "@id",
       "@id": "transfer_tax",
@@ -1880,15 +1965,18 @@
         }
       }
     },
+    "transfer_type": {
+      "@id": "transfer_type"
+    },
     "denominator": {
       "@id": "denominator"
     },
     "concessions_note": {
       "@id": "concessions_note"
     },
-    "observed_on": {
+    "observed_date": {
       "@type": "xsd:date",
-      "@id": "observed_on"
+      "@id": "observed_date"
     },
     "rate_basis": {
       "@context": {
@@ -2121,6 +2209,9 @@
     "ListingEvent": {
       "@id": "ListingEvent"
     },
+    "ListingIdentifier": {
+      "@id": "ListingIdentifier"
+    },
     "ListingParticipant": {
       "@id": "ListingParticipant"
     },
@@ -2139,6 +2230,9 @@
     "LoanParty": {
       "@id": "LoanParty"
     },
+    "MlsObservation": {
+      "@id": "MlsObservation"
+    },
     "Money": {
       "@id": "Money"
     },
@@ -2153,6 +2247,9 @@
     },
     "Parcel": {
       "@id": "Parcel"
+    },
+    "ParcelIdentifier": {
+      "@id": "ParcelIdentifier"
     },
     "ParcelLineage": {
       "@id": "ParcelLineage"
@@ -2231,6 +2328,12 @@
     },
     "SaleEventParty": {
       "@id": "SaleEventParty"
+    },
+    "SaleEvidence": {
+      "@id": "SaleEvidence"
+    },
+    "SaleListingRelationship": {
+      "@id": "SaleListingRelationship"
     },
     "Site": {
       "@id": "Site"
