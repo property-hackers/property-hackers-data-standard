@@ -19,7 +19,7 @@ Property systems repeatedly model the same facts in incompatible shapes. PHDS
 provides a common source for database design, generated types, validation, and
 JSON interchange without assuming a country, registry, vendor, property use,
 unit system, currency, or rating scale. It generates and tests JSON Schema,
-JSON-LD, Pydantic, TypeScript, and Rust contracts.
+JSON-LD, Pydantic, TypeScript, Zod 4, and Rust contracts.
 
 ## What you can use it for
 
@@ -27,6 +27,45 @@ JSON-LD, Pydantic, TypeScript, and Rust contracts.
 - Structure and validate extracted or AI-produced data.
 - Enforce structural and semantic rules at system boundaries.
 - Exchange property profiles without custom mappings for every integration.
+
+## TypeScript and Zod example
+
+The complete
+[`PropertyProfile` residential-sale fixture](examples/zod/PropertyProfile-complex-residential-sale.json)
+shows one property across parcel and site identity, structures, annual
+assessments, listing and sale snapshots, agents, transfer, and consecutive
+owners. Validate the same JSON at a TypeScript product boundary with the
+generated Zod 4 contract:
+
+```ts
+import { readFileSync } from "node:fs";
+import { PropertyProfileSchema } from "./schema/generated/phds.zod";
+
+const payload: unknown = JSON.parse(
+  readFileSync(
+    "examples/zod/PropertyProfile-complex-residential-sale.json",
+    "utf8",
+  ),
+);
+const result = PropertyProfileSchema.safeParse(payload);
+
+if (!result.success) console.error(result.error.issues);
+```
+
+Until PHDS publishes a versioned package, the recommended third-party setup is
+to vendor the exact generated module—for example, copy
+`schema/generated/phds.zod.ts` to `vendor/phds/phds.zod.ts` in your application.
+Pin the PHDS release or commit in your dependency notes so upgrades are
+deliberate and reviewable. Do not edit the generated file; put product-specific
+extensions or transforms in a separate module that imports it.
+
+When using an AI coding agent, give it the pinned PHDS source, this fixture, and
+an explicit instruction to treat the vendored file as generated read-only code.
+The agent should import `PropertyProfileSchema`, pass external data as `unknown`,
+and handle the public `safeParse` result rather than recreating the model.
+
+Run `npm ci && just test-zod` to compile the generated schemas strictly and
+exercise this lifecycle plus focused nested failure cases.
 
 ## Design highlights
 
@@ -85,7 +124,12 @@ schema/
   profiles.yaml             PropertyProfile interchange document
   capture.yaml              operational capture envelopes; core generator entry point
   standards/                optional external-standards profiles; not imported by core
-  generated/                generated JSON Schema, JSON-LD, Pydantic, TypeScript, and Rust
+  generated/                generated JSON Schema, JSON-LD, Pydantic, TypeScript, Zod 4, and Rust
+    phds.zod.ts             core Zod 4 contract
+    standards/
+      uad_3_6.zod.ts        optional UAD 3.6 Zod 4 contract
+      boma_building_class.metro.zod.ts
+      boma_building_class.international.zod.ts
 examples/                   valid illustrative core fixtures
 examples/standards/         valid optional-profile fixtures
 counter_examples/schema/    fixtures rejected by structural validation
@@ -97,22 +141,40 @@ docs/crosswalks/            field and concept alignment with external standards
 
 ## Quickstart
 
-Requires Python 3.10+, [just](https://github.com/casey/just), and a Rust
-toolchain with `cargo`.
+Requires Python 3.10+, Node.js 24+, [just](https://github.com/casey/just), and a
+Rust toolchain with `cargo`.
 
 ```sh
 just venv             # create .venv and install the pinned LinkML toolchain
+npm ci                # install the locked TypeScript and Zod 4 toolchain
 just gen              # regenerate all core and optional-profile artifacts
 just check-generated  # fail if regeneration changes schema/generated
 just validate         # valid fixtures pass; negative fixtures fail as intended
 just test-generated   # source, semantic, round-trip, and generated-contract tests
+just test-zod         # compile and exercise generated Zod 4 contracts
 just test-rust        # core and standards-profile Rust wire-format tests
-just check            # generated-drift + semantic + round-trip + standards-profile + Rust checks
+just check            # generated-drift + semantic + round-trip + standards-profile + Zod + Rust checks
 ```
 
 `just check-generated` regenerates from an empty isolated tree and compares the
 result with `schema/generated`. It does not write to the checkout or use the Git
 index, so unrelated work cannot affect drift detection.
+
+## Zod usage
+
+Generated validators:
+
+- `schema/generated/phds.zod.ts`
+- `schema/generated/standards/uad_3_6.zod.ts`
+- `schema/generated/standards/boma_building_class.metro.zod.ts`
+- `schema/generated/standards/boma_building_class.international.zod.ts`
+
+```ts
+import { PropertyProfileSchema } from "./schema/generated/phds.zod";
+
+const result = PropertyProfileSchema.safeParse(payload);
+if (!result.success) console.error(result.error.issues);
+```
 
 ## Fixtures
 
@@ -123,7 +185,7 @@ synthetic or altered.
 ## Roadmap
 
 - SQL DDL generation for PostgreSQL
-- Zod generation and Elixir and Ruby clients
+- Elixir and Ruby clients
 - Registered namespace URIs (currently `example.org` placeholders)
 - A separate multi-property comparable-analysis extension
 - Typed, multi-authority Party credentials with issuer, jurisdiction, status,

@@ -545,7 +545,8 @@ class PublicArchitectureContractTests(unittest.TestCase):
         self.assertNotIn("just gen", recipe)
         self.assertNotIn("schema/generated", recipe)
         self.assertIn(
-            "check: check-generated validate test-generated test-rust", justfile
+            "check: check-generated validate test-generated test-zod test-rust",
+            justfile,
         )
 
 

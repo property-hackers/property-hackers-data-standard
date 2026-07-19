@@ -10,6 +10,7 @@ gen: gen-core gen-standards
 
 gen-core:
     .venv/bin/gen-json-schema schema/capture.yaml | .venv/bin/python tools/normalize_generated_output.py > schema/generated/phds.schema.json
+    .venv/bin/python tools/gen_zod.py schema/generated/phds.schema.json --root-name Phds > schema/generated/phds.zod.ts
     .venv/bin/gen-jsonld-context schema/capture.yaml --no-metadata -o schema/generated/phds.context.jsonld > /dev/null
     .venv/bin/python tools/fix_jsonld_context.py schema/capture.yaml schema/generated/phds.context.jsonld
     .venv/bin/gen-pydantic schema/capture.yaml --template-dir tools/pydantic_templates > schema/generated/phds_pydantic.py
@@ -21,12 +22,15 @@ gen-core:
 gen-standards:
     mkdir -p schema/generated/standards
     .venv/bin/gen-json-schema schema/standards/uad_3_6.yaml --top-class Uad36PropertyProfile | .venv/bin/python tools/normalize_generated_output.py > schema/generated/standards/uad_3_6.schema.json
+    .venv/bin/python tools/gen_zod.py schema/generated/standards/uad_3_6.schema.json --root-name Uad36 > schema/generated/standards/uad_3_6.zod.ts
     .venv/bin/gen-pydantic schema/standards/uad_3_6.yaml > schema/generated/standards/uad_3_6_pydantic.py
     .venv/bin/python tools/gen_typescript.py schema/standards/uad_3_6.yaml > schema/generated/standards/uad_3_6.ts
     rust_schema=$(mktemp); trap 'rm -f "$rust_schema"' EXIT; .venv/bin/gen-linkml schema/standards/uad_3_6.yaml --no-metadata --format yaml -o "$rust_schema"; .venv/bin/python tools/gen_rust.py "$rust_schema" --output schema/generated/standards/uad_3_6-rust --force --serde --omit-poly
     .venv/bin/python tools/gen_wire_format_test.py --linkml-schema schema/standards/uad_3_6.yaml --json-schema schema/generated/standards/uad_3_6.schema.json --rust-lib schema/generated/standards/uad_3_6-rust/src/lib.rs --output schema/generated/standards/uad_3_6-rust/tests/wire_format.rs --crate phds_uad_3_6
     .venv/bin/gen-json-schema schema/standards/boma_building_class_metro.yaml --top-class BomaMetroBuildingClassPropertyProfile | .venv/bin/python tools/normalize_generated_output.py > schema/generated/standards/boma_building_class.metro.schema.json
+    .venv/bin/python tools/gen_zod.py schema/generated/standards/boma_building_class.metro.schema.json --root-name BomaMetro > schema/generated/standards/boma_building_class.metro.zod.ts
     .venv/bin/gen-json-schema schema/standards/boma_building_class_international.yaml --top-class BomaInternationalBuildingClassPropertyProfile | .venv/bin/python tools/normalize_generated_output.py > schema/generated/standards/boma_building_class.international.schema.json
+    .venv/bin/python tools/gen_zod.py schema/generated/standards/boma_building_class.international.schema.json --root-name BomaInternational > schema/generated/standards/boma_building_class.international.zod.ts
     .venv/bin/gen-pydantic schema/standards/boma_building_class.yaml > schema/generated/standards/boma_building_class_pydantic.py
     .venv/bin/python tools/gen_typescript.py schema/standards/boma_building_class.yaml > schema/generated/standards/boma_building_class.ts
     rust_schema=$(mktemp); trap 'rm -f "$rust_schema"' EXIT; .venv/bin/gen-linkml schema/standards/boma_building_class.yaml --no-metadata --format yaml -o "$rust_schema"; .venv/bin/python tools/gen_rust.py "$rust_schema" --output schema/generated/standards/boma_building_class-rust --force --serde --omit-poly
@@ -87,6 +91,10 @@ validate:
 test-generated:
     .venv/bin/python -m unittest discover -s tests -p 'test_*.py' -v
 
+# Generated Zod contracts must compile and match structural fixture behavior.
+test-zod:
+    npm run test:zod
+
 # Rust enums must round-trip the canonical snake_case wire values.
 test-rust:
     cargo test --manifest-path schema/generated/phds-rust/Cargo.toml --features serde
@@ -98,4 +106,4 @@ test-rust:
 check-generated:
     .venv/bin/python tools/check_generated.py
 
-check: check-generated validate test-generated test-rust
+check: check-generated validate test-generated test-zod test-rust

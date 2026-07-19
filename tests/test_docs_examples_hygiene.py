@@ -9,6 +9,66 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 class DocsAndExamplesHygieneTests(unittest.TestCase):
+    def test_readme_documents_zod_generator_and_consumer_contract(self):
+        source = (ROOT / "README.md").read_text()
+
+        for required_text in (
+            "Zod 4",
+            "schema/generated/phds.zod.ts",
+            "schema/generated/standards/uad_3_6.zod.ts",
+            "schema/generated/standards/boma_building_class.metro.zod.ts",
+            "schema/generated/standards/boma_building_class.international.zod.ts",
+            "Node.js 24+",
+            "npm ci",
+            "just test-zod",
+            'import { PropertyProfileSchema } from "./schema/generated/phds.zod";',
+            "PropertyProfileSchema.safeParse(payload)",
+            "result.error.issues",
+            "## TypeScript and Zod example",
+            "examples/zod/PropertyProfile-complex-residential-sale.json",
+            "vendor/phds/phds.zod.ts",
+            "Pin the PHDS release or commit",
+            "Do not edit the generated file",
+            "AI coding agent",
+        ):
+            with self.subTest(required_text=required_text):
+                self.assertIn(required_text, source)
+
+        self.assertLess(
+            source.index("## TypeScript and Zod example"),
+            source.index("## Design highlights"),
+        )
+
+        roadmap = source.split("## Roadmap", 1)[1].split("## ", 1)[0]
+        self.assertNotIn("Zod generation", roadmap)
+        check_line = next(
+            line for line in source.splitlines() if line.startswith("just check ")
+        )
+        self.assertIn("Zod", check_line)
+
+    def test_ci_installs_locked_node_toolchain(self):
+        source = (ROOT / ".github/workflows/ci.yml").read_text()
+        python_setup = source.index("actions/setup-python@")
+        node_setup = source.index(
+            "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020"
+        )
+        just_venv = source.index("run: just venv")
+        npm_install = source.index("run: npm ci")
+
+        self.assertLess(python_setup, node_setup)
+        self.assertIn('node-version: "24"', source)
+        self.assertIn("cache: npm", source)
+        self.assertLess(just_venv, npm_install)
+        self.assertIn("name: Install locked Node toolchain", source)
+        self.assertIn('test -z "$(git status --porcelain)"', source)
+
+    def test_zod_toolchain_typechecks_every_runtime_suite(self):
+        package = json.loads((ROOT / "package.json").read_text())
+        config = json.loads((ROOT / "tsconfig.zod.json").read_text())
+
+        self.assertIn("tests/zod_*.test.ts", package["scripts"]["test:zod:runtime"])
+        self.assertIn("tests/zod_*.test.ts", config["include"])
+
     def test_uad_crosswalk_describes_current_contract(self):
         source = (ROOT / "docs/crosswalks/uad36-alignment.md").read_text()
         normalized = " ".join(source.split()).casefold()

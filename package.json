@@ -1,0 +1,17 @@
+{
+  "name": "phds-generated-contract-tests",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "typecheck:zod": "tsc -p tsconfig.zod.json --noEmit",
+    "test:zod:runtime": "node --import tsx --test tests/zod_*.test.ts",
+    "test:zod": "npm run typecheck:zod && npm run test:zod:runtime"
+  },
+  "dependencies": { "zod": "4.4.3" },
+  "devDependencies": {
+    "@types/node": "26.1.1",
+    "tsx": "4.23.1",
+    "typescript": "7.0.2"
+  }
+}

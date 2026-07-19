@@ -791,14 +791,25 @@ class GeneratedContractTests(unittest.TestCase):
                     self.models.Money.model_validate(payload)
 
     def test_property_profile_fixtures_agree_across_validators(self):
-        for path in sorted((ROOT / "examples").glob("*.json")):
+        valid_paths = sorted((ROOT / "examples").glob("PropertyProfile-*.json"))
+        structural_paths = sorted(
+            (ROOT / "counter_examples" / "schema").glob("PropertyProfile-*.json")
+        )
+        semantic_paths = sorted(
+            (ROOT / "counter_examples" / "semantic").glob("PropertyProfile-*.json")
+        )
+        self.assertEqual(9, len(valid_paths))
+        self.assertEqual(14, len(structural_paths))
+        self.assertEqual(21, len(semantic_paths))
+
+        for path in valid_paths:
             payload = json.loads(path.read_text(encoding="utf-8"))
             with self.subTest(path=path.name, validator="jsonschema"):
                 self.assertEqual([], list(self.profile_validator.iter_errors(payload)))
             with self.subTest(path=path.name, validator="pydantic"):
                 self.models.PropertyProfile.model_validate(payload)
 
-        for path in sorted((ROOT / "counter_examples" / "schema").glob("*.json")):
+        for path in structural_paths:
             payload = json.loads(path.read_text(encoding="utf-8"))
             with self.subTest(path=path.name, validator="jsonschema"):
                 self.assertTrue(list(self.profile_validator.iter_errors(payload)))
@@ -806,7 +817,7 @@ class GeneratedContractTests(unittest.TestCase):
                 with self.assertRaises(ValidationError):
                     self.models.PropertyProfile.model_validate(payload)
 
-        for path in sorted((ROOT / "counter_examples" / "semantic").glob("*.json")):
+        for path in semantic_paths:
             payload = json.loads(path.read_text(encoding="utf-8"))
             with self.subTest(path=path.name, validator="jsonschema"):
                 self.assertEqual([], list(self.profile_validator.iter_errors(payload)))

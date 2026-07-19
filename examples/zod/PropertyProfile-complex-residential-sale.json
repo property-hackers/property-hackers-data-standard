@@ -1,0 +1,463 @@
+{
+  "property": {
+    "id": "property-1842-oak-ridge",
+    "name": "1842 Oak Ridge Drive",
+    "estate_type": "fee_simple",
+    "property_use_class": "residential",
+    "property_use_type": "single_family_detached",
+    "property_use_system": "pucs_1_0",
+    "building_count": 1,
+    "location": {
+      "latitude": 33.9491,
+      "longitude": -84.3372
+    }
+  },
+  "parties": [
+    {
+      "id": "party-seller",
+      "kind": "person",
+      "name": "Alex Morgan",
+      "normalized_name": "alex morgan"
+    },
+    {
+      "id": "party-buyer",
+      "kind": "person",
+      "name": "Taylor Reed",
+      "normalized_name": "taylor reed"
+    },
+    {
+      "id": "party-listing-agent",
+      "kind": "person",
+      "name": "Jamie Chen",
+      "normalized_name": "jamie chen"
+    },
+    {
+      "id": "party-buyer-agent",
+      "kind": "person",
+      "name": "Riley Patel",
+      "normalized_name": "riley patel"
+    }
+  ],
+  "jurisdictions": [
+    {
+      "id": "jurisdiction-fulton-ga",
+      "country": "US",
+      "region": "GA",
+      "name": "Fulton County",
+      "kind": "county",
+      "authority_code": "13121"
+    }
+  ],
+  "parcels": [
+    {
+      "id": "parcel-fulton-17-0089",
+      "jurisdiction": "jurisdiction-fulton-ga",
+      "parcel_number": "17-0089-LL-042",
+      "normalized_parcel_number": "170089ll042",
+      "legal_description": "Lot 42, Oak Ridge Subdivision, Phase II",
+      "land_area": {
+        "value": 0.38,
+        "unit": "acre"
+      }
+    }
+  ],
+  "property_parcels": [
+    {
+      "id": "property-parcel-oak-ridge",
+      "property": "property-1842-oak-ridge",
+      "parcel": "parcel-fulton-17-0089",
+      "is_primary": true,
+      "start_date": "1998-06-15"
+    }
+  ],
+  "site": {
+    "id": "site-oak-ridge",
+    "property": "property-1842-oak-ridge",
+    "lot_size": {
+      "value": 0.38,
+      "unit": "acre"
+    },
+    "usable_land_area": {
+      "value": 0.31,
+      "unit": "acre"
+    },
+    "usable_land_area_basis": "survey_estimate",
+    "zoning_code": "R-3",
+    "subdivision": "Oak Ridge",
+    "lot_number": "42",
+    "topography": "gently_sloping",
+    "utilities": [
+      "electric",
+      "natural_gas",
+      "public_water",
+      "public_sewer"
+    ]
+  },
+  "structures": [
+    {
+      "id": "structure-main-house",
+      "property": "property-1842-oak-ridge",
+      "kind": "building",
+      "name": "Main Residence",
+      "year_built": 1998,
+      "effective_year_built": 2018,
+      "stories": 2,
+      "construction_method": "site_built",
+      "construction_status": "complete",
+      "living_area": {
+        "value": 2840,
+        "unit": "sqft"
+      },
+      "gross_area": {
+        "value": 3440,
+        "unit": "sqft"
+      },
+      "garage_area": {
+        "value": 600,
+        "unit": "sqft"
+      },
+      "residential": {
+        "bedrooms_total": 4,
+        "bathrooms_full": 3,
+        "bathrooms_half": 1,
+        "rooms_total": 9,
+        "attachment": "detached",
+        "architectural_design": "traditional",
+        "basement_type": "partial",
+        "garage_type": "garage",
+        "garage_attachment": "attached",
+        "parking_spaces": 2,
+        "fireplaces": 1,
+        "has_pool": false,
+        "occupancy": "owner_occupied"
+      },
+      "renovations": [
+        {
+          "kind": "kitchen",
+          "description": "Kitchen renovation",
+          "completed_year": 2018,
+          "cost": {
+            "amount": "68000.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "kind": "roof",
+          "description": "Architectural shingle roof replacement",
+          "completed_year": 2021,
+          "cost": {
+            "amount": "18500.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    }
+  ],
+  "assessments": [
+    {
+      "id": "assessment-fulton-2024",
+      "parcel": "parcel-fulton-17-0089",
+      "jurisdiction": "jurisdiction-fulton-ga",
+      "tax_year": 2024,
+      "roll_type": "original",
+      "assessed_land_value": {
+        "amount": "82000.00",
+        "currency": "USD"
+      },
+      "assessed_improvement_value": {
+        "amount": "298000.00",
+        "currency": "USD"
+      },
+      "assessed_total_value": {
+        "amount": "380000.00",
+        "currency": "USD"
+      },
+      "market_total_value": {
+        "amount": "550000.00",
+        "currency": "USD"
+      }
+    },
+    {
+      "id": "assessment-fulton-2025",
+      "parcel": "parcel-fulton-17-0089",
+      "jurisdiction": "jurisdiction-fulton-ga",
+      "tax_year": 2025,
+      "roll_type": "original",
+      "assessed_land_value": {
+        "amount": "86000.00",
+        "currency": "USD"
+      },
+      "assessed_improvement_value": {
+        "amount": "314000.00",
+        "currency": "USD"
+      },
+      "assessed_total_value": {
+        "amount": "400000.00",
+        "currency": "USD"
+      },
+      "market_total_value": {
+        "amount": "575000.00",
+        "currency": "USD"
+      }
+    }
+  ],
+  "property_state_snapshots": [
+    {
+      "id": "snapshot-at-listing",
+      "property": "property-1842-oak-ridge",
+      "as_of_date": "2025-03-06",
+      "basis": {
+        "system": "https://example.org/phds/state-basis",
+        "code": "at_listing",
+        "display": "At listing"
+      },
+      "property_state": {
+        "id": "property-state-at-listing",
+        "subject": "property-1842-oak-ridge",
+        "property_use_class": "residential",
+        "property_use_type": "single_family_detached",
+        "property_use_system": "pucs_1_0",
+        "building_count": 1
+      },
+      "structure_states": [
+        {
+          "id": "structure-state-at-listing",
+          "subject": "structure-main-house",
+          "kind": "building",
+          "year_built": 1998,
+          "effective_year_built": 2018,
+          "living_area": {
+            "value": 2840,
+            "unit": "sqft"
+          },
+          "residential": {
+            "bedrooms_total": 4,
+            "bathrooms_full": 3,
+            "bathrooms_half": 1,
+            "occupancy": "owner_occupied",
+            "parking_spaces": 2,
+            "has_pool": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "snapshot-at-sale",
+      "property": "property-1842-oak-ridge",
+      "as_of_date": "2025-05-30",
+      "basis": {
+        "system": "https://example.org/phds/state-basis",
+        "code": "at_sale",
+        "display": "At sale"
+      },
+      "property_state": {
+        "id": "property-state-at-sale",
+        "subject": "property-1842-oak-ridge",
+        "property_use_class": "residential",
+        "property_use_type": "single_family_detached",
+        "property_use_system": "pucs_1_0",
+        "building_count": 1
+      },
+      "structure_states": [
+        {
+          "id": "structure-state-at-sale",
+          "subject": "structure-main-house",
+          "living_area": {
+            "value": 2840,
+            "unit": "sqft"
+          },
+          "residential": {
+            "bedrooms_total": 4,
+            "bathrooms_full": 3,
+            "bathrooms_half": 1,
+            "occupancy": "vacant",
+            "parking_spaces": 2
+          }
+        }
+      ]
+    }
+  ],
+  "listings": [
+    {
+      "id": "listing-oak-ridge-2025",
+      "property": "property-1842-oak-ridge",
+      "property_state": "snapshot-at-listing",
+      "offering_type": "for_sale",
+      "identifiers": [
+        {
+          "scheme": "listing_key",
+          "namespace": "ga-mls",
+          "value": "7501842",
+          "is_primary": true
+        }
+      ],
+      "listing_contract_date": "2025-03-06",
+      "marketing_channel": "mls",
+      "exposure_type": "public",
+      "participants": [
+        {
+          "party": "party-listing-agent",
+          "role": "listing_agent",
+          "sequence": 1
+        },
+        {
+          "party": "party-buyer-agent",
+          "role": "buyer_agent",
+          "sequence": 2
+        }
+      ],
+      "events": [
+        {
+          "effective_date": "2025-03-06",
+          "event_type": "listed",
+          "status": "active",
+          "list_price": {
+            "amount": "625000.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "effective_date": "2025-04-02",
+          "event_type": "price_change",
+          "list_price": {
+            "amount": "609000.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "effective_date": "2025-04-18",
+          "event_type": "pending",
+          "status": "pending"
+        },
+        {
+          "effective_date": "2025-05-30",
+          "event_type": "closed",
+          "status": "sold",
+          "close_price": {
+            "amount": "598000.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    }
+  ],
+  "transfers": [
+    {
+      "id": "transfer-oak-ridge-2025",
+      "property": "property-1842-oak-ridge",
+      "parcel": "parcel-fulton-17-0089",
+      "transfer_type": "warranty_deed",
+      "instrument_date": "2025-05-30",
+      "effective_date": "2025-05-30",
+      "recorded_date": "2025-06-02",
+      "recording_authority": "jurisdiction-fulton-ga",
+      "document_number": "2025-0061842",
+      "consideration": {
+        "amount": "598000.00",
+        "currency": "USD"
+      },
+      "price_disclosure": "full",
+      "parties": [
+        {
+          "party": "party-seller",
+          "role": "grantor",
+          "sequence": 1
+        },
+        {
+          "party": "party-buyer",
+          "role": "grantee",
+          "sequence": 2
+        }
+      ]
+    }
+  ],
+  "sales": [
+    {
+      "id": "sale-oak-ridge-2025",
+      "property": "property-1842-oak-ridge",
+      "property_state": "snapshot-at-sale",
+      "transfer": "transfer-oak-ridge-2025",
+      "close_date": "2025-05-30",
+      "sale_price": {
+        "amount": "598000.00",
+        "currency": "USD"
+      },
+      "price_disclosure": "full",
+      "sale_type": "arms_length",
+      "buyer_financing": {
+        "code": "conventional"
+      },
+      "concessions_amount": {
+        "amount": "7500.00",
+        "currency": "USD"
+      },
+      "concessions": [
+        {
+          "code": "closing_costs"
+        }
+      ],
+      "concessions_comments": "Seller paid buyer closing costs",
+      "listings": [
+        {
+          "listing": "listing-oak-ridge-2025",
+          "relationship_type": "resulted_in_sale"
+        }
+      ],
+      "parties": [
+        {
+          "party": "party-seller",
+          "role": "seller",
+          "sequence": 1
+        },
+        {
+          "party": "party-buyer",
+          "role": "buyer",
+          "sequence": 2
+        },
+        {
+          "party": "party-listing-agent",
+          "role": "seller_broker",
+          "sequence": 3
+        },
+        {
+          "party": "party-buyer-agent",
+          "role": "buyer_broker",
+          "sequence": 4
+        }
+      ]
+    }
+  ],
+  "ownership": [
+    {
+      "id": "ownership-seller",
+      "property": "property-1842-oak-ridge",
+      "start_date": "2012-08-17",
+      "end_date": "2025-05-30",
+      "disposed_via_transfer": "transfer-oak-ridge-2025",
+      "vesting_type": "sole_ownership",
+      "interests": [
+        {
+          "party": "party-seller",
+          "role": "owner",
+          "interest_pct": 100,
+          "is_owner_occupied": true
+        }
+      ]
+    },
+    {
+      "id": "ownership-buyer",
+      "property": "property-1842-oak-ridge",
+      "start_date": "2025-05-30",
+      "acquired_via_transfer": "transfer-oak-ridge-2025",
+      "vesting_type": "sole_ownership",
+      "interests": [
+        {
+          "party": "party-buyer",
+          "role": "owner",
+          "interest_pct": 100,
+          "is_owner_occupied": true
+        }
+      ]
+    }
+  ]
+}
